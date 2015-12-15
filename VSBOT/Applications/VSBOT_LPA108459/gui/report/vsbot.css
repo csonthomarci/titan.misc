@@ -1,0 +1,23 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+h2 { text-align:right }
+table { border:0px; width:100% }
+th.testcase { padding:5px; padding-left:7px; text-align:left; font-style:bold }
+td.testcase { padding:5px; padding-left:7px; border:1px solid black; text-align:left }
+td.verdict { padding:5px; border:0px; width:20px; text-align:center }
+td { text-align:left}
+td.name { text-indent:20; color:black; width:150 }
+td.value { text-indent:20; color:red }
+th.overall { text-align:right }
+td.overall { text-align:right }
+td.number { font-style:italic }
+th.note { font-style:italic; text-align:left }
+td.note { font-style:italic; text-align:left }

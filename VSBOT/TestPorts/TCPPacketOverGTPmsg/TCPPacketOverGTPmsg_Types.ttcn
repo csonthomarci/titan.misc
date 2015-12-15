@@ -1,0 +1,46 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+module TCPPacketOverGTPmsg_Types {
+
+import from TCPPacketmsg_Types all;
+
+type record TCPPacketOverGTP {
+  IPHeader IP,
+  UDPHeader UDP,
+  GTPPacket GTP
+};
+
+type record UDPHeader {
+  integer src optional,
+  integer dst,
+  integer totalLength optional,
+  integer checksum optional
+};
+
+type record GTPPacket {
+  GTPHeader GTPhdr,
+  IPHeader IPhdr,
+  TCPHeader TCPhdr
+};
+
+//A tunnel has to be set up externally to be able to use the TEID
+type record GTPHeader {
+  integer version optional,
+  integer	protocolType optional,
+  integer extensionHeader optional,
+  integer sequenceNr optional,
+  integer nPDUNr optional,
+  integer messageType optional,
+  integer totalLength optional,
+  integer TEID
+};
+
+}

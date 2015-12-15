@@ -1,0 +1,325 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Main
+//
+//  Purpose:
+//    This module contains the implementation of the
+//    single control and testcase part
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Config_Definitions>
+//    <VS_Config_Functions>
+//    <VS_Statistics_Definitions>
+//    <VS_Statistics_Functions>
+//    <VS_Common_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Scanning_XSS_Definitions>
+//    <VS_Scanning_XSS_Functions>
+//    <VS_Scanning_SQLi_Definitions>
+//    <VS_Scanning_SQLi_Functions>
+//    <VS_Scanning_DirectoryTraversal_Definitions>
+//    <VS_Scanning_DirectoryTraversal_Functions>
+//    <VS_Flooding_SynFlood_Definitions>
+//    <VS_Flooding_SynFlood_Functions>
+//    <VS_Flooding_SynFloodOverGTP_Definitions>
+//    <VS_Flooding_SynFloodOverGTP_Functions>
+//    <VS_UI_Definitions>
+//    <VS_UI_Functions>
+//
+//  Detailed Comments:
+//    Don't implement anything other here than the creation
+//    and start of components!
+//
+///////////////////////////////////////////////////////////
+
+module VS_Main
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Config_Definitions all;
+import from VS_Config_Functions all;
+import from VS_Statistics_Definitions all;
+import from VS_Statistics_Functions all;
+import from VS_Common_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Scanning_XSS_Definitions all;
+import from VS_Scanning_XSS_Functions all;
+import from VS_Scanning_SQLi_Definitions all;
+import from VS_Scanning_SQLi_Functions all;
+import from VS_Scanning_DirectoryTraversal_Definitions all;
+import from VS_Scanning_DirectoryTraversal_Functions all;
+import from VS_Flooding_SynFlood_Definitions all;
+import from VS_Flooding_SynFlood_Functions all;
+import from VS_Flooding_SynFloodOverGTP_Definitions all;
+import from VS_Flooding_SynFloodOverGTP_Functions all;
+import from VS_UI_Definitions all;
+import from VS_UI_Functions all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Main_ExecPTCs
+//
+//  Purpose:
+//	  List of different PTCs
+//
+//  Elements:
+//     -
+//     -
+//
+//  Detailed Comments:
+//    Needed to be able to start different tests, but UI
+//    will get other type of Exec PTC list to avoid more
+//    circular imports, if the other type would have been
+//    used, the specific behaviors wouldn't have been able
+//    to start, if TITAN supported broadcast on ports,
+//    this won't be necessary
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Main_ExecPTCUnion VS_Main_ExecPTCs
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Main_ExecPTCUnion
+//
+//  Purpose:
+//	  The supported types of testing components
+//
+//  Elements:
+//    XSS - <VS_Scanning_XSS_CT> - an XSS typed test
+//    SQLi - <VS_Scanning_SQLi_CT> - an SQLi typed test
+//    DirectoryTraversal - <VS_Scanning_DirectoryTraversal_CT>
+//      - an DirectoryTraversal typed test
+//    SynFlood - <VS_Flooding_SynFlood_CT> - a SynFlood typed test
+//    SynFloodOverGTP - <VS_Flooding_SynFloodOverGTP_CT>
+//      - a SynFloodOverGTP typed test
+//
+//  Detailed Comments:
+//    Needed to be able to start specific behaviors
+//
+///////////////////////////////////////////////////////////
+
+type union VS_Main_ExecPTCUnion
+{
+  VS_Scanning_XSS_CT XSS,
+  VS_Scanning_SQLi_CT SQLi,
+  VS_Scanning_DirectoryTraversal_CT DirectoryTraversal,
+  VS_Flooding_SynFlood_CT SynFlood,
+  VS_Flooding_SynFloodOverGTP_CT SynFloodOverGTP
+}
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Main_CT
+//
+//  Purpose:
+//	  Starts the other components
+//
+//  Elements:
+//    v_config - <VS_Config_CT> - the single Config
+//      component
+//    v_ui - <VS_UI_CT> - the single UI component, only use
+//      when startWithUI is turned on! It stays unbound
+//      when it is false
+//    v_execPTCs - <VS_Main_ExecPTCs> - the test PTCs
+//      (won't be needed if TITAN supported broadcast on
+//      ports)
+//    v_execPTCRefs - <VS_Common_ExecPTCRefs> - the test
+//      PTCs to pass to UI (won't be needed if TITAN
+//      supported broadcast on ports)
+//
+//  Detailed Comments:
+//    Main should contain every component that has to be
+//    started
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Main_CT
+{
+  var VS_Config_CT v_config;
+  var VS_UI_CT v_ui;
+  var VS_Statistics_CT v_stats;
+  var VS_Main_ExecPTCs v_execPTCs;
+  var VS_Common_ExecPTCRefs v_execPTCRefs;
+  
+  var VS_Config_TestCases v_testCases;
+  
+  port VS_Config_InternalConfig_PT config_PT;
+}
+
+//=========================================================================
+// Testcases
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Testcase: tc_VS_Main
+//
+//  Purpose:
+//    The testcase with UI support
+//
+//  Parameters:
+//     -
+//
+//  Return Value:
+//    -
+//
+//  Errors:
+//    Just from lower levels, errors should stop the MTC
+//
+//  Detailed Comments:
+//    First creates the Config and UI component, then
+//    connects them, then creates the PTCs, starts
+//    them.
+//
+///////////////////////////////////////////////////////////
+
+testcase tc_VS_Main()
+runs on VS_Main_CT
+{  
+  log_debug(%definitionId & " started.");
+  
+  v_testCases := {};
+  
+  v_config := VS_Config_CT.create("CFG");
+  connect(self:config_PT,v_config:config_PT);
+  v_config.start(f_VS_Config_behavior());
+  config_PT.receive(VS_Config_TestCases:?) -> value v_testCases;
+  v_config.done;
+  
+  v_stats := VS_Statistics_CT.create("STATS");
+  if (tsp_startWithUI)
+  {
+    v_ui := VS_UI_CT.create("UI");
+    connect(v_ui:ui_PT,v_stats:ui_PT);
+  }
+  
+  for (var integer vl_TCidx := 0; vl_TCidx < sizeof(tsp_VS_testCases); vl_TCidx := vl_TCidx + 1)
+  {
+    var charstring vl_host := tsp_defaultHost;
+    
+    if (isbound(tsp_VS_testCases[vl_TCidx].host) and ispresent(tsp_VS_testCases[vl_TCidx].host))
+    {
+      vl_host := tsp_VS_testCases[vl_TCidx].host
+    }
+    
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.XSS))
+    {
+      v_execPTCs[vl_TCidx].XSS := VS_Scanning_XSS_CT.create("ScanPTC" & int2str(vl_TCidx), vl_host);
+      v_execPTCRefs[vl_TCidx] := v_execPTCs[vl_TCidx].XSS
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi))
+    {
+      v_execPTCs[vl_TCidx].SQLi := VS_Scanning_SQLi_CT.create("ScanPTC" & int2str(vl_TCidx), vl_host);  
+      v_execPTCRefs[vl_TCidx] := v_execPTCs[vl_TCidx].SQLi;
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal))
+    {
+      v_execPTCs[vl_TCidx].DirectoryTraversal := VS_Scanning_DirectoryTraversal_CT.create("ScanPTC" & int2str(vl_TCidx), vl_host);
+      v_execPTCRefs[vl_TCidx] := v_execPTCs[vl_TCidx].DirectoryTraversal
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood))
+    {
+      v_execPTCs[vl_TCidx].SynFlood := VS_Flooding_SynFlood_CT.create("FloodPTC" & int2str(vl_TCidx), vl_host);  
+      v_execPTCRefs[vl_TCidx] := v_execPTCs[vl_TCidx].SynFlood;
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP))
+    {
+      v_execPTCs[vl_TCidx].SynFloodOverGTP := VS_Flooding_SynFloodOverGTP_CT.create("FloodPTC" & int2str(vl_TCidx), vl_host);  
+      v_execPTCRefs[vl_TCidx] := v_execPTCs[vl_TCidx].SynFloodOverGTP;
+    }
+  }
+  
+  if (tsp_startWithUI)
+  {
+    v_ui.start(f_VS_UI_behavior());
+  }
+  
+  v_stats.start(f_VS_Statistics_behavior(v_execPTCRefs));
+  
+  for (var integer vl_TCidx := 0; vl_TCidx < sizeof(v_testCases); vl_TCidx := vl_TCidx + 1)
+  {
+    if (ischosen(v_testCases[vl_TCidx].testCaseType.XSS))
+    {
+      v_execPTCs[vl_TCidx].XSS.start(f_VS_Scanning_XSS_behavior(v_testCases[vl_TCidx].testCaseType.XSS, v_testCases[vl_TCidx].testCaseName, vl_TCidx, v_testCases[vl_TCidx].wordListIdx));
+    }
+    else
+    if (ischosen(v_testCases[vl_TCidx].testCaseType.SQLi))
+    {
+      v_execPTCs[vl_TCidx].SQLi.start(f_VS_Scanning_SQLi_behavior(v_testCases[vl_TCidx].testCaseType.SQLi, v_testCases[vl_TCidx].testCaseName, vl_TCidx, v_testCases[vl_TCidx].wordListIdx));
+    }
+    else
+    if (ischosen(v_testCases[vl_TCidx].testCaseType.DirectoryTraversal))
+    {
+      v_execPTCs[vl_TCidx].DirectoryTraversal.start(f_VS_Scanning_DirectoryTraversal_behavior(v_testCases[vl_TCidx].testCaseType.DirectoryTraversal, v_testCases[vl_TCidx].testCaseName, vl_TCidx, v_testCases[vl_TCidx].wordListIdx));
+    }
+    else
+    if (ischosen(v_testCases[vl_TCidx].testCaseType.SynFlood))
+    {
+      v_execPTCs[vl_TCidx].SynFlood.start(f_VS_Flooding_SynFlood_behavior(v_testCases[vl_TCidx].testCaseType.SynFlood, v_testCases[vl_TCidx].testCaseName, vl_TCidx));
+    }
+    else
+    if (ischosen(v_testCases[vl_TCidx].testCaseType.SynFloodOverGTP))
+    {
+      v_execPTCs[vl_TCidx].SynFloodOverGTP.start(f_VS_Flooding_SynFloodOverGTP_behavior(v_testCases[vl_TCidx].testCaseType.SynFloodOverGTP, v_testCases[vl_TCidx].testCaseName, vl_TCidx));
+    }
+  }
+
+  all component.done;
+  
+  log_debug(%definitionId & " finished.")
+}
+
+//=========================================================================
+// Control
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Control 
+//
+//  Purpose:
+//    Execute the testcase
+//
+//  Parameters:
+//     -
+//
+//  Return Value:
+//    Not assigned
+//
+//  Errors:
+//    -
+//
+//  Detailed Comments:
+//    This should be specified to start in the config file
+//
+///////////////////////////////////////////////////////////
+
+control
+{
+  execute(tc_VS_Main())
+}
+
+} //end of module

@@ -1,0 +1,326 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Flooding_SynFloodOverGTP_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of
+//    SynFloodOverGTP related types
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Flooding_Definitions>
+//    <VS_Common_Definitions>
+//    <TCPPacketOverGTPmsg_PortType>
+//    <TCPPacketOverGTPmsg_Types>
+//
+//  Detailed Comments:
+//    Put every SynFloodOverGTP-specific type here, that is
+//    used by the component
+//
+///////////////////////////////////////////////////////////
+
+module VS_Flooding_SynFloodOverGTP_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Flooding_Definitions all;
+import from VS_Common_Definitions all;
+import from TCPPacketOverGTPmsg_PortType all;
+import from TCPPacketOverGTPmsg_Types all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP
+//
+//  Purpose:
+//	  A SynFloodOverGTP attack
+//
+//  Elements:
+//    packetPerSec - *float* - the intensity of flooding
+//    packet - <TCPPacketOverGTP> - the packet to send
+//    srcPortHighUDP - *integer* - optional, source port upper boundary, UDP
+//    dstPortHighUDP - *integer* - optional, destination port upper boundary, UDP
+//    srcIPHighIP1   - *charstring* - optional, source IP upper boundary
+//    dstIPHighIP1   - *charstring* - optional, destination IP upper boundary
+//    srcPortHighTCP - *integer* - optional, source port upper boundary, TCP (GTP encapsulated)
+//    dstPortHighTCP - *integer* - optional, destination port upper boundary, TCP (GTP encapsulated)
+//    srcIPHighIP2   - *charstring* - optional, source IP upper boundary (GTP encapsulated)
+//    dstIPHighIP2   - *charstring* - optional, destination IP upper boundary (GTP encapsulated)
+//
+//  Detailed Comments:
+//    Will be used in configs and flooding
+//
+///////////////////////////////////////////////////////////
+
+type record VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP
+{
+  float packetPerSec,
+  TCPPacketOverGTP packet,
+  integer srcPortHighUDP optional,
+  integer dstPortHighUDP optional,
+  charstring srcIPHighIP1 optional,
+  charstring dstIPHighIP1 optional,
+  integer srcPortHighTCP optional,
+  integer dstPortHighTCP optional,
+  charstring srcIPHighIP2 optional,
+  charstring dstIPHighIP2 optional
+}
+
+//=========================================================================
+// Template Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacketOverGTP tr_Syn
+//
+//  Purpose:
+//	  A Syn packet template
+//
+//  Values:
+//    urg := 0,
+//    ack := 0,
+//    psh := 0,
+//    rst := 0,
+//    syn := 1,
+//    fin := 0
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacketOverGTP tr_Syn :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  UDP :=
+  {
+    src := ?,
+    dst := ?,
+    totalLength := ?,
+    checksum := ?
+  },
+  GTP :=
+  {
+    GTPhdr :=
+    {
+      version := ?,
+      protocolType := ?,
+      extensionHeader := ?,
+      sequenceNr := ?,
+      nPDUNr := ?,
+      messageType := ?,
+      totalLength := ?,
+      TEID := ?
+    },
+    IPhdr :=
+    {
+      src := ?,
+      dst := ?
+    },
+    TCPhdr :=
+    {
+      src := ?,
+      dst := ?,
+      seq := ?,
+      ackseq := ?,
+      doff := ?,
+      res1 := ?,
+      res2 := ?,
+      urg := 0,
+      ack := 0,
+      psh := 0,
+      rst := 0,
+      syn := 1,
+      fin := 0,
+      window := ?,  
+      checksum := ?,
+      urgptr := ?
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacketOverGTP tr_SynAck
+//
+//  Purpose:
+//	  A SynAck packet template
+//
+//  Values:
+//    urg := 0,
+//    ack := 1,
+//    psh := 0,
+//    rst := 0,
+//    syn := 1,
+//    fin := 0
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacketOverGTP tr_SynAck :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  UDP :=
+  {
+    src := ?,
+    dst := ?,
+    totalLength := ?,
+    checksum := ?
+  },
+  GTP :=
+  {
+    GTPhdr :=
+    {
+      version := ?,
+      protocolType := ?,
+      extensionHeader := ?,
+      sequenceNr := ?,
+      nPDUNr := ?,
+      messageType := ?,
+      totalLength := ?,
+      TEID := ?
+    },
+    IPhdr :=
+    {
+      src := ?,
+      dst := ?
+    },
+    TCPhdr :=
+    {
+      src := ?,
+      dst := ?,
+      seq := ?,
+      ackseq := ?,
+      doff := ?,
+      res1 := ?,
+      res2 := ?,
+      urg := 0,
+      ack := 1,
+      psh := 0,
+      rst := 0,
+      syn := 1,
+      fin := 0,
+      window := ?,  
+      checksum := ?,
+      urgptr := ?
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacketOverGTP tr_Rst
+//
+//  Purpose:
+//	  A Rst packet template
+//
+//  Values:
+//    rst := 1
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacketOverGTP tr_Rst :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  UDP :=
+  {
+    src := ?,
+    dst := ?,
+    totalLength := ?,
+    checksum := ?
+  },
+  GTP :=
+  {
+    GTPhdr :=
+    {
+      version := ?,
+      protocolType := ?,
+      extensionHeader := ?,
+      sequenceNr := ?,
+      nPDUNr := ?,
+      messageType := ?,
+      totalLength := ?,
+      TEID := ?
+    },
+    IPhdr :=
+    {
+      src := ?,
+      dst := ?
+    },
+    TCPhdr :=
+    {
+      src := ?,
+      dst := ?,
+      seq := ?,
+      ackseq := ?,
+      doff := ?,
+      res1 := ?,
+      res2 := ?,
+      urg := ?,
+      ack := ?,
+      psh := ?,
+      rst := 1,
+      syn := ?,
+      fin := ?,
+      window := ?,  
+      checksum := ?,
+      urgptr := ?
+    }
+  }
+};
+
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Flooding_SynFloodOverGTP_CT
+//
+//  Purpose:
+//	  An SynFloodOverGTP component
+//
+//  Elements:
+//    packet_PT - <TCPPacketOverGTP_PT> - TCP over GTP port
+//
+//  Detailed Comments:
+//    Extends the VS_Flooding_CT component
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Flooding_SynFloodOverGTP_CT
+extends VS_Flooding_CT
+{
+  port TCPPacketOverGTP_PT packet_PT;
+}
+
+}  // end of module

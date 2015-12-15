@@ -1,0 +1,91 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_UI_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of the UI
+//    related types
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <TELNETasp_PortType>
+//
+//  Detailed Comments:
+//    UI related types should be implemented here
+//
+///////////////////////////////////////////////////////////
+
+module VS_UI_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from TELNETasp_PortType all;
+
+//=========================================================================
+//Port Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_InternalUI_PT
+//
+//  Purpose:
+//	  Transport charstrings towards the UI component
+//
+//  Elements:
+//     *inout* *charstring*
+//
+//  Detailed Comments:
+//    It is internal, and should be used solely to
+//    communicate with the UI component
+//
+///////////////////////////////////////////////////////////
+
+type port VS_UI_InternalUI_PT message {
+  inout charstring
+}
+with
+{ extension "internal" }
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_UI_CT
+//
+//  Purpose:
+//	  The UI component
+//
+//  Elements:
+//    telnet_PT - <TELNETasp_PT> - the port towards the
+//      outside world
+//    ui_PT - <VS_UI_InternalUI_PT> - the port to
+//      communicate with internal components (Statistics)
+//
+//  Detailed Comments:
+//    The UI components, Main should start an instance if
+//    configured
+//
+///////////////////////////////////////////////////////////
+
+type component VS_UI_CT
+{
+  port TELNETasp_PT telnet_PT
+  port VS_UI_InternalUI_PT ui_PT
+}
+
+}  // end of module

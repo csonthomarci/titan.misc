@@ -1,0 +1,277 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Flooding_SynFloodOverGTP_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the
+//    SynFloodOverGTP related functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Flooding_SynFloodOverGTP_Definitions>
+//    <TCPPacketOverGTPmsg_Types>
+//    <VS_Logging_Functions>
+//    <VS_Flooding_Functions>
+//    <VS_Common_Definitions>
+//    <VS_Common_Functions>
+//    <TCCConversion_Functions>
+//
+//  Detailed Comments:
+//    Implement the SynFloodOverGTP functions here
+//
+///////////////////////////////////////////////////////////
+
+module VS_Flooding_SynFloodOverGTP_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Flooding_SynFloodOverGTP_Definitions all;
+import from TCPPacketOverGTPmsg_Types all;
+import from VS_Logging_Functions all;
+import from VS_Flooding_Functions all;
+import from VS_Common_Definitions all;
+import from VS_Common_Functions all;
+import from TCCConversion_Functions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Flooding_SynFloodOverGTP_init
+// 
+//  Purpose:
+//    Initialize a SynFloodOverGTP test
+//
+//  Parameters:
+//    pl_TCName - *in* *charstring* - name of the TC
+//    pl_TCidx - *in* *integer* - the index of the TC
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Calls the parent's init. Maps packet_PT.
+//    Should only be called by the behavior()!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_Flooding_SynFloodOverGTP_init(in charstring pl_TCName, in integer pl_TCidx)
+runs on VS_Flooding_SynFloodOverGTP_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Flooding_init(pl_TCName, pl_TCidx);
+  map(self:packet_PT,system:packet_PT);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Flooding_SynFloodOverGTP_behavior
+// 
+//  Purpose:
+//    Execute a SynFloodOverGTP TestCase
+//
+//  Parameters:
+//    pl_TC - *in* <VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP> - the TC to be executed
+//    pl_TCName - *in* *charstring* - name of the TC
+//    pl_TCidx - *in* *integer* - the index of the TC
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    First calls the init. Implements load generating (fills and sends packets
+//    using TL_limiter to corrigate average towards configured packet/sec).
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Flooding_SynFloodOverGTP_behavior(in VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP pl_TC, in charstring pl_TCName, in integer pl_TCidx)
+runs on VS_Flooding_SynFloodOverGTP_CT
+{  
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Flooding_SynFloodOverGTP_init(pl_TCName, pl_TCidx);
+  
+  timer TL_limiter;
+  timer TL_heartbeat := 1.0;
+  
+  var float vl_limiterValue := pl_TC.packetPerSec;
+  var integer vl_synCounter := 1;
+  var integer vl_previousSynCounter := 0;
+  var TCPPacketOverGTP vl_packetin;
+  var TCPPacketOverGTP vl_packetout := pl_TC.packet;
+  
+  packet_PT.send(pl_TC.packet);
+  
+  TL_limiter.start(1.0/vl_limiterValue);
+  TL_heartbeat.start;
+ 
+  alt {
+    [] TL_heartbeat.timeout
+       {
+         f_VS_Flooding_reportInteger(vl_synCounter);
+         
+         if (pl_TC.packetPerSec > 1.0 and pl_TC.packetPerSec != int2float(vl_synCounter) and vl_limiterValue<pl_TC.packetPerSec*pl_TC.packetPerSec)
+         {
+           //Try to corrigate the actual syn/sec towards the configured
+           vl_limiterValue := vl_limiterValue*pl_TC.packetPerSec/int2float(vl_synCounter);
+         }
+         else
+         if (pl_TC.packetPerSec > 1.0 and pl_TC.packetPerSec != int2float(vl_synCounter))
+         {
+           log_warning("It seems that your host can't generate the configured syn/sec value...");
+         }
+         vl_previousSynCounter := vl_synCounter;
+         vl_synCounter := 0;
+         TL_heartbeat.start;
+         repeat
+       }
+    [] TL_limiter.timeout
+       {
+         log_debug("Sending TCPPacketOverGTP Syn!");
+         
+         if (ispresent(pl_TC.srcPortHighUDP))
+         {
+           if (pl_TC.srcPortHighUDP > vl_packetout.UDP.src)
+           {
+             vl_packetout.UDP.src := vl_packetout.UDP.src + 1;
+           }
+           else
+           {
+             vl_packetout.UDP.src := pl_TC.packet.UDP.src;
+           }
+         }
+         
+         if (ispresent(pl_TC.dstPortHighUDP))
+         {
+           if (pl_TC.dstPortHighUDP > vl_packetout.UDP.dst)
+           {
+             vl_packetout.UDP.dst := vl_packetout.UDP.dst + 1;
+           }
+           else
+           {
+             vl_packetout.UDP.dst := pl_TC.packet.UDP.dst;
+           }
+         }
+         
+         if (ispresent(pl_TC.srcIPHighIP1))
+         {
+           if (f_compOctetstring(f_OctetIpv4(pl_TC.srcIPHighIP1), f_OctetIpv4(vl_packetout.IP.src)) == 1)
+           {
+             f_VS_Common_incIPv4(vl_packetout.IP.src);
+           }
+           else
+           {
+             vl_packetout.IP.src := pl_TC.packet.IP.src;
+           }
+         }
+         
+         if (ispresent(pl_TC.dstIPHighIP1))
+         {
+           if (f_compOctetstring(f_OctetIpv4(pl_TC.dstIPHighIP1), f_OctetIpv4(vl_packetout.IP.dst)) == 1)
+           {
+             f_VS_Common_incIPv4(vl_packetout.IP.dst);
+           }
+           else
+           {
+             vl_packetout.IP.dst := pl_TC.packet.IP.dst;
+           }
+         }
+         
+         if (ispresent(pl_TC.srcPortHighTCP))
+         {
+           if (pl_TC.srcPortHighTCP > vl_packetout.GTP.TCPhdr.src)
+           {
+             vl_packetout.GTP.TCPhdr.src := vl_packetout.GTP.TCPhdr.src + 1;
+           }
+           else
+           {
+             vl_packetout.GTP.TCPhdr.src := pl_TC.packet.GTP.TCPhdr.src;
+           }
+         }
+         
+         if (ispresent(pl_TC.dstPortHighTCP))
+         {
+           if (pl_TC.dstPortHighTCP > vl_packetout.GTP.TCPhdr.dst)
+           {
+             vl_packetout.GTP.TCPhdr.dst := vl_packetout.GTP.TCPhdr.dst + 1;
+           }
+           else
+           {
+             vl_packetout.GTP.TCPhdr.dst := pl_TC.packet.GTP.TCPhdr.dst;
+           }
+         }
+         
+         if (ispresent(pl_TC.srcIPHighIP2))
+         {
+           if (f_compOctetstring(f_OctetIpv4(pl_TC.srcIPHighIP2), f_OctetIpv4(vl_packetout.GTP.IPhdr.src)) == 1)
+           {
+             f_VS_Common_incIPv4(vl_packetout.GTP.IPhdr.src);
+           }
+           else
+           {
+             vl_packetout.GTP.IPhdr.src := pl_TC.packet.GTP.IPhdr.src;
+           }
+         }
+         
+         if (ispresent(pl_TC.dstIPHighIP2))
+         {
+           if (f_compOctetstring(f_OctetIpv4(pl_TC.dstIPHighIP2), f_OctetIpv4(vl_packetout.GTP.IPhdr.dst)) == 1)
+           {
+             f_VS_Common_incIPv4(vl_packetout.GTP.IPhdr.dst);
+           }
+           else
+           {
+             vl_packetout.GTP.IPhdr.dst := pl_TC.packet.GTP.IPhdr.dst;
+           }
+         }
+         
+         packet_PT.send(vl_packetout);
+         vl_synCounter := vl_synCounter + 1;
+         TL_limiter.start(1.0/vl_limiterValue);
+         repeat
+       }
+    [] packet_PT.receive(TCPPacketOverGTP:?) -> value vl_packetin
+       {
+         log_debug("TCPPacketOverGTP received! " & log2str(vl_packetin));
+         repeat
+       }
+    [] any port.receive { log_error("Unexpected message received!"); setverdict(inconc); /*f_VS_Exec_reportTCVerdict();*/ stop }
+  }
+  
+  
+  if (TL_limiter.running)
+  {
+    TL_limiter.stop;
+  }
+  
+  stats_PT.send("finished");
+  //f_VS_Exec_reportTCVerdict();
+  unmap(self:packet_PT,system:packet_PT);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

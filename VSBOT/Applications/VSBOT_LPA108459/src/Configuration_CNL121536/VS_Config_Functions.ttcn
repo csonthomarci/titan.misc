@@ -1,0 +1,597 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Config_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the
+//    Config-related functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Config_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Common_Definitions>
+//
+//  Detailed Comments:
+//    It's functions should only be called through the
+//    behavior
+//
+///////////////////////////////////////////////////////////
+
+module VS_Config_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Config_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Common_Definitions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Config_init
+// 
+//  Purpose:
+//    Replace unbound values with omits in module parameter, then send to Main.
+//
+//  Parameters:
+//    - 
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Should only be called by the behavior()! Will be replaced by TITAN's
+//    implicit omit feature when it becomes recursive.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_Config_init()
+runs on VS_Config_CT
+{
+  log_debug(%definitionId & " started.");
+
+  var VS_Config_TestCases vl_testCases := tsp_VS_testCases;
+  
+  for (var integer vl_TCidx := 0; vl_TCidx < sizeof(tsp_VS_testCases); vl_TCidx := vl_TCidx + 1)
+  {
+    if (isbound(tsp_VS_testCases[vl_TCidx].host) and ispresent(tsp_VS_testCases[vl_TCidx].host))
+    {
+      vl_testCases[vl_TCidx].host := tsp_VS_testCases[vl_TCidx].host
+    }
+    else
+    {
+      vl_testCases[vl_TCidx].host := tsp_defaultHost
+    }
+    
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi))
+    {
+      for (var integer vl_i := 0; vl_i < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi); vl_i := vl_i + 1)
+      {
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_i].templateParameters))
+        {
+          vl_testCases[vl_TCidx].testCaseType.SQLi[vl_i].templateParameters := omit
+        }
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_i].testResults))
+        {
+          vl_testCases[vl_TCidx].testCaseType.SQLi[vl_i].testResults := omit
+        }
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.XSS))
+    {
+      for (var integer vl_i := 0; vl_i < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.XSS); vl_i := vl_i + 1)
+      {
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_i].templateParameters))
+        {
+          vl_testCases[vl_TCidx].testCaseType.XSS[vl_i].templateParameters := omit
+        }
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_i].testResults))
+        {
+          vl_testCases[vl_TCidx].testCaseType.XSS[vl_i].testResults := omit
+        }
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal))
+    {
+      for (var integer vl_i := 0; vl_i < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal); vl_i := vl_i + 1)
+      {
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].depth))
+        {
+          vl_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].depth := omit
+        }
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].templateParameters))
+        {
+          vl_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].templateParameters := omit
+        }
+        if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].testResults))
+        {
+          vl_testCases[vl_TCidx].testCaseType.DirectoryTraversal[vl_i].testResults := omit
+        }
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood))
+    {
+      //TCP
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.src))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.src := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.seq))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.seq := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.ackseq))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.ackseq := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.doff))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.doff := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.res1))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.res1 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.res2))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.res2 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.urg))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.urg := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.ack))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.ack := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.psh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.psh := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.rst))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.rst := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.syn))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.syn := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.fin))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.fin := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.window))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.window := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.checksum))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.checksum := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.urgptr))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.urgptr := omit
+      }
+      
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.srcPortHigh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.srcPortHigh := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.dstPortHigh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.dstPortHigh := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.srcIPHigh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.srcIPHigh := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.dstIPHigh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFlood.dstIPHigh := omit
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP))
+    {
+      //UDP
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.src))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.src := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.totalLength))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.totalLength := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.checksum))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.checksum := omit
+      }
+      
+      //GTP/GTP
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.version))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.version := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.protocolType))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.protocolType := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.extensionHeader))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.extensionHeader := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.sequenceNr))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.sequenceNr := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.nPDUNr))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.nPDUNr := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.messageType))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.messageType := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.totalLength))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.GTPhdr.totalLength := omit
+      }
+
+      //GTP/TCP
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.src))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.src := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.seq))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.seq := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.ackseq))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.ackseq := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.doff))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.doff := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.res1))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.res1 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.res2))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.res2 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.urg))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.urg := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.ack))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.ack := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.psh))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.psh := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.rst))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.rst := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.syn))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.syn := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.fin))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.fin := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.window))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.window := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.checksum))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.checksum := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.urgptr))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.urgptr := omit
+      }
+      
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighUDP))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighUDP := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighUDP))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighUDP := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP1))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP1 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP1))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP1 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighTCP))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighTCP := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighTCP))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighTCP := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP2))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP2 := omit
+      }
+      if (not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP2))
+      {
+        vl_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP2 := omit
+      }
+    }
+    
+    if (isbound(tsp_VS_testCases[vl_TCidx].wordListIdx) and ispresent(tsp_VS_testCases[vl_TCidx].wordListIdx))
+    {
+      vl_testCases[vl_TCidx].wordListIdx := tsp_VS_testCases[vl_TCidx].wordListIdx
+    }
+    else
+    {
+      vl_testCases[vl_TCidx].wordListIdx := 0
+    }
+  }
+
+  config_PT.send(vl_testCases);
+    
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Config_behavior
+// 
+//  Purpose:
+//    Setup the component and start the required functions
+//
+//  Parameters:
+//    - 
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    Call init, then check the config, then if turned on, send the attacksteps
+//    to the UI component, which will buffer it until a client connects
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Config_behavior()
+runs on VS_Config_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Config_init();
+  
+  f_VS_Config_checkConfigSemantics();
+    
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Config_checkConfigSemantics
+// 
+//  Purpose:
+//    Check the config semantically
+//
+//  Parameters:
+//    - 
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    Timer-type result is not in first place in config
+//    Timer-type result's delay threshold is negative number
+//    UI is on and test contains restricted string
+//    PacketPerSec is negative
+// 
+//  Detailed description:
+//    Check if UI support is on that the test doesn't contain "::" string.
+//    Check if a timerResult is not in the first place in SQLi type testcases,
+//    or delayThreshold is a negative value.
+//    Check if a timerResult is configured for XSS type testcases.
+//    Check packetPerSec for SynFlood(OverGTP) attacks.
+//    The application doesn't start with syntax errors, TITAN checks it   
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_Config_checkConfigSemantics()
+runs on VS_Config_CT
+{
+  // If UI is on, check for "::" characters in the config, because they can mess up the UI protocol
+  if (tsp_startWithUI and regexp(log2str(tsp_VS_testCases), "*(::)*", 0) != "")
+  {
+    log_error("If UI support is on, the test must not contain \"::\" anywhere!");
+    mtc.stop
+  }
+  
+  for (var integer vl_TCidx := 0; vl_TCidx < sizeof(tsp_VS_testCases); vl_TCidx := vl_TCidx + 1)
+  {
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi))
+    {
+      for (var integer vl_j := 0; vl_j < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi); vl_j := vl_j + 1)
+      {
+        if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults) and
+            ispresent(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults) and
+            sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults) > 1)
+        {
+          // Check the delayThreshold for negative value
+          if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[0].timerResult) and
+              tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[0].timerResult.delayThreshold < 0.0)
+          {
+            log_error("In a configuration file, if present, the timerResult typed result's delayThreshold value must be non/negative!");
+            mtc.stop
+          }
+          // Check if the ifOver/ifUnder is the same
+          if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[0].timerResult) and
+              tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[0].timerResult.ifOver ==
+              tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[0].timerResult.ifUnder)
+          {
+            log_warning("In a configuration file, if present, the timerResult typed result's ifOver and ifUnder parameters should be different!");
+          }
+          // Check if there are more than 1 timerResults, or is not the first of the testResults
+          for (var integer vl_k := 1; vl_k < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults); vl_k := vl_k + 1)
+          {
+            if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SQLi[vl_j].testResults[vl_k].timerResult))
+            {
+              log_error("In a configuration file, if present, the timerResult typed result must be the first (and only) among the testResults!");
+              mtc.stop
+            }
+          }
+        }
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.XSS))
+    {
+      for (var integer vl_j := 0; vl_j < sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.XSS); vl_j := vl_j + 1)
+      {
+        if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_j].testResults) and
+            ispresent(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_j].testResults) and
+            sizeof(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_j].testResults) > 1)
+        {
+          // Check the timerResult
+          if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.XSS[vl_j].testResults[0].timerResult))
+          {
+            log_warning("In a configuration file, timerResult is not supported for XSS!");
+          }
+        }
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood))
+    {
+      // Check the packetPerSec for negative value
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packetPerSec) and
+          tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packetPerSec < 0.0)
+      {
+        log_error("In a configuration file, the packetPerSec value must be non/negative!");
+        mtc.stop
+      }
+      //Check ranges
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.srcPortHigh) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.src))
+      {
+        log_error("In a configuration file, the packet.TCP.src value must be specified when srcPortHigh is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.dstPortHigh) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.TCP.dst))
+      {
+        log_error("In a configuration file, the packet.TCP.dst value must be specified when dstPortHigh is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.srcIPHigh) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.IP.src))
+      {
+        log_error("In a configuration file, the packet.IP.src value must be specified when srcIPHigh is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.dstIPHigh) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFlood.packet.IP.dst))
+      {
+        log_error("In a configuration file, the packet.IP.dst value must be specified when dstIPHigh is present!");
+        mtc.stop
+      }
+    }
+    else
+    if (ischosen(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP))
+    {
+      // Check the packetPerSec for negative value
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packetPerSec) and
+          tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packetPerSec < 0.0)
+      {
+        log_error("In a configuration file, the packetPerSec value must be non/negative!");
+        mtc.stop
+      }
+      //Check ranges
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighUDP) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.src))
+      {
+        log_error("In a configuration file, the packet.UDP.src value must be specified when srcPortHighUDP is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighUDP) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.UDP.dst))
+      {
+        log_error("In a configuration file, the packet.UDP.dst value must be specified when dstPortHighUDP is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP1) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.IP.src))
+      {
+        log_error("In a configuration file, the packet.IP.src value must be specified when srcIPHighIP1 is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP1) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.IP.dst))
+      {
+        log_error("In a configuration file, the packet.IP.dst value must be specified when dstIPHighIP1 is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcPortHighTCP) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.src))
+      {
+        log_error("In a configuration file, the packet.GTP.TCPhdr.src value must be specified when srcPortHighTCP is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstPortHighTCP) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.TCPhdr.dst))
+      {
+        log_error("In a configuration file, the packet.GTP.TCPhdr.dst value must be specified when dstPortHighTCP is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.srcIPHighIP2) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.IPhdr.src))
+      {
+        log_error("In a configuration file, the packet.GTP.IPhdr.src value must be specified when srcIPHighIP2 is present!");
+        mtc.stop
+      }
+      if (isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.dstIPHighIP2) and
+          not isbound(tsp_VS_testCases[vl_TCidx].testCaseType.SynFloodOverGTP.packet.GTP.IPhdr.dst))
+      {
+        log_error("In a configuration file, the packet.GTP.IPhdr.dst value must be specified when dstIPHighIP2 is present!");
+        mtc.stop
+      }
+    }
+  }
+}
+
+}  // end of module

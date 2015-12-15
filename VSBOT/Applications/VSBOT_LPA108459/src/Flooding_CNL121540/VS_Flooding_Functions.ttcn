@@ -1,0 +1,145 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Flooding_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the Flooding
+//    functions that should be available to the executable
+//    testcases
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Flooding_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Exec_Functions>
+//
+//  Detailed Comments:
+//    None of these functions should be called from outside
+//    of descendant components
+//
+///////////////////////////////////////////////////////////
+
+module VS_Flooding_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Flooding_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Exec_Functions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Flooding_init
+// 
+//  Purpose:
+//    Connect to the HTTP and UI ports - if configured, and wait for start;
+//    or log a message about the start
+//
+//  Parameters:
+//    pl_tcName - *in* *charstring* - the name of the testcase to execute
+//    pl_TCidx - *in* *integer* - the index of the testcase
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    It is a common init function for executing any type of supported
+//    testcases, it sets up the UI port - if configured,
+//    then it waits for the start command from the UI port, and sends the TC's
+//    name; or just prints a message about the start.
+//    Should only be called by derived components! Must be called by any
+//    derived component!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Flooding_init(in charstring pl_tcName, in integer pl_TCidx)
+runs on VS_Flooding_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Exec_init(pl_tcName, pl_TCidx);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Flooding_reportInteger
+// 
+//  Purpose:
+//    Logs an integer value through the statistics port.
+//
+//  Parameters:
+//    pl_value - *in* *integer* - the value to send
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Flooding_reportInteger(in integer pl_value)
+runs on VS_Flooding_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  stats_PT.send(int2str(v_TCidx) & "::INTEGER::" & int2str(pl_value));
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Flooding_reportFloat
+// 
+//  Purpose:
+//    Logs a float value through the statistics port.
+//
+//  Parameters:
+//    pl_value - *in* *float* - the value to send
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Flooding_reportFloat(in float pl_value)
+runs on VS_Flooding_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  stats_PT.send(int2str(v_TCidx) & "::FLOAT::" & float2str(pl_value));
+  
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

@@ -1,0 +1,174 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Statistics_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of the Statistics
+//    related types
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_UI_Definitions>
+//
+//  Detailed Comments:
+//    Statistics related types should be implemented here
+//
+///////////////////////////////////////////////////////////
+
+module VS_Statistics_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_UI_Definitions all;
+
+//=========================================================================
+//Port Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_InternalUI_PT
+//
+//  Purpose:
+//	  Transport charstrings towards the UI component
+//
+//  Elements:
+//     *inout* *charstring*
+//
+//  Detailed Comments:
+//    It is internal, and should be used solely to
+//    communicate with the UI component
+//
+///////////////////////////////////////////////////////////
+
+type port VS_Statistics_InternalStatistics_PT message {
+  inout charstring
+}
+with
+{ extension "internal" }
+
+//=========================================================================
+// Data Types
+//=========================================================================
+/* TODO: use a database to store and cummulate statistics
+///////////////////////////////////////////////////////////
+//  Type: VS_Statistics_DBTable
+//
+//  Purpose:
+//	  A table of stats in the db
+//
+//  Elements:
+//    <VS_Statistics_DBRow>
+//
+//  Detailed Comments:
+//    Will be used in stat db
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Statistics_DBRow VS_Statistics_DBTable;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Statistics_DBRow
+//
+//  Purpose:
+//	  A row of stats in the db
+//
+//  Elements:
+//    <VS_Statistics_DBTypeUnion>
+//
+//  Detailed Comments:
+//    Will be used in stat db
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Statistics_DBTypeUnion VS_Statistics_DBRow;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Statistics_DBTypeUnion
+//
+//  Purpose:
+//	  Possible types of stats
+//
+//  Elements:
+//    verdictStat - <VS_Statistics_DataType_Verdict> - verdict
+//    integerStat - *integer* - integer
+//    floatStat - *float* - float
+//
+//  Detailed Comments:
+//    Will be used in stat db
+//
+///////////////////////////////////////////////////////////
+
+type union VS_Statistics_DBTypeUnion
+{
+  VS_Statistics_DataType_Verdict verdictStat,
+  integer integerStat,
+  float floatStat
+}
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Statistics_DataType_Verdict
+//
+//  Purpose:
+//	  Verdict value in the database.
+//
+//  Elements:
+//    verdict - *charstring* - the verdict
+//    reason - *charstring* - optional, the reason of the
+//      verdict
+//
+//  Detailed Comments:
+//    Will be used in stat db
+//
+///////////////////////////////////////////////////////////
+
+type record VS_Statistics_DataType_Verdict
+{
+  charstring verdict,
+  charstring reason
+}*/
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Statistics_CT
+//
+//  Purpose:
+//	  The Statistics component
+//
+//  Elements:
+//    stats_PT - <VS_Statistics_InternalStatistics_PT>
+//      - the port towards the PTCs
+//    ui_PT - <VS_UI_InternalStatistics_PT> - the port to
+//      communicate with UI
+//
+//  Detailed Comments:
+//    The Statistics components, Main should start an
+//    instance if configured
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Statistics_CT
+{
+  port VS_Statistics_InternalStatistics_PT stats_PT
+  port VS_UI_InternalUI_PT ui_PT
+  
+  //var VS_Statistics_DBTable v_statsDB
+}
+
+}  // end of module

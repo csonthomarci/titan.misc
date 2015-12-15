@@ -1,0 +1,324 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Common_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of common
+//    data and port types
+//
+//  Module Parameters:
+//    tsp_startWithUI - *boolean* -turn UI support on/off
+//    tsp_coloredBashOutput - *boolean* - turn bash-style
+//      output coloring on/off
+//    tsp_defaultHost - *charstring* - set the default
+//      host for testCases
+//    tsp_VS_wordLists - <VS_Common_WordLists> - wordlists
+//
+//  Module depends on:
+//    <HTTPmsg_Types>
+//    <VS_Exec_Definitions>
+//
+//  Detailed Comments:
+//    This module implements the default module parameters,
+//    the internal UI port type, the record of Exec
+//    components and the types for the config parameters.
+//    Try to implement every definition here, that is used
+//    in at least two completely different modules
+//
+///////////////////////////////////////////////////////////
+
+module VS_Common_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from HTTPmsg_Types all;
+import from VS_Exec_Definitions all; // circular import
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+
+// Turn the TELNET-based UI support on/off
+modulepar boolean tsp_startWithUI := false;
+// Turn bash-style console output coloring on/off
+modulepar boolean tsp_coloredBashOutput := true;
+// Set the default host for testCases
+modulepar charstring tsp_defaultHost := "127.0.0.1";
+// Set the wordlists to work with
+modulepar VS_Common_WordLists tsp_VS_wordLists := {{{""}}};
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_ExecPTCRefs
+//
+//  Purpose:
+//	  List of Exec CTs
+//
+//  Elements:
+//    <VS_Exec_CT> - the elements
+//
+//  Detailed Comments:
+//    Will be used by Main, and the UI, won't be necessary,
+//    if TITAN supported broadcast on ports
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Exec_CT VS_Common_ExecPTCRefs;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_CharstringList
+//
+//  Purpose:
+//    List of charstrings
+//
+//  Elements:
+//    *charstring* - the elements
+//
+//  Detailed Comments:
+//    The UI uses it as a buffer
+//
+///////////////////////////////////////////////////////////
+
+type record of charstring VS_Common_CharstringList;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_HTTPMessageUnion
+//
+//  Purpose:
+//	  A union of the possible HTTP messages
+//
+//  Elements:
+//    close - <Close>
+//    connectTo - <Connect>
+//    halfClose - <Half_close>
+//    listen - <Listen>
+//    shutdown - <Shutdown>
+//    HTTPMessage - <HTTPMessage>
+//
+//  Detailed Comments:
+//    The values come from the HTTPmsg_Types, will be used
+//    in config parameters
+//
+///////////////////////////////////////////////////////////
+
+type union VS_Common_HTTPMessageUnion
+{
+    Close close,
+    Connect connectTo,
+    Half_close halfClose,
+    Listen listen,
+    Shutdown shutdown,
+    HTTPMessage HTTPMessage
+}
+
+///////////////////////////////////////////////////////////
+//  Group: ResultTypes
+//
+//  Purpose:
+//    This group contains the implementation of the results
+//    to match in the tests
+//
+//  Detailed Comments:
+//    -
+//
+///////////////////////////////////////////////////////////
+
+group ResultTypes
+{
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_RegexpResults
+  //
+  //  Purpose:
+  //	List of VS_Common_RegexpResult
+  //
+  //  Elements:
+  //     <VS_Common_RegexpResult> - the elements
+  //
+  //  Detailed Comments:
+  //    It will be used in the definition and usage of config
+  //    parameters
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type record of VS_Common_RegexpResult VS_Common_RegexpResults;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_MixedResults
+  //
+  //  Purpose:
+  //	A mixture of regexp-, statuscode- and time-based results
+  //
+  //  Elements:
+  //     <VS_Common_MixedResultUnion> - the elements
+  //
+  //  Detailed Comments:
+  //    It will be used in the definition and usage of config
+  //    parameters
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type record of VS_Common_MixedResultUnion VS_Common_MixedResults;
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_MixedResultUnion
+  //
+  //  Purpose:
+  //	A union of the two different result types
+  //
+  //  Elements:
+  //    regexpResult - <VS_Common_RegexpResult>
+  //    timerResult - <VS_Common_TimerResult>
+  //
+  //  Detailed Comments:
+  //    It will be used in the definition and usage of config
+  //    parameters
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type union VS_Common_MixedResultUnion
+  {
+    VS_Common_RegexpResult regexpResult,
+    VS_Common_TimerResult timerResult,
+    VS_Common_StatusCodeResult statusCodeResult
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_RegexpResult
+  //
+  //  Purpose:
+  //	The regexp typed result
+  //
+  //  Elements:
+  //    regexpPattern - *charstring* - a regexp string to
+  //      match
+  //    ifMatches - *verdicttype* - the verdict to set in
+  //      case of the regexp matches
+  //
+  //  Detailed Comments:
+  //    It will be used in the configs and the XSS, SQLi
+  //    testing
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type record VS_Common_RegexpResult
+  {
+    charstring regexpPattern,
+    verdicttype ifMatches
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_TimerResult
+  //
+  //  Purpose:
+  //	The timer based result type
+  //
+  //  Elements:
+  //    delayThreshold - *float* - the time that counts as a
+  //      limit for a response message
+  //    ifOver - *verdicttype* - if the Threshold is exceeded
+  //      set this verdict
+  //    ifUnder - *verdicttype* - if a message arrives in the
+  //      given time, set this verdict
+  //
+  //  Detailed Comments:
+  //    It will be used in SQLi testing and config parameters
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type record VS_Common_TimerResult
+  {
+    float delayThreshold,
+    verdicttype ifOver,
+    verdicttype ifUnder
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //  Type: VS_Common_StatusCodeResult
+  //
+  //  Purpose:
+  //	The status code based result type
+  //
+  //  Elements:
+  //    statusCode - *integer* - the status code
+  //    ifMatches - *verdicttype* - set this then the status
+  //      code of a response matches statusCode
+  //
+  //  Detailed Comments:
+  //    It will be used in SQLi/XSS testing and config
+  //    parameters
+  //
+  ///////////////////////////////////////////////////////////
+  
+  type record VS_Common_StatusCodeResult
+  {
+    integer statusCode,
+    verdicttype ifMatches
+  }
+}
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_WordLists
+//
+//  Purpose:
+//	List of wordlists
+//
+//  Elements:
+//     <VS_Common_WordList> - the elements
+//
+//  Detailed Comments:
+//    It will be used in the definition and usage of config
+//    parameters
+//
+///////////////////////////////////////////////////////////
+type record of VS_Common_WordList VS_Common_WordLists;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_WordList
+//
+//  Purpose:
+//	List of word combinations
+//
+//  Elements:
+//     <VS_Common_WordCombination> - the elements
+//
+//  Detailed Comments:
+//    It will be used in the definition and usage of config
+//    parameters
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Common_WordCombination VS_Common_WordList;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_WordCombination
+//
+//  Purpose:
+//	Combination of words
+//
+//  Elements:
+//     *charstring* - the elements
+//
+//  Detailed Comments:
+//    It will be used in the definition and usage of config
+//    parameters
+//
+///////////////////////////////////////////////////////////
+
+type record of charstring VS_Common_WordCombination;
+
+}  // end of module

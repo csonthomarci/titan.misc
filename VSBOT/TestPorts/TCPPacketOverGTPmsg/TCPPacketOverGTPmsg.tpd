@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+-->
+<TITAN_Project_File_Information version="1.0">
+  <ProjectName>TCPPacketmsg</ProjectName>
+  <ReferencedProjects>
+    <ReferencedProject name="TCPPacketmsg" projectLocationURI="../TCPPacketmsg/TCPPacketmsg.tpd"/>
+  </ReferencedProjects>
+  <Files>
+    <FileResource projectRelativePath="TCPPacketOverGTP_PT.cc" relativeURI="TCPPacketOverGTP_PT.cc"/>
+    <FileResource projectRelativePath="TCPPacketOverGTP_PT.hh" relativeURI="TCPPacketOverGTP_PT.hh"/>
+    <FileResource projectRelativePath="TCPPacketOverGTPmsg_PortType.ttcn" relativeURI="TCPPacketOverGTPmsg_PortType.ttcn"/>
+    <FileResource projectRelativePath="TCPPacketOverGTPmsg_Types.ttcn" relativeURI="TCPPacketOverGTPmsg_Types.ttcn"/>
+  </Files>
+  <ActiveConfiguration>Default</ActiveConfiguration>
+  <Configurations>
+    <Configuration name="Default">
+      <ProjectProperties>
+        <MakefileSettings>
+          <generateInternalMakefile>true</generateInternalMakefile>
+          <GNUMake>true</GNUMake>
+          <incrementalDependencyRefresh>true</incrementalDependencyRefresh>
+          <targetExecutable>bin/TCPPacketOverGTPmsg</targetExecutable>
+          <buildLevel>Level 3 - Creating object files with dependency update</buildLevel>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>bin</workingDirectory>
+        </LocalBuildSettings>
+      </ProjectProperties>
+    </Configuration>
+  </Configurations>
+</TITAN_Project_File_Information>

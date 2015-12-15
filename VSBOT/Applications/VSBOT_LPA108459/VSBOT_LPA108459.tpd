@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+-->
+<TITAN_Project_File_Information version="1.0">
+  <ProjectName>VSBOT_LPA108459</ProjectName>
+   <ReferencedProjects>
+     <ReferencedProject name="Abstract_Socket_CNL113384" projectLocationURI="../../TestPorts/Common_Components/Abstract_Socket_CNL113384/Abstract_Socket_CNL113384.tpd"/>
+     <ReferencedProject name="HTTPmsg_CNL113312" projectLocationURI="../../TestPorts/HTTPmsg_CNL113312/HTTPmsg_CNL113312.tpd"/>
+     <ReferencedProject name="TCPPacketmsg" projectLocationURI="../../TestPorts/TCPPacketmsg/TCPPacketmsg.tpd"/>
+     <ReferencedProject name="TCPPacketOverGTPmsg" projectLocationURI="../../TestPorts/TCPPacketOverGTPmsg/TCPPacketOverGTPmsg.tpd"/>
+     <ReferencedProject name="TELNETasp_CNL113320" projectLocationURI="../../TestPorts/TELNETasp_CNL113320/TELNETasp_CNL113320.tpd"/>
+     <ReferencedProject name="TCCUsefulFunctions_CNL113472_Common" projectLocationURI="../../Libraries/TCCUsefulFunctions_CNL113472/TCCUsefulFunctions_CNL113472_Common.tpd"/>
+  </ReferencedProjects>
+  <Folders>
+    <FolderResource projectRelativePath="tools" relativeURI="tools"/>
+    <FolderResource projectRelativePath="cfg" relativeURI="cfg"/>
+    <FolderResource projectRelativePath="src" relativeURI="src"/>
+    <FolderResource projectRelativePath="src/Common" relativeURI="src/Common"/>
+    <FolderResource projectRelativePath="src/Configuration_CNL121536" relativeURI="src/Configuration_CNL121536"/>
+    <FolderResource projectRelativePath="src/Execution_CRL119186" relativeURI="src/Execution_CRL119186"/>
+    <FolderResource projectRelativePath="src/Flooding_CNL121540" relativeURI="src/Flooding_CNL121540"/>
+    <FolderResource projectRelativePath="src/Flooding_CNL121540/synflood" relativeURI="src/Flooding_CNL121540/synflood"/>
+    <FolderResource projectRelativePath="src/Flooding_CNL121540/synfloodovergtp" relativeURI="src/Flooding_CNL121540/synfloodovergtp"/>
+    <FolderResource projectRelativePath="src/Logging" relativeURI="src/Logging"/>
+    <FolderResource projectRelativePath="src/Main_CNL121534" relativeURI="src/Main_CNL121534"/>
+    <FolderResource projectRelativePath="src/Scanning_CNL121535" relativeURI="src/Scanning_CNL121535"/>
+    <FolderResource projectRelativePath="src/Scanning_CNL121535/dirtrav" relativeURI="src/Scanning_CNL121535/dirtrav"/>
+    <FolderResource projectRelativePath="src/Scanning_CNL121535/sqli" relativeURI="src/Scanning_CNL121535/sqli"/>
+    <FolderResource projectRelativePath="src/Scanning_CNL121535/xss" relativeURI="src/Scanning_CNL121535/xss"/>
+    <FolderResource projectRelativePath="src/Statistics_CNL121537" relativeURI="src/Statistics_CNL121537"/>
+    <FolderResource projectRelativePath="src/UI" relativeURI="src/UI"/>
+  </Folders>
+  <Files>
+    <FileResource projectRelativePath="tools/setcap.sh" relativeURI="tools/setcap.sh"/>
+    <FileResource projectRelativePath="cfg/common_result_patterns.cfg" relativeURI="cfg/common_result_patterns.cfg"/>
+    <FileResource projectRelativePath="cfg/main.cfg" relativeURI="cfg/main.cfg"/>
+    <FileResource projectRelativePath="cfg/wordlists.cfg" relativeURI="cfg/wordlists.cfg"/>
+    <FileResource projectRelativePath="src/Common/VS_Common_Definitions.ttcn" relativeURI="src/Common/VS_Common_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Common/VS_Common_Functions.ttcn" relativeURI="src/Common/VS_Common_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Configuration_CNL121536/VS_Config_Definitions.ttcn" relativeURI="src/Configuration_CNL121536/VS_Config_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Configuration_CNL121536/VS_Config_Functions.ttcn" relativeURI="src/Configuration_CNL121536/VS_Config_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Execution_CRL119186/VS_Exec_Definitions.ttcn" relativeURI="src/Execution_CRL119186/VS_Exec_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Execution_CRL119186/VS_Exec_Functions.ttcn" relativeURI="src/Execution_CRL119186/VS_Exec_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/VS_Flooding_Definitions.ttcn" relativeURI="src/Flooding_CNL121540/VS_Flooding_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/VS_Flooding_Functions.ttcn" relativeURI="src/Flooding_CNL121540/VS_Flooding_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/synflood/VS_Flooding_SynFlood_Definitions.ttcn" relativeURI="src/Flooding_CNL121540/synflood/VS_Flooding_SynFlood_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/synflood/VS_Flooding_SynFlood_Functions.ttcn" relativeURI="src/Flooding_CNL121540/synflood/VS_Flooding_SynFlood_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/synfloodovergtp/VS_Flooding_SynFloodOverGTP_Definitions.ttcn" relativeURI="src/Flooding_CNL121540/synfloodovergtp/VS_Flooding_SynFloodOverGTP_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Flooding_CNL121540/synfloodovergtp/VS_Flooding_SynFloodOverGTP_Functions.ttcn" relativeURI="src/Flooding_CNL121540/synfloodovergtp/VS_Flooding_SynFloodOverGTP_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Logging/VS_Logging_External_Functions.cc" relativeURI="src/Logging/VS_Logging_External_Functions.cc"/>
+    <FileResource projectRelativePath="src/Logging/VS_Logging_External_Functions.hh" relativeURI="src/Logging/VS_Logging_External_Functions.hh"/>
+    <FileResource projectRelativePath="src/Logging/VS_Logging_Functions.ttcn" relativeURI="src/Logging/VS_Logging_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Main_CNL121534/VS_Main.ttcn" relativeURI="src/Main_CNL121534/VS_Main.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/VS_Scanning_Definitions.ttcn" relativeURI="src/Scanning_CNL121535/VS_Scanning_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/VS_Scanning_Functions.ttcn" relativeURI="src/Scanning_CNL121535/VS_Scanning_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/dirtrav/VS_Scanning_DirectoryTraversal_Definitions.ttcn" relativeURI="src/Scanning_CNL121535/dirtrav/VS_Scanning_DirectoryTraversal_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/dirtrav/VS_Scanning_DirectoryTraversal_Functions.ttcn" relativeURI="src/Scanning_CNL121535/dirtrav/VS_Scanning_DirectoryTraversal_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/sqli/VS_Scanning_SQLi_Definitions.ttcn" relativeURI="src/Scanning_CNL121535/sqli/VS_Scanning_SQLi_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/sqli/VS_Scanning_SQLi_Functions.ttcn" relativeURI="src/Scanning_CNL121535/sqli/VS_Scanning_SQLi_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/xss/VS_Scanning_XSS_Definitions.ttcn" relativeURI="src/Scanning_CNL121535/xss/VS_Scanning_XSS_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Scanning_CNL121535/xss/VS_Scanning_XSS_Functions.ttcn" relativeURI="src/Scanning_CNL121535/xss/VS_Scanning_XSS_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/Statistics_CNL121537/VS_Statistics_Definitions.ttcn" relativeURI="src/Statistics_CNL121537/VS_Statistics_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/Statistics_CNL121537/VS_Statistics_Functions.ttcn" relativeURI="src/Statistics_CNL121537/VS_Statistics_Functions.ttcn"/>
+    <FileResource projectRelativePath="src/UI/VS_UI_Definitions.ttcn" relativeURI="src/UI/VS_UI_Definitions.ttcn"/>
+    <FileResource projectRelativePath="src/UI/VS_UI_Functions.ttcn" relativeURI="src/UI/VS_UI_Functions.ttcn"/>
+  </Files>
+  <ActiveConfiguration>Default</ActiveConfiguration>
+  <Configurations>
+    <Configuration name="Default">
+      <ProjectProperties>
+        <MakefileSettings>
+          <generateInternalMakefile>true</generateInternalMakefile>
+          <GNUMake>true</GNUMake>
+          <incrementalDependencyRefresh>true</incrementalDependencyRefresh>
+          <targetExecutable>bin/vsbot</targetExecutable>
+          <buildLevel>Level 3 - Creating object files with dependency update</buildLevel>
+        </MakefileSettings>
+        <LocalBuildSettings>
+          <workingDirectory>bin</workingDirectory>
+        </LocalBuildSettings>
+      </ProjectProperties>
+    </Configuration>
+  </Configurations>
+</TITAN_Project_File_Information>

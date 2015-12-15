@@ -1,0 +1,240 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Flooding_SynFlood_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of SynFlood
+//    related types
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Flooding_Definitions>
+//    <VS_Common_Definitions>
+//    <TCPPacketmsg_PortType>
+//    <TCPPacketmsg_Types>
+//
+//  Detailed Comments:
+//    Put every SynFlood-specific type here, that is used by
+//    the component
+//
+///////////////////////////////////////////////////////////
+
+module VS_Flooding_SynFlood_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Flooding_Definitions all;
+import from VS_Common_Definitions all;
+import from TCPPacketmsg_PortType all;
+import from TCPPacketmsg_Types all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Flooding_SynFlood_TestCaseType_SynFlood
+//
+//  Purpose:
+//	  A SynFlood attack
+//
+//  Elements:
+//    packetPerSec - *float* - the intensity of flooding
+//    packet - <TCPPacket> - the packet to send
+//    srcPortHigh - *integer* - optional, source port upper boundary
+//    dstPortHigh - *integer* - optional, destination port upper boundary
+//    srcIPHigh   - *charstring* - optional, source IP upper boundary
+//    dstIPHigh   - *charstring* - optional, destination IP upper boundary
+//
+//  Detailed Comments:
+//    Will be used in configs and flooding
+//
+///////////////////////////////////////////////////////////
+
+type record VS_Flooding_SynFlood_TestCaseType_SynFlood
+{
+  float packetPerSec,
+  TCPPacket packet,
+  integer srcPortHigh optional,
+  integer dstPortHigh optional,
+  charstring srcIPHigh optional,
+  charstring dstIPHigh optional
+}
+
+//=========================================================================
+// Template Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacket tr_Syn
+//
+//  Purpose:
+//	  A Syn packet template
+//
+//  Values:
+//    urg := 0,
+//    ack := 0,
+//    psh := 0,
+//    rst := 0,
+//    syn := 1,
+//    fin := 0
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacket tr_Syn :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  TCP :=
+  {
+    src := ?,
+    dst := ?,
+    seq := ?,
+    ackseq := ?,
+    doff := ?,
+    res1 := ?,
+    res2 := ?,
+    urg := 0,
+    ack := 0,
+    psh := 0,
+    rst := 0,
+    syn := 1,
+    fin := 0,
+    window := ?,  
+    checksum := ?,
+    urgptr := ?
+  }
+};
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacket tr_SynAck
+//
+//  Purpose:
+//	  A SynAck packet template
+//
+//  Values:
+//    urg := 0,
+//    ack := 1,
+//    psh := 0,
+//    rst := 0,
+//    syn := 1,
+//    fin := 0
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacket tr_SynAck :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  TCP :=
+  {
+    src := ?,
+    dst := ?,
+    seq := ?,
+    ackseq := ?,
+    doff := ?,
+    res1 := ?,
+    res2 := ?,
+    urg := 0,
+    ack := 1,
+    psh := 0,
+    rst := 0,
+    syn := 1,
+    fin := 0,
+    window := ?,  
+    checksum := ?,
+    urgptr := ?
+  }
+};
+
+///////////////////////////////////////////////////////////
+//  Template: TCPPacket tr_Rst
+//
+//  Purpose:
+//	  A Rst packet template
+//
+//  Values:
+//    rst := 1
+//  Detailed Comments:
+//    Will be used in flooding
+//
+///////////////////////////////////////////////////////////
+
+template TCPPacket tr_Rst :=
+{
+  IP :=
+  {
+    src := ?,
+    dst := ?
+  },
+  TCP :=
+  {
+    src := ?,
+    dst := ?,
+    seq := ?,
+    ackseq := ?,
+    doff := ?,
+    res1 := ?,
+    res2 := ?,
+    urg := ?,
+    ack := ?,
+    psh := ?,
+    rst := 1,
+    syn := ?,
+    fin := ?,
+    window := ?,  
+    checksum := ?,
+    urgptr := ?
+  }
+};
+
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Flooding_SynFlood_CT
+//
+//  Purpose:
+//	  An SynFlood component
+//
+//  Elements:
+//    packet_PT - <TCPPacket_PT> - TCP port
+//
+//  Detailed Comments:
+//    Extends the Exec component
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Flooding_SynFlood_CT
+extends VS_Flooding_CT
+{
+  port TCPPacket_PT packet_PT;
+}
+
+}  // end of module

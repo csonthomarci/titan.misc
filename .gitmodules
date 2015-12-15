@@ -1,0 +1,12 @@
+[submodule "VSBOT/TestPorts/Common_Components/Abstract_Socket_CNL113384"]
+	path = VSBOT/TestPorts/Common_Components/Abstract_Socket_CNL113384
+	url = https://github.com/eclipse/titan.TestPorts.Common_Components.Abstract_Socket
+[submodule "VSBOT/TestPorts/TELNETasp_CNL113320"]
+	path = VSBOT/TestPorts/TELNETasp_CNL113320
+	url = https://github.com/eclipse/titan.TestPorts.TELNETasp
+[submodule "VSBOT/Libraries/TCCUsefulFunctions_CNL113472"]
+	path = VSBOT/Libraries/TCCUsefulFunctions_CNL113472
+	url = https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
+[submodule "VSBOT/TestPorts/HTTPmsg_CNL113312"]
+	path = VSBOT/TestPorts/HTTPmsg_CNL113312
+	url = https://github.com/eclipse/titan.TestPorts.HTTPmsg
