@@ -1,0 +1,91 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Exec_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the Exec
+//    functions that should be available to the executable
+//    testcases
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Exec_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Common_Definitions>
+//
+//  Detailed Comments:
+//    None of these functions should be called from outside
+//    of descendant components
+//
+///////////////////////////////////////////////////////////
+
+module VS_Exec_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Exec_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Common_Definitions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Exec_init
+// 
+//  Purpose:
+//    Connect to the HTTP and UI ports - if configured, and wait for start;
+//    or log a message about the start
+//
+//  Parameters:
+//    pl_tcName - *in* *charstring* - the name of the testcase to execute
+//    pl_TCidx - *in* *integer* - the index of the testcase
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    It is a common init function for executing any type of supported
+//    testcases, it sets up the UI port - if configured,
+//    then it waits for the start command from the UI port, and sends the TC's
+//    name; or just prints a message about the start.
+//    Should only be called by derived components! Must be called by any
+//    derived component!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Exec_init(in charstring pl_tcName, in integer pl_TCidx)
+runs on VS_Exec_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  v_TCidx := pl_TCidx;
+  v_tcName := pl_tcName;
+  
+  if (not tsp_startWithUI)
+  {
+    log_testcase("Executing TestCase nr." & int2str(v_TCidx) & " \'" & v_tcName & "\'...");
+  }
+  
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

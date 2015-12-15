@@ -1,0 +1,310 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Scanning_XSS_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the XSS
+//    related functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Scanning_XSS_Definitions>
+//    <HTTPmsg_Types>
+//    <VS_Logging_Functions>
+//    <VS_Scanning_Functions>
+//    <VS_Common_Definitions>
+//
+//  Detailed Comments:
+//    Implement the XSS functions here
+//
+///////////////////////////////////////////////////////////
+
+module VS_Scanning_XSS_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Scanning_XSS_Definitions all;
+import from HTTPmsg_Types all;
+import from VS_Logging_Functions all;
+import from VS_Scanning_Functions all;
+import from VS_Common_Definitions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_XSS_init
+// 
+//  Purpose:
+//    Initialize an XSS test
+//
+//  Parameters:
+//    pl_TCName - *in* *charstring* - name of the TC
+//    pl_TCidx - *in* *integer* - the index of the TC
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Calls the parent's init. Maps msg_PT.
+//    Should only be called by the behavior()!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_Scanning_XSS_init(in charstring pl_TCName, in integer pl_TCidx)
+runs on VS_Scanning_XSS_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Scanning_init(pl_TCName, pl_TCidx);
+  map(self:msg_PT,system:msg_PT);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_XSS_behavior
+// 
+//  Purpose:
+//    Execute an XSS TestCase
+//
+//  Parameters:
+//    pl_TC - *in* <VS_Scanning_XSS_TestCaseType_XSS> - the TC to be executed
+//    pl_TCName - *in* *charstring* - name of the TC
+//    pl_TCidx - *in* *integer* - the index of the TC
+//    pl_wordListIdx - *in* *integer* - the index of the wordlist to use
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    Unexpected message on the HTTP port
+//    Abstract Socket DTE when the host is unreachable
+// 
+//  Detailed description:
+//    First calls the init, then iterates through the AttackSteps, and simply
+//    send every message, except for the HTTPMessage typed ones. Those templates
+//    are filled in from the wordlist specified in a module parameter, then
+//    sent, then response is expected which is then examined according to the
+//    configured testResults, then reports the verdict. This function should
+//    be started when creating a new XSS component.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Scanning_XSS_behavior(in VS_Scanning_XSS_TestCaseType_XSS pl_TC, in charstring pl_TCName, in integer pl_TCidx, in integer pl_wordListIdx)
+runs on VS_Scanning_XSS_CT
+{  
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Scanning_XSS_init(pl_TCName, pl_TCidx);
+  
+  for (var integer vl_wordIdx := 0; vl_wordIdx < sizeof(tsp_VS_wordLists[pl_wordListIdx]); vl_wordIdx := vl_wordIdx + 1)
+  {
+    f_VS_Scanning_reportTCVerdict(vl_wordIdx, none, log2str(tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx]));
+    var charstring vl_cookie := ""
+    for (var integer vl_i := 0; vl_i < sizeof(pl_TC); vl_i := vl_i + 1)
+    {
+      var HTTPMessage vl_msgin;
+      var HTTPMessage vl_msgout;
+      var VS_Common_MixedResults vl_testResults;
+
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.close))
+      {
+        msg_PT.send(pl_TC[vl_i].HTTPMessageType.close);
+      }
+      else
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.connectTo))
+      {
+        msg_PT.send(pl_TC[vl_i].HTTPMessageType.connectTo);
+      }
+      else
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.halfClose))
+      {
+        msg_PT.send(pl_TC[vl_i].HTTPMessageType.halfClose);
+      }
+      else
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.listen))
+      {
+        msg_PT.send(pl_TC[vl_i].HTTPMessageType.listen);
+      }
+      else
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.shutdown))
+      {
+        msg_PT.send(pl_TC[vl_i].HTTPMessageType.shutdown);
+      }
+      else
+      if (ischosen(pl_TC[vl_i].HTTPMessageType.HTTPMessage))
+      {
+        timer TL_watchDog := 10.0;
+        
+        //Filling the template
+        vl_msgout := pl_TC[vl_i].HTTPMessageType.HTTPMessage;
+        if (ispresent(pl_TC[vl_i].testResults))
+        {
+          vl_testResults := pl_TC[vl_i].testResults;
+        }
+        else
+        {
+          vl_testResults := {}
+        }
+        
+        if (ispresent(pl_TC[vl_i].templateParameters))
+        {
+          for (var integer vl_j := 0; vl_j<sizeof(pl_TC[vl_i].templateParameters); vl_j := vl_j + 1)
+          {
+            //Uri
+            if (regexp(vl_msgout.request.uri, "*(" & pl_TC[vl_i].templateParameters[vl_j] & ")*", 0) != "")
+            {
+              vl_msgout.request.uri :=
+                regexp(vl_msgout.request.uri, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 0) &
+                tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx][vl_j] &
+                regexp(vl_msgout.request.uri, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 1)
+            }
+            //Headers
+            for (var integer vl_k := 0; vl_k<sizeof(vl_msgout.request.header); vl_k := vl_k + 1)
+            {
+              if (regexp(vl_msgout.request.header[vl_k].header_name, "*(" & pl_TC[vl_i].templateParameters[vl_j] & ")*", 0) != "")
+              {
+                vl_msgout.request.header[vl_k].header_name :=
+                  regexp(vl_msgout.request.header[vl_k].header_name, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 0) &
+                  tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx][vl_j] &
+                  regexp(vl_msgout.request.header[vl_k].header_name, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 1)
+              }
+              if (regexp(vl_msgout.request.header[vl_k].header_value, "*(" & pl_TC[vl_i].templateParameters[vl_j] & ")*", 0) != "")
+              {
+                vl_msgout.request.header[vl_k].header_value :=
+                  regexp(vl_msgout.request.header[vl_k].header_value, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 0) &
+                  tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx][vl_j] &
+                  regexp(vl_msgout.request.header[vl_k].header_value, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 1)
+              }
+            }
+            //Body
+            if (regexp(vl_msgout.request.body, "*(" & pl_TC[vl_i].templateParameters[vl_j] & ")*", 0) != "")
+            {
+              vl_msgout.request.body :=
+                regexp(vl_msgout.request.body, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 0) &
+                tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx][vl_j] &
+                regexp(vl_msgout.request.body, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 1)
+            }
+            //Results
+            for (var integer vl_k := 0; vl_k<sizeof(vl_testResults); vl_k := vl_k + 1)
+            {
+              if (ischosen(vl_testResults[vl_k].regexpResult))
+              {
+                if (regexp(vl_testResults[vl_k].regexpResult.regexpPattern, "*(" & pl_TC[vl_i].templateParameters[vl_j] & ")*", 0) != "")
+                {
+                  vl_testResults[vl_k].regexpResult.regexpPattern :=
+                    regexp(vl_testResults[vl_k].regexpResult.regexpPattern, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 0) &
+                    tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx][vl_j] &
+                    regexp(vl_testResults[vl_k].regexpResult.regexpPattern, "(*)" & pl_TC[vl_i].templateParameters[vl_j] & "(*)", 1)
+                }
+              }
+            }
+          }
+        }
+        
+        f_VS_Scanning_setCookie(vl_cookie, vl_msgout)
+        vl_msgout.request.header[sizeof(vl_msgout.request.header)].header_name := "Content-Length"
+        vl_msgout.request.header[sizeof(vl_msgout.request.header) - 1].header_value := int2str(lengthof(vl_msgout.request.body))
+        //Sending the message
+        msg_PT.send(vl_msgout);
+        
+        TL_watchDog.start;
+      
+        alt {
+          [] msg_PT.receive(HTTPMessage:?) -> value vl_msgin
+              {
+                log_debug("HTTPMessage received!");
+                if (isbound(vl_testResults) and
+                    ispresent(vl_testResults))
+                {
+                  // Convert octetstring body to charstring,
+                  // substitute universal chars with "_" (because regexp cannot handle them)
+                  var charstring vl_body := ""; 
+                  if (ischosen(vl_msgin.response_binary))
+                  {
+                    log_debug(oct2str(vl_msgin.response_binary.body))
+                    for (var integer vl_k := 0; vl_k < lengthof(vl_msgin.response_binary.body); vl_k := vl_k + 1)
+                    {
+                      var integer vl_temp := oct2int(vl_msgin.response_binary.body[vl_k]);
+                      if (vl_temp <= 127)
+                      {
+                        vl_body[vl_k] := int2char(vl_temp)
+                      }
+                      else
+                      {
+                        vl_body[vl_k] := "_"
+                      }
+                    }
+                  }
+                  else
+                  {
+                    vl_body := vl_msgin.response.body
+                  }
+                  for (var integer vl_j := 0; vl_j < sizeof(vl_testResults); vl_j := vl_j + 1)
+                  {
+                    if (ischosen(vl_testResults[vl_j].regexpResult) and
+                        regexp(vl_body, vl_testResults[vl_j].regexpResult.regexpPattern, 0) != "")
+                    {
+                      //setverdict(vl_testResults[vl_j].regexpResult.ifMatches);
+                      f_VS_Scanning_reportTCVerdict(vl_wordIdx, vl_testResults[vl_j].regexpResult.ifMatches, log2str(tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx]), "the returned message matched regexp " & vl_testResults[vl_j].regexpResult.regexpPattern);
+                    }
+                    if (ischosen(vl_testResults[vl_j].statusCodeResult) and
+                        vl_testResults[vl_j].statusCodeResult.statusCode == vl_msgin.response.statuscode)
+                    {
+                      //setverdict(vl_testResults[vl_j].statusCodeResult.ifMatches);
+                      f_VS_Scanning_reportTCVerdict(vl_wordIdx, vl_testResults[vl_j].regexpResult.ifMatches, log2str(tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx]), "returned status code was " & int2str(vl_msgin.response.statuscode));
+                    }
+                  }
+                }
+                
+                f_VS_Scanning_getCookie(vl_msgin, vl_cookie)
+              }
+          [] any port.receive
+             {
+               log_warning("Unexpected message received!");
+               //setverdict(inconc);
+               f_VS_Scanning_reportTCVerdict(vl_wordIdx, inconc, log2str(tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx]), "unexpected message received!");
+             }
+          [] TL_watchDog.timeout
+             {
+               log_warning("10 sec WatchDog timer timeout!");
+               //setverdict(inconc);
+               f_VS_Scanning_reportTCVerdict(vl_wordIdx, inconc, log2str(tsp_VS_wordLists[pl_wordListIdx][vl_wordIdx]), "10 sec WatchDog timer timeout!");
+             }
+        }
+        
+        if (TL_watchDog.running)
+        {
+          TL_watchDog.stop;
+        }
+      }
+    }
+  }
+
+  stats_PT.send("finished");
+  
+  unmap(self:msg_PT,system:msg_PT);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

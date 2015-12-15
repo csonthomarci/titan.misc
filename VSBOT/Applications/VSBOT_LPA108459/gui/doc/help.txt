@@ -1,0 +1,22 @@
+Configuration
+Test cases can be configured via a graphical configuration editor featured in the GUI.
+The User can create, open or save configuration files that can be executed with or without the GUI support. To use a configuration with UI support, the tsp_startWithUI parameter has to be set to true in the main configuration file.
+To add a new test case, right click on the test cases area.
+After adding a new test case, it can be renamed; the executor host can be specified.
+In case of scanning-type testcases, different type of HTTP packets can be added to the message sequence chart editor.
+When new packets are added, they are filled with default values. For more information on the specific parameters of the packet contents, please refer to the HTTPmsg_CNL113312 Test Port User Guide.
+Template parameters can be used in requests and responses. The parameters from the previous request can be used in a response. The listed strings in the template parameters part will be replaced from the message template with value from the actual row of the selected wordlist from the wordlists.cfg file. Each row from the wordlist will generate a separate verdict on the statistics view tab of the GUI.
+Special, flooding test cases can be configured in a similar way. The packet/sec value specifies the frequency of the packets sent out. The packet can be filled in as a usual TCP packet. The range fields can be used to specify upper bounds for ranges beginning with the values specified in the packet. Some values in the packet are mandatory (target specific fields), but some can be omitted. If they are omitted, the addresses and ports are randomized. The flags are 0 by default.
+
+Executing the Test
+After filling the credentials, the execution can be started with the start button. The console output will be displayed in the textbox area. Currently the SSH password field is not supported, so the public keys have to be exchanged between the executor and the GUI controller PC. Currently stop button is not supported; flooding test cases can be stopped with the kill button.
+Note that the last saved version of the configuration file will be executed and run time modified values will be ignored during the execution.
+
+Statistics view
+The collected verdicts and statistics are displayed online on the statistics view tab for each test case, in a tree list format. Scanning-type test cases report verdicts with notes about the exact cause of the verdict. Flooding-type test cases report packet/sec values, which are displayed on charts.
+
+Report generator
+After the tests have finished, the User can generate HTML-based reports. The report will be generated into the Applications/VSBOT_LPA108459/gui/report/test.html file. The needed images and .css are located in the same folder.
+
+-----------------------------------
+(Extract from the VSBOT User Guide)

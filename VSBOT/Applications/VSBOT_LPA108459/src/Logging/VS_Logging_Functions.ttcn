@@ -1,0 +1,78 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Logging_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the custom
+//    logging functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    -
+//
+//  Detailed Comments:
+//    Introduces the external logging functions written in
+//    C++. The Ericsson-standard naming conventions are
+//    ignored to enhance readability
+//
+///////////////////////////////////////////////////////////
+
+module VS_Logging_Functions
+{
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: log_debug
+//            log_warning
+//            log_error
+//            log_user
+//            log_testcase
+// 
+//  Purpose:
+//    Provide API for TITAN logging
+//
+//  Parameters:
+//    pl_msg - *in* *charstring* - the string to log
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    External functions written in C++, using the TITAN API. The TITAN config
+//    parameters can mask them, as the user sets them.
+//    Usecases:
+//      log_debug - developing purposes, for tracing functions, messages, etc.
+//                  It is recommended to log the starts/finishes of functions
+//                  this way, for easier debugging!
+//      log_warning - warn the user about something dangerous or important
+//      log_error - use if something is not correct or unexpected, usually
+//                  used in pair with stoping the TestCase
+//      log_user - use if just want to share information with the user
+//      log_testcase - for logging starts and ends of TestCases mainly
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+external function log_debug(charstring pl_msg);
+external function log_warning(charstring pl_msg);
+external function log_error(charstring pl_msg);
+external function log_user(charstring pl_msg);
+external function log_testcase(charstring pl_msg);
+
+}  // end of module

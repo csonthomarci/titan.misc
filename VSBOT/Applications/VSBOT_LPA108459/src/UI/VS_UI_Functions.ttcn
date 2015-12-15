@@ -1,0 +1,164 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_UI_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the UI-
+//    related functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_UI_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Common_Definitions>
+//
+//  Detailed Comments:
+//    Every UI-related function should be implemented here
+//
+///////////////////////////////////////////////////////////
+
+module VS_UI_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_UI_Definitions all;
+import from VS_Common_Definitions all;
+import from VS_Logging_Functions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_UI_init
+// 
+//  Purpose:
+//    Map the TELNET port
+//
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Maps it's TELNET port to the system's.
+//    Should only be called by the behavior()!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_UI_init()
+runs on VS_UI_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  map(self:telnet_PT,system:telnet_PT);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_UI_behavior
+// 
+//  Purpose:
+//    Relay messages between the UI and TELNET port
+//
+//  Parameters:
+//    -
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    Relays all messages between TELNET and UI port, except for integers and
+//    the special "kill" and "finished" command. If a message arrives,
+//    determines it's type: integers indicate a new connection; "kill"
+//    indicates that the termination of the test was requested, thus kills the
+//    mtc; else puts charstrings into the buffer and sends them if a client
+//    connects. The "terminate" command arrives when all of the PTCs finished.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_UI_behavior()
+runs on VS_UI_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_UI_init();
+  
+  log_debug("Relaying started.");
+  log_debug("TELNET connection opened, waiting for Client to connect...");
+  
+  var charstring vl_msg;
+  var integer vl_int;
+  var VS_Common_CharstringList vl_buffer := {};
+  var boolean vl_connected := false;
+  var boolean vl_finished := false;
+  
+  alt {
+    [] telnet_PT.receive("kill") -> value vl_msg { log_debug(%definitionId & ": message on telnet_PT: " & vl_msg); mtc.kill }
+  	[] ui_PT.receive("finished") {
+  	                               vl_finished := true
+  	                               if (not vl_connected)
+  	                               {
+  	                                 repeat
+  	                               }
+  	                             }
+  	[] ui_PT.receive(charstring:?) -> value vl_msg {
+  	                                                 log_debug(%definitionId & ": message on ui_PT: " & vl_msg);
+  	                                                 if (vl_connected)
+  	                                                 {
+  	                                                   telnet_PT.send(vl_msg)
+  	                                                 }
+  	                                                 else
+  	                                                 {
+  	                                                   vl_buffer[sizeof(vl_buffer)] := vl_msg
+  	                                                 }
+  	                                                 repeat
+  	                                               }
+  	[] telnet_PT.receive(charstring:?) -> value vl_msg {
+  	                                                     log_warning(%definitionId & ": unexpected message on telnet_PT: " & vl_msg);
+  	                                                     repeat
+  	                                                   }
+  	[] telnet_PT.receive(integer:?) -> value vl_int {
+                                                      log_debug(%definitionId & ": message on ui_PT: " & int2str(vl_int));
+                                                      log_debug("Client connected.");
+                                                      for (var integer vl_i := 0; vl_i < sizeof(vl_buffer); vl_i := vl_i + 1)
+                                                      {
+                                                        telnet_PT.send(vl_buffer[vl_i])
+                                                      }
+                                                      vl_connected := true
+                                                      if (not vl_finished)
+                                                      {
+                                                        repeat
+                                                      }
+                                                  	}
+  }
+  
+  log_debug("Operation finished, TELNET connection closed.");
+  log_debug("Relaying stopped.");
+    
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

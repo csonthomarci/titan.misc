@@ -1,0 +1,226 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Config_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of the Config
+//    layer's definitions
+//
+//  Module Parameters:
+//    tsp_VS_testCases- <VS_Config_TestCases> - the main
+//      descriptor of the testcases
+//
+//  Module depends on:
+//    <VS_Scanning_XSS_Definitions>
+//    <VS_Scanning_SQLi_Definitions>
+//    <VS_Scanning_DirectoryTraversal_Definitions>
+//    <VS_Flooding_SynFlood_Definitions>
+//    <VS_Flooding_SynFloodOverGTP_Definitions>
+//
+//  Detailed Comments:
+//    Everything that is only concerning the config layer
+//    should be defined here
+//
+///////////////////////////////////////////////////////////
+
+module VS_Config_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Scanning_XSS_Definitions all;
+import from VS_Scanning_SQLi_Definitions all;
+import from VS_Scanning_DirectoryTraversal_Definitions all;
+import from VS_Flooding_SynFlood_Definitions all;
+import from VS_Flooding_SynFloodOverGTP_Definitions all;
+
+//=========================================================================
+// Module Parameters
+//=========================================================================
+
+// The testcases parameter with default value
+modulepar VS_Config_TestCases tsp_VS_testCases := 
+{
+  {
+    testCaseName := "Localhost XSS test",
+    host := omit,
+    testCaseType := 
+    {
+      XSS :=
+      {
+        { // connect to localhost
+          HTTPMessageType :=
+          {
+            connectTo :=
+            {
+              hostname := "localhost",
+              portnumber := 80,
+              use_ssl := false
+            }
+          },
+          testResults := omit
+        },
+        { // close connection
+          HTTPMessageType :=
+          {
+            close :=
+            {
+              client_id := omit
+            }
+          },
+          testResults := omit
+        }
+      }
+    }
+  }
+}
+with
+{ extension "implicit omit" };
+
+//=========================================================================
+//Port Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Common_InternalConfig_PT
+//
+//  Purpose:
+//	  Transport Config towards the Main component
+//
+//  Elements:
+//     *inout* <VS_Config_TestCases>
+//
+//  Detailed Comments:
+//    It is internal, and should be used solely to
+//    communicate with the Main component
+//
+///////////////////////////////////////////////////////////
+
+type port VS_Config_InternalConfig_PT message {
+  inout VS_Config_TestCases
+}
+with
+{ extension "internal" }
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Config_TestCases
+//
+//  Purpose:
+//	  List of testcases
+//
+//  Elements:
+//     <VS_Config_TestCase> - the elements
+//
+//  Detailed Comments:
+//    Will be used in Config_Functions and Main
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Config_TestCase VS_Config_TestCases;
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Config_TestCase
+//
+//  Purpose:
+//	  The bricks of the testCases module parameter
+//
+//  Elements:
+//    testCaseName - *charstring* - the name of the
+//      testcase
+//    host - *charstring* - optional, the host to run the
+//      test component on
+//    testCaseType - <VS_Config_TestCaseTypeUnion> - the
+//      descriptor of the testcases
+//    wordListIdx - *integer* - the index of the wordlist
+//      to use
+//
+//  Detailed Comments:
+//    Will be used in config parameters and Main
+//    parameterizes the specific testcase components with
+//    it
+//
+///////////////////////////////////////////////////////////
+
+type record VS_Config_TestCase
+{
+  charstring testCaseName,
+  charstring host optional,
+  VS_Config_TestCaseTypeUnion testCaseType,
+  integer wordListIdx optional
+}
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Config_TestCaseTypeUnion
+//
+//  Purpose:
+//	  The supported testcase types
+//
+//  Elements:
+//    XSS - <VS_Scanning_XSS_TestCaseType_XSS> - XSS type
+//    SQLi - <VS_Scanning_SQLi_TestCaseType_SQLi> - SQLi
+//      type
+//    DirectoryTraversal -
+//      <VS_Scanning_DirectoryTraversal_TestCaseType_DirectoryTraversal>
+//      - DirectoryTraversal type
+//    SynFlood -
+//      <VS_Flooding_SynFlood_TestCaseType_SynFlood> -
+//      SynFlood type
+//    SynFloodOverGTP -
+//      <VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP> -
+//      SynFloodOverGTP type
+//
+//  Detailed Comments:
+//    New supported testing features' parameters should be
+//    added here
+//
+///////////////////////////////////////////////////////////
+
+type union VS_Config_TestCaseTypeUnion
+{
+  VS_Scanning_XSS_TestCaseType_XSS XSS,
+  VS_Scanning_SQLi_TestCaseType_SQLi SQLi,
+  VS_Scanning_DirectoryTraversal_TestCaseType_DirectoryTraversal DirectoryTraversal,
+  VS_Flooding_SynFlood_TestCaseType_SynFlood SynFlood,
+  VS_Flooding_SynFloodOverGTP_TestCaseType_SynFloodOverGTP SynFloodOverGTP
+}
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Config_CT
+//
+//  Purpose:
+//	  The Config component
+//
+//  Elements:
+//    ui_PT - <VS_Common_InternalUI_PT> - the UI port
+//
+//  Detailed Comments:
+//    The Config CT, it is used in Config_Functions and
+//    Main starts an instance
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Config_CT
+{
+  port VS_Config_InternalConfig_PT config_PT;
+}
+
+} //end of module

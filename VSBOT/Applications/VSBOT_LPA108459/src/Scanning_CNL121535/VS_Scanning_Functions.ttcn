@@ -1,0 +1,281 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Scanning_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the Scanning
+//    functions that should be available to the executable
+//    testcases
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Scanning_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Exec_Functions>
+//    <HTTPmsg_Types>
+//
+//  Detailed Comments:
+//    None of these functions should be called from outside
+//    of descendant components
+//
+///////////////////////////////////////////////////////////
+
+module VS_Scanning_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Scanning_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Exec_Functions all;
+import from HTTPmsg_Types all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_init
+// 
+//  Purpose:
+//    Connect to the HTTP and UI ports - if configured, and wait for start;
+//    or log a message about the start
+//
+//  Parameters:
+//    pl_tcName - *in* *charstring* - the name of the testcase to execute
+//    pl_TCidx - *in* *integer* - the index of the testcase
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    It is a common init function for executing any type of supported
+//    testcases, it sets up the UI port - if configured,
+//    then it waits for the start command from the UI port, and sends the TC's
+//    name; or just prints a message about the start.
+//    Should only be called by derived components! Must be called by any
+//    derived component!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Scanning_init(in charstring pl_tcName, in integer pl_TCidx)
+runs on VS_Scanning_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Exec_init(pl_tcName, pl_TCidx);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_reportTCVerdict
+// 
+//  Purpose:
+//    Sends the verdict of the TestCase to the statistics component.
+//
+//  Parameters:
+//    pl_wordIdx - *in* *integer* - nr. of the word in the wordlist
+//    pl_verdict - *in* *verdicttype* - the verdict to log
+//    pl_word - *in* *charstring* - the word to log
+//    pl_note - *in* *charstring* - optional note
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Converts the verdict to string and sends it to the stats component.
+//    Should only be called by derived components!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Scanning_reportTCVerdict(in integer pl_wordIdx, in verdicttype pl_verdict, in charstring pl_word, in charstring pl_note := "")
+runs on VS_Scanning_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  var charstring vl_verdict;
+
+  select (pl_verdict)
+  {
+    case (none)   { vl_verdict := "NONE" }
+    case (pass)   { vl_verdict := "PASS" }
+    case (inconc) { vl_verdict := "INCONCLUSIVE" }
+    case (fail)   { vl_verdict := "FAIL" }
+    case (error)  { vl_verdict := "ERROR" }
+  }
+
+  var charstring vl_message := int2str(v_TCidx) & "::VERDICT::" & int2str(pl_wordIdx) & "::" & vl_verdict & "::" & pl_word;
+  if (pl_note != "")
+  {
+    vl_message := vl_message & "::" & pl_note;
+  }
+  stats_PT.send(vl_message);
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_getCookie
+// 
+//  Purpose:
+//    Gets the cookie from the incoming packet.
+//
+//  Parameters:
+//    pl_msgin - *in* *HTTPMessage* - the message to analyze
+//    pl_out - *inout* *charstring* - the cookie extracted
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Gets the cookie from incoming binary or ascii based incoming packet.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Scanning_getCookie(in HTTPMessage pl_msgin, inout charstring pl_out)
+runs on VS_Scanning_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  var charstring vl_cookieName := ""
+  var charstring vl_cookieValue := ""
+  
+  if (ischosen(pl_msgin.response))
+  {
+    for (var integer vl_j := 0; vl_j < sizeof(pl_msgin.response.header); vl_j := vl_j + 1)
+    {
+      if (pl_msgin.response.header[vl_j].header_name == "Set-Cookie")
+      {//if there's a set cookie header
+        vl_cookieName := regexp(pl_msgin.response.header[vl_j].header_value, "(*)=*", 0);
+        vl_cookieValue := regexp(pl_msgin.response.header[vl_j].header_value, "*=(*)[;]#(,)*", 0);
+        
+        if (pl_out != "")
+        {//if cookie header is present
+         if (regexp(pl_out, "*(" & vl_cookieName & "=)*", 0) != "")
+          {//if the cookie name is used, update the value
+            pl_out := 
+              regexp(pl_out, "(*" & vl_cookieName & "=)*", 0) &
+              vl_cookieValue &
+              regexp(pl_out, "*" & vl_cookieName & "=*([;]#(,)*)", 0);
+          }
+          else
+          {//if the cookie is new, add it
+            pl_out :=
+              pl_out &
+              "; " & vl_cookieName & "=" & vl_cookieValue;
+          }
+        }
+        else
+        if (vl_cookieName != "" and vl_cookieValue != "")
+        {//if there's no cookie header yet
+          pl_out := vl_cookieName & "=" & vl_cookieValue;
+        }
+      }
+    }
+  }
+  else
+  if (ischosen(pl_msgin.response_binary))
+  {
+    for (var integer vl_j := 0; vl_j < sizeof(pl_msgin.response_binary.header); vl_j := vl_j + 1)
+    {
+      if (pl_msgin.response_binary.header[vl_j].header_name == "Set-Cookie")
+      {//if there's a set cookie header
+        vl_cookieName := regexp(pl_msgin.response_binary.header[vl_j].header_value, "(*)=*", 0);
+        vl_cookieValue := regexp(pl_msgin.response_binary.header[vl_j].header_value, "*=(*)[;]#(,)*", 0);
+        
+        if (pl_out != "")
+        {//if cookie header is present
+         if (regexp(pl_out, "*(" & vl_cookieName & "=)*", 0) != "")
+          {//if the cookie name is used, update the value
+            pl_out := 
+              regexp(pl_out, "(*" & vl_cookieName & "=)*", 0) &
+              vl_cookieValue &
+              regexp(pl_out, "*" & vl_cookieName & "=*([;]#(,)*)", 0);
+          }
+          else
+          {//if the cookie is new, add it
+            pl_out :=
+              pl_out &
+              "; " & vl_cookieName & "=" & vl_cookieValue;
+          }
+        }
+        else
+        if (vl_cookieName != "" and vl_cookieValue != "")
+        {//if there's no cookie header yet
+          pl_out := vl_cookieName & "=" & vl_cookieValue;
+        }
+      }
+    }
+  }
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_setCookie
+// 
+//  Purpose:
+//    Sets the cookie from the input charstring.
+//
+//  Parameters:
+//    pl_in - *in* *charstring* - the cookie to be set
+//    pl_msgout - *inout* *HTTPMessage* - the filled message
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Sets the cookie in the packet based on the charstring.
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Scanning_setCookie(in charstring pl_in, inout HTTPMessage pl_msgout)
+runs on VS_Scanning_CT
+{
+  log_debug(%definitionId & " started.");
+  log_debug(pl_in)
+  for (var integer vl_k := 0; vl_k < sizeof(pl_msgout.request.header); vl_k := vl_k + 1)
+  {
+    if (pl_msgout.request.header[vl_k].header_name == "Cookie" and pl_in != "")
+    {//if cookie header is present
+      pl_msgout.request.header[vl_k].header_value := pl_in;
+      break
+    }
+    else
+    if (vl_k == sizeof(pl_msgout.request.header) - 1 and pl_in != "")
+    {//if there's no cookie header yet
+      pl_msgout.request.header[sizeof(pl_msgout.request.header)].header_name := "Cookie";
+      pl_msgout.request.header[sizeof(pl_msgout.request.header) - 1].header_value := pl_in;
+    }
+  }
+    
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

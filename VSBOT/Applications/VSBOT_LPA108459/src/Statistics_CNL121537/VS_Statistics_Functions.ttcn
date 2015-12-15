@@ -1,0 +1,255 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Statistics_Functions
+//
+//  Purpose:
+//    This module contains the implementation of the Statistics-
+//    related functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Statistics_Definitions>
+//    <VS_Logging_Functions>
+//    <VS_Common_Definitions>
+//
+//  Detailed Comments:
+//    Every Statistics-related function should be implemented here
+//
+///////////////////////////////////////////////////////////
+
+module VS_Statistics_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Statistics_Definitions all;
+import from VS_Logging_Functions all;
+import from VS_Common_Definitions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Statistics_init
+// 
+//  Purpose:
+//    Connect the Exec PTCs' ports
+//
+//  Parameters:
+//    pl_execPTCRefs - <VS_Common_ExecPTCRefs> - the PTCs (won't be necessary
+//      if TITAN supported broadcast on ports)
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Connects the Statistics port to the Exec PTCs.
+//    Should only be called by the behavior()!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+private function f_VS_Statistics_init(VS_Common_ExecPTCRefs pl_execPTCRefs)
+runs on VS_Statistics_CT
+{
+  log_debug(%definitionId & " started.");
+
+  for (var integer vl_i := 0; vl_i < sizeof(pl_execPTCRefs); vl_i := vl_i + 1)
+  {
+    connect(self:stats_PT,pl_execPTCRefs[vl_i]:stats_PT)
+  }
+  
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Statistics_behavior
+// 
+//  Purpose:
+//    Relay messages between the Statistics and UI port
+//
+//  Parameters:
+//    pl_execPTCRefs - <VS_Common_ExecPTCRefs> - the PTCs on the other side of
+//      the Statistics port
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    -
+// 
+//  Detailed description:
+//    Relays messages between UI and Statistics port. Counts the finished
+//    components.
+//    TODO: use a database to store and cummulate statistics
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Statistics_behavior(VS_Common_ExecPTCRefs pl_execPTCRefs)
+runs on VS_Statistics_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  f_VS_Statistics_init(pl_execPTCRefs);
+
+  //for (var integer vl_i := 0; vl_i < sizeof(pl_execPTCRefs); vl_i := vl_i + 1)
+  //{
+  //  v_statsDB[sizeof(v_statsDB)] := {}
+  //}
+  
+  log_debug("Statistics collecting started.");
+  
+  var charstring vl_msg;
+  var integer vl_finished := 0;
+  
+  alt {
+  	[] stats_PT.receive("finished") {
+                                      vl_finished := vl_finished + 1;
+                            	        if (vl_finished != sizeof(pl_execPTCRefs))
+                                      {
+                                        repeat
+                                      }
+                                      else
+                                      if (tsp_startWithUI)
+                                      {
+                                        ui_PT.send("finished")
+                                      }
+                                    }
+  	[] stats_PT.receive(charstring:?/*pattern "\d#(1,)::VERDICT::*"*/) -> value vl_msg {
+            	                                              log_debug(%definitionId & ": message on stats_PT: " & vl_msg);
+            	                                              //var integer vl_tcIdx := str2int(regexp("(*)::*", vl_msg, 0));
+            	                                              //var charstring vl_verdict := regexp("*::VERDICT::(*)::*", vl_msg, 0);
+            	                                              //var charstring vl_reason := regexp("*::VERDICT::*::(*)", vl_msg, 0);
+            	                                              
+            	                                              //v_statsDB[vl_tcIdx][sizeof(v_statsDB[vl_tcIdx])] := { verdictStat := { vl_verdict, vl_reason } };
+            	                                              f_VS_Statistics_sendMessage(vl_msg);
+                                                            repeat;
+                                                          }
+    [tsp_startWithUI] ui_PT.receive(charstring:?) -> value vl_msg {
+                                                     for (var integer vl_i := 0; vl_i < sizeof(pl_execPTCRefs); vl_i := vl_i + 1)
+                                                     {
+                                                       ui_PT.send(vl_msg) to pl_execPTCRefs[vl_i]
+                                                     }
+                                                   }
+    /*[] stats_PT.receive(pattern "\d#(1,)::INTEGER::*") -> value vl_msg {
+            	                                              log_debug(%definitionId & ": message on stats_PT: " & vl_msg);
+            	                                              //var integer vl_tcIdx := str2int(regexp("(*)::*", vl_msg, 0));
+            	                                              //var integer vl_integer := str2int(regexp("*::INTEGER::(*)*", vl_msg, 0));
+            	                                              
+            	                                              //v_statsDB[vl_tcIdx][sizeof(v_statsDB[vl_tcIdx])] := { integerStat := vl_integer };
+                                                            f_VS_Statistics_sendMessage(vl_msg)
+                                                          }
+    [] stats_PT.receive(pattern "\d#(1,)::FLOAT::*") -> value vl_msg {
+            	                                            log_debug(%definitionId & ": message on stats_PT: " & vl_msg);
+            	                                            //var integer vl_tcIdx := str2int(regexp("(*)::*", vl_msg, 0));
+            	                                            //var float vl_float := str2float(regexp("*::FLOAT::(*)*", vl_msg, 0));
+            	                                            
+            	                                            //v_statsDB[vl_tcIdx][sizeof(v_statsDB[vl_tcIdx])] := { floatStat := vl_float };
+                                                          f_VS_Statistics_sendMessage(vl_msg)
+                                                        }*/
+    /*[] T_heartbeat.timeout {
+                	           log_debug(%definitionId & ": sending actual stats now...");
+                             T_heartbeat.start;
+                             for (var integer vl_i := 0; vl_i < sizeof(pl_execPTCRefs); vl_i := vl_i + 1)
+                             {
+                               ui_PT.send(v_statsDB[vl_tcIdx][sizeof(v_statsDB[vl_tcIdx]) - 1])
+                             }
+                           }
+     */
+  }
+  
+  log_debug("Statistics collecting  stopped.");
+    
+  log_debug(%definitionId & " finished.");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Scanning_sendMessage
+// 
+//  Purpose:
+//    Sends verdicts and stats to the UI.
+//
+//  Parameters:
+//    pl_message - *in* *charstring* - the message to send
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    Converts the message to output line and colors it, if coloring is turned
+//    on; or sends the verdict to the UI, if UI is configured.
+//    Should only be called by derived components!
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Statistics_sendMessage(in charstring pl_message := "")
+runs on VS_Statistics_CT
+{
+  log_debug(%definitionId & " started.");
+  
+  if (tsp_startWithUI)
+  {
+    ui_PT.send(pl_message);
+  }
+  else
+  {
+    if (regexp(pl_message, "\\d#(,)::(VERDICT)::\\d#(,)::*", 0) != "")
+    {
+      var charstring vl_verdict := regexp(pl_message, "\\d#(,)::VERDICT::\\d#(,)::(PASS|FAIL|INCONCLUSIVE|ERROR|NONE)::*", 0);
+      if (tsp_coloredBashOutput)
+      {
+        select (vl_verdict)
+        {
+          case ("NONE")   { vl_verdict := "\033[1;30;36mNONE\033[m" }
+          case ("PASS")   { vl_verdict := "\033[1;30;32mPASS\033[m" } 
+          case ("INCONCLUSIVE") { vl_verdict := "\033[1;30;33mINCONCLUSIVE\033[m" } 
+          case ("FAIL")   { vl_verdict := "\033[1;30;31mFAIL\033[m" } 
+          case ("ERROR")  { vl_verdict := "\033[1;41;37mERROR\033[m" }
+        }
+      }
+
+      var charstring vl_message := "Verdict of testCase nr." & regexp(pl_message, "(\\d#(,))::*", 0) & ", word combination nr." & regexp(pl_message, "\\d#(,)::VERDICT::(\\d#(,))*", 0) & " has been set to " & vl_verdict;
+      var charstring vl_note := regexp(pl_message, "(*)::(*)::(*)::(*)::(*)::(*)", 5);
+      if (vl_note != "")
+      {
+        vl_message := vl_message & ", reason: " & vl_note;
+      }
+      log_testcase(vl_message);
+    }
+    else
+    if (regexp(pl_message, "\\d#(,)::(INTEGER)::\\d#(,)", 0) != "")
+    {
+      var charstring vl_value := regexp(pl_message, "\\d#(,)::INTEGER::(\\d#(,))", 0);
+      if (tsp_coloredBashOutput)
+      {
+          vl_value := "\033[1;30;32m" & vl_value & "\033[m";
+      }
+
+      var charstring vl_message := "Actual packet/sec value of testCase nr." & regexp(pl_message, "(\\d#(,))::*", 0) & " is " & vl_value;
+      log_testcase(vl_message);
+    }
+  }
+  
+  log_debug(%definitionId & " finished.");
+}
+
+}  // end of module

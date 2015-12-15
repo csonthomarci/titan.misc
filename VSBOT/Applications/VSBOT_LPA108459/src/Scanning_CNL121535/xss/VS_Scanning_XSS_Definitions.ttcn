@@ -1,0 +1,115 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Scanning_XSS_Definitions
+//
+//  Purpose:
+//    This module contains the implementation of XSS
+//    related types
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <VS_Scanning_Definitions>
+//    <VS_Common_Definitions>
+//    <HTTPmsg_PortType>
+//
+//  Detailed Comments:
+//    Put every XSS-specific type here, that is used by
+//    the component
+//
+///////////////////////////////////////////////////////////
+
+module VS_Scanning_XSS_Definitions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from VS_Scanning_Definitions all;
+import from VS_Common_Definitions all;
+import from HTTPmsg_PortType all;
+
+//=========================================================================
+// Data Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Scanning_XSS_TestCaseType_XSS
+//
+//  Purpose:
+//	  List of XSS attacksteps
+//
+//  Elements:
+//    <VS_Scanning_XSS_TestCaseType_XSSAttackStep> - the
+//      elements
+//
+//  Detailed Comments:
+//    Will be used in the configs and scanning
+//
+///////////////////////////////////////////////////////////
+
+type record of VS_Scanning_XSS_TestCaseType_XSSAttackStep VS_Scanning_XSS_TestCaseType_XSS
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Scanning_XSS_TestCaseType_XSSAttackStep
+//
+//  Purpose:
+//	  An XSS attack step
+//
+//  Elements:
+//    templateParameters - <VS_Common_WordCombination> - the
+//      keywords to substitute
+//    HTTPMessageType - <VS_Common_HTTPMessageUnion> - the
+//      message itself
+//    testResults - <VS_Common_MixedResults> - optional,
+//      the result to match
+//
+//  Detailed Comments:
+//    Will be used in configs and scanning, timerResult
+//    is not supported
+//
+///////////////////////////////////////////////////////////
+
+type record VS_Scanning_XSS_TestCaseType_XSSAttackStep
+{
+  VS_Common_WordCombination templateParameters optional,
+  VS_Common_HTTPMessageUnion HTTPMessageType,
+  VS_Common_MixedResults testResults optional
+}
+
+//=========================================================================
+//Component Types
+//=========================================================================
+
+///////////////////////////////////////////////////////////
+//  Type: VS_Scanning_XSS_CT
+//
+//  Purpose:
+//	  An XSS component
+//
+//  Elements:
+//    -
+//
+//  Detailed Comments:
+//    Extends the VS_Scanning_CT component
+//
+///////////////////////////////////////////////////////////
+
+type component VS_Scanning_XSS_CT
+extends VS_Scanning_CT
+{
+  port HTTPmsg_PT msg_PT;
+}
+
+}  // end of module

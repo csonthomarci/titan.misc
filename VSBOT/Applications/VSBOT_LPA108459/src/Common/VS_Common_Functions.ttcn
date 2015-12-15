@@ -1,0 +1,85 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+///////////////////////////////////////////////////////////
+//  Module: VS_Common_Functions
+//
+//  Purpose:
+//    This module contains the implementation of common
+//    functions
+//
+//  Module Parameters:
+//    -
+//
+//  Module depends on:
+//    <TCCConversion_Functions>
+//    <VS_Logging_Functions>
+//
+//  Detailed Comments:
+//    Implementations of common functions.
+//
+///////////////////////////////////////////////////////////
+
+module VS_Common_Functions
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from TCCConversion_Functions all;
+import from VS_Logging_Functions all;
+
+//=========================================================================
+// Functions
+//=========================================================================
+
+///////////////////////////////////////////////////////////////////////////////
+//  Function: f_VS_Common_incIPv4
+// 
+//  Purpose:
+//    Add 1 to IP.
+//
+//  Parameters:
+//    pl_ip- *inout* *charstring* - IP to inc
+// 
+//  Return Value:
+//    -
+//
+//  Errors:
+//    - 
+// 
+//  Detailed description:
+//    -
+// 
+///////////////////////////////////////////////////////////////////////////////
+
+function f_VS_Common_incIPv4(inout charstring pl_ip)
+{
+  var octetstring vl_return := f_OctetIpv4(pl_ip);
+
+  if (f_compOctetstring(vl_return, 'FFFFFFFF'O) == 2)
+  {
+    vl_return := f_addOctetstring(vl_return, '01'O);
+  }
+  else
+  {
+    log_warning("The IP can't be inc'd on, it has reached 255.255.255.255!");
+  }
+
+  pl_ip := int2str(oct2int(vl_return[0]));
+  
+  for (var integer vl_i := 1; vl_i < 4; vl_i := vl_i + 1)
+  {
+    pl_ip := pl_ip & "." & int2str(oct2int(vl_return[vl_i]));
+  }
+}
+
+}  // end of module

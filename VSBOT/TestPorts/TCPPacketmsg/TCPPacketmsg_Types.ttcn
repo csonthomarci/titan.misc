@@ -1,0 +1,42 @@
+/******************************************************************************
+* Copyright (c) 2004, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributor: david.ferenc.vranics@ericsson.com
+******************************************************************************/
+
+module TCPPacketmsg_Types {
+
+type record TCPPacket {
+  IPHeader IP,
+  TCPHeader TCP
+};
+
+type record IPHeader {
+  charstring src,
+  charstring dst
+};
+
+type record TCPHeader { //Based on tcphdr struct from C
+  integer src optional,
+  integer dst,
+  integer seq optional,
+  integer ackseq optional,
+  integer doff optional,
+  integer res1 optional,
+  integer res2 optional,
+  integer urg optional,
+  integer ack optional,
+  integer psh optional,
+  integer rst optional,
+  integer syn optional,
+  integer fin optional,
+  integer window optional,  
+  integer checksum optional,
+  integer urgptr optional
+};
+
+}
