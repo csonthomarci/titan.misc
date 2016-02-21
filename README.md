@@ -6,6 +6,9 @@ VSBOT is a Vulnerability Scanner Based On TTCN-3. Currently scans for web applic
 The execution is based on TTCN-3 code executed by Titan, with a number of building blocks from the Titan toolbox(test ports etc.)  and it also has a Python-based GUI.
 
 
+Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
+will have to be issued.
+
 
 Main project page:
 
