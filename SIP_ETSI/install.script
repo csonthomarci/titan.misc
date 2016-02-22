@@ -1,18 +1,18 @@
 #!/bin/sh
-ln  -s TestPorts/SIPmsg/lex.SIP_parse_.c  .
-ln  -s TestPorts/SIPmsg/SIPmsg_PortType.ttcn .
-ln  -s TestPortsSIPmsg/SIPmsg_PT.cc .
-ln  -s TestPortsSIPmsg/SIPmsg_PT.hh .
-ln  -s TestPortsSIPmsg/SIPmsg_Types.ttcn .
-ln  -s TestPortsSIPmsg/SIP_parse.h .
-ln  -s TestPortsSIPmsg/SIP_parse_.tab.c .
-ln  -s TestPortsSIPmsg/SIP_parse_.tab.h .
+ln  -s TestPorts/SIPmsg/src/lex.SIP_parse_.c  .
+ln  -s TestPorts/SIPmsg/src/SIPmsg_PortType.ttcn .
+ln  -s TestPorts/SIPmsg/src/SIPmsg_PT.cc .
+ln  -s TestPorts/SIPmsg/src/SIPmsg_PT.hh .
+ln  -s TestPorts/SIPmsg/src/SIPmsg_Types.ttcn .
+ln  -s TestPorts/SIPmsg/src/SIP_parse.h .
+ln  -s TestPorts/SIPmsg/src/SIP_parse_.tab.c .
+ln  -s TestPorts/SIPmsg/src/SIP_parse_.tab.h .
 
 
-ln -s  Libraries/TCCUsefulFunctions/TCCDateTime.cc .
-ln -s  Libraries/TCCUsefulFunctions/TCCDateTime_Functions.ttcn
-ln -s  Libraries/TCCUsefulFunctions/TCCConversion.cc .
-ln -s  Libraries/TCCUsefulFunctions/TCCConversion_Functions.ttcn
-ln -s  Libraries/TCCUsefulFunctions/TCCInterface.cc .
-ln -s  Libraries/TCCUsefulFunctions/TCCInterface_Functions.ttcn
-ln -s  Libraries/TCCUsefulFunctions/TCCInterface_ip.h
+ln -s  Libraries/TCCUsefulFunctions/src/TCCDateTime.cc .
+ln -s  Libraries/TCCUsefulFunctions/src/TCCDateTime_Functions.ttcn
+ln -s  Libraries/TCCUsefulFunctions/src/TCCConversion.cc .
+ln -s  Libraries/TCCUsefulFunctions/src/TCCConversion_Functions.ttcn
+ln -s  Libraries/TCCUsefulFunctions/src/TCCInterface.cc .
+ln -s  Libraries/TCCUsefulFunctions/src/TCCInterface_Functions.ttcn
+ln -s  Libraries/TCCUsefulFunctions/src/TCCInterface_ip.h
