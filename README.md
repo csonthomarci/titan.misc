@@ -10,6 +10,13 @@ Note: As this repository includes submodules, after cloning it, a 'git submodule
 will have to be issued.
 
 
+SIP_ETSI is based on Session Initiation Protocol (SIP) Test Suite  (http://www.ttcn-3.org/index.php/downloads/publicts/publicts-etsi/27-publicts-sip)  
+edited to be compatible with Titan and the SIPmsg test port.
+
+Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
+will have to be issued.
+
+
 Main project page:
 
 https://projects.eclipse.org/projects/tools.titan
