@@ -1,0 +1,2296 @@
+/*
+//-----------------------------------------------------------------------------
+//AUTHOR:      Gyorgy Rethy, L.M. Ericsson (STF296, STF270, STF246, STF196, STF166)
+//DATE:        September 2007
+//VERSION:     4.2.1
+//
+//RTS/MTS -3
+//
+//Methods for Testing and Specification (MTS);
+//Conformance Test Specification for SIP (RFC32361);
+//Part 3: Abstract Test Suite (TTCN-3 code)
+//
+//(c) European Telecommunications Standards Institute 2001.
+//All rights reserved.
+//
+//-----------------------------------------------------------------------------
+//HISTORY: ---> see History in SIP_MainModule.ttcn
+//
+//References
+//The following documents contain provisions which, through reference in this text, constitute provisions of the present document.
+//- References are either specific (identified by date of publication, edition number, version number, etc.) or non-specific.
+//- For a specific reference, subsequent revisions do not apply.
+//- For a non-specific reference, the latest version applies.
+//- A non-specific reference to an ETS shall also be taken to refer to later versions published as an EN with the same number.
+//[1]  RFC 3261, "Session Description Protocol", SDP: Session Description Protocol. M. Handley, V. Jacobson. April 1998. (Status: PROPOSED STANDARD).
+//[3]  ISO/IEC 9646-1: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 1: General concepts
+//[4]  ISO/IEC 9646-2: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 2: Abstract Test Suite specification".
+//[5] ISO/IEC 9646-3: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 3: The Tree and Tabular Combined Notation".
+//[6]  ETS 300 406: "Methods for Testing and Specification (MTS); Protocol and profile conformance testing specifications; Standardization methodology".
+*/
+
+//**************************************************************************************************
+//compiled with Titan 5 R4C 2016.02.22 Elemer Lelik
+//**************************************************************************************************
+
+
+module SIP_TypesAndConf {
+
+import from SIPmsg_Types all;
+import from SIPmsg_PortType all;
+
+modulepar TestCaseSelectionArray par_selection:= {
+  {tc_name:="SIP_CC_OE_CE_TI_001", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_002", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_003", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_004", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_005", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_006", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_007", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_008", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_009", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_010", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_011", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_TI_012", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_001", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_002", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_003", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_004", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_005", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_006", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_007", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_008", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_009", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_010", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_011", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_012", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_013", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_014", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_015", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_016", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_017", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_018", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_019", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_020", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_021", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_022", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_023", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_024", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_025", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_026", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_027", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_028", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_029", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_030", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_031", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_032", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_033", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_034", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_035", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_036", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_037", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_038", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_039", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_040", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_041", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_042", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_043", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_044", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_045", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_046", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_047", selection:= false},
+  {tc_name:="SIP_CC_OE_CE_V_048", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_I_001", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_001", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_002", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_003", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_004", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_005", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_006", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_007", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_TI_008", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_001", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_002", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_003", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_004", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_005", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_006", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_007", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_008", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_009", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_010", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_011", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_012", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_013", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_014", selection:= false},
+  {tc_name:="SIP_CC_OE_CR_V_015", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_I_001", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_I_002", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_I_003", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_I_004", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_001", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_002", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_003", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_004", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_005", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_006", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_007", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_008", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_009", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_010", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_011", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_012", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_013", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_014", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_015", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_016", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_017", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_018", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_019", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_020", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_021", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_022", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_023", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_024", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_025", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_026", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_027", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_028", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_029", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_030", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_031", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_032", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_033", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_034", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_035", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_036", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_037", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_038", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_039", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_040", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_041", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_042", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_043", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_044", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_045", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_046", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_047", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_048", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_049", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_050", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_051", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_052", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_053", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_054", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_055", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_056", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_057", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_058", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_059", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_060", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_061", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_062", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_063", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_064", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_065", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_066", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RQ_V_067", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_001", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_002", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_003", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_004", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_005", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_006", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_007", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_008", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_009", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_010", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_011", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_012", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_013", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_014", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_015", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_016", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_017", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_018", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_019", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_020", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_021", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_022", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_023", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_024", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_025", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_026", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_027", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_028", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_029", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_030", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_031", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_032", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_033", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_034", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_035", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_036", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_037", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_038", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_039", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_040", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_041", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_042", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_043", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_044", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_045", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_046", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_047", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_048", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_049", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_050", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_051", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_052", selection:= false},
+  {tc_name:="SIP_CC_PR_MP_RS_V_053", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_001", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_002", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_003", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_004", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_005", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_006", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_007", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_008", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_009", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_010", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_011", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_012", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_013", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_014", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_015", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_016", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_017", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_018", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_TI_019", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_001", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_002", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_003", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_004", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_005", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_006", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_007", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_008", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_009", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_010", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_CL_V_011", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_001", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_002", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_003", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_004", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_005", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_006", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_007", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_008", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_TI_009", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_001", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_002", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_003", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_004", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_005", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_006", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_007", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_008", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_009", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_010", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_011", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_012", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_013", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_014", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_015", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_016", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_017", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_018", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_019", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_020", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_021", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_022", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_023", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_024", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_025", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_026", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_027", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_028", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_029", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_030", selection:= false},
+  {tc_name:="SIP_CC_PR_TR_SE_V_031", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_001", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_002", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_003", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_004", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_005", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_006", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_007", selection:= false},
+  {tc_name:="SIP_CC_RD_CE_V_008", selection:= false},
+  {tc_name:="SIP_CC_RD_CR_V_001", selection:= false},
+  {tc_name:="SIP_CC_RD_CR_V_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_I_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_I_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_003", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_004", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_005", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_006", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_007", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_008", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_009", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_010", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_011", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_TI_012", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_003", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_004", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_005", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_006", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_007", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_008", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_009", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_010", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_011", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_012", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_013", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_014", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_015", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_016", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_017", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_018", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_019", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_020", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_021", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_022", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_023", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_024", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_025", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_026", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_027", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_028", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_029", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_030", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_031", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_032", selection:= false},
+  {tc_name:="SIP_CC_TE_CE_V_033", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_I_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_I_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_I_003", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_I_004", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_I_005", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_TI_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_001", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_002", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_003", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_004", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_005", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_006", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_007", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_008", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_009", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_010", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_011", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_012", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_013", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_014", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_015", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_016", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_017", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_018", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_019", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_020", selection:= false},
+  {tc_name:="SIP_CC_TE_CR_V_021", selection:= false},
+  {tc_name:="SIP_CC_TE_SM_I_001", selection:= false},
+  {tc_name:="SIP_CC_TE_SM_V_001", selection:= false},
+  {tc_name:="SIP_CC_TE_SM_V_002", selection:= false},
+  {tc_name:="SIP_CC_TE_SM_V_003", selection:= false},
+  {tc_name:="SIP_MG_OE_I_001", selection:= false},
+  {tc_name:="SIP_MG_OE_I_002", selection:= false},
+  {tc_name:="SIP_MG_OE_I_003", selection:= false},
+  {tc_name:="SIP_MG_OE_I_004", selection:= false},
+  {tc_name:="SIP_MG_OE_I_005", selection:= false},
+  {tc_name:="SIP_MG_OE_I_006", selection:= false},
+  {tc_name:="SIP_MG_OE_I_007", selection:= false},
+  {tc_name:="SIP_MG_OE_I_008", selection:= false},
+  {tc_name:="SIP_MG_OE_I_009", selection:= false},
+  {tc_name:="SIP_MG_OE_I_010", selection:= false},
+  {tc_name:="SIP_MG_OE_V_001", selection:= false},
+  {tc_name:="SIP_MG_OE_V_002", selection:= false},
+  {tc_name:="SIP_MG_OE_V_003", selection:= false},
+  {tc_name:="SIP_MG_OE_V_004", selection:= false},
+  {tc_name:="SIP_MG_OE_V_005", selection:= false},
+  {tc_name:="SIP_MG_OE_V_006", selection:= false},
+  {tc_name:="SIP_MG_OE_V_007", selection:= false},
+  {tc_name:="SIP_MG_OE_V_008", selection:= false},
+  {tc_name:="SIP_MG_OE_V_009", selection:= false},
+  {tc_name:="SIP_MG_OE_V_010", selection:= false},
+  {tc_name:="SIP_MG_OE_V_011", selection:= false},
+  {tc_name:="SIP_MG_OE_V_012", selection:= false},
+  {tc_name:="SIP_MG_OE_V_013", selection:= false},
+  {tc_name:="SIP_MG_OE_V_014", selection:= false},
+  {tc_name:="SIP_MG_OE_V_015", selection:= false},
+  {tc_name:="SIP_MG_PR_I_001", selection:= false},
+  {tc_name:="SIP_MG_PR_I_002", selection:= false},
+  {tc_name:="SIP_MG_PR_I_003", selection:= false},
+  {tc_name:="SIP_MG_PR_I_004", selection:= false},
+  {tc_name:="SIP_MG_PR_I_005", selection:= false},
+  {tc_name:="SIP_MG_PR_I_006", selection:= false},
+  {tc_name:="SIP_MG_PR_I_007", selection:= false},
+  {tc_name:="SIP_MG_PR_I_008", selection:= false},
+  {tc_name:="SIP_MG_PR_I_009", selection:= false},
+  {tc_name:="SIP_MG_PR_I_010", selection:= false},
+  {tc_name:="SIP_MG_PR_V_001", selection:= false},
+  {tc_name:="SIP_MG_PR_V_002", selection:= false},
+  {tc_name:="SIP_MG_PR_V_003", selection:= false},
+  {tc_name:="SIP_MG_PR_V_004", selection:= false},
+  {tc_name:="SIP_MG_PR_V_005", selection:= false},
+  {tc_name:="SIP_MG_PR_V_006", selection:= false},
+  {tc_name:="SIP_MG_PR_V_007", selection:= false},
+  {tc_name:="SIP_MG_PR_V_008", selection:= false},
+  {tc_name:="SIP_MG_PR_V_009", selection:= false},
+  {tc_name:="SIP_MG_PR_V_010", selection:= false},
+  {tc_name:="SIP_MG_PR_V_011", selection:= false},
+  {tc_name:="SIP_MG_PR_V_012", selection:= false},
+  {tc_name:="SIP_MG_PR_V_013", selection:= false},
+  {tc_name:="SIP_MG_PR_V_014", selection:= false},
+  {tc_name:="SIP_MG_PR_V_015", selection:= false},
+  {tc_name:="SIP_MG_PR_V_016", selection:= false},
+  {tc_name:="SIP_MG_RD_I_001", selection:= false},
+  {tc_name:="SIP_MG_RD_I_002", selection:= false},
+  {tc_name:="SIP_MG_RD_I_003", selection:= false},
+  {tc_name:="SIP_MG_RD_I_004", selection:= false},
+  {tc_name:="SIP_MG_RD_I_005", selection:= false},
+  {tc_name:="SIP_MG_RD_I_006", selection:= false},
+  {tc_name:="SIP_MG_RD_I_007", selection:= false},
+  {tc_name:="SIP_MG_RD_I_008", selection:= false},
+  {tc_name:="SIP_MG_RD_V_001", selection:= false},
+  {tc_name:="SIP_MG_RD_V_002", selection:= false},
+  {tc_name:="SIP_MG_RD_V_003", selection:= false},
+  {tc_name:="SIP_MG_RD_V_004", selection:= false},
+  {tc_name:="SIP_MG_RD_V_005", selection:= false},
+  {tc_name:="SIP_MG_RD_V_006", selection:= false},
+  {tc_name:="SIP_MG_RD_V_007", selection:= false},
+  {tc_name:="SIP_MG_RD_V_008", selection:= false},
+  {tc_name:="SIP_MG_RD_V_009", selection:= false},
+  {tc_name:="SIP_MG_RD_V_010", selection:= false},
+  {tc_name:="SIP_MG_RD_V_011", selection:= false},
+  {tc_name:="SIP_MG_RD_V_012", selection:= false},
+  {tc_name:="SIP_MG_RD_V_013", selection:= false},
+  {tc_name:="SIP_MG_RD_V_014", selection:= false},
+  {tc_name:="SIP_MG_RR_I_001", selection:= false},
+  {tc_name:="SIP_MG_RR_I_002", selection:= false},
+  {tc_name:="SIP_MG_RR_I_003", selection:= false},
+  {tc_name:="SIP_MG_RR_I_004", selection:= false},
+  {tc_name:="SIP_MG_RR_I_005", selection:= false},
+  {tc_name:="SIP_MG_RR_I_006", selection:= false},
+  {tc_name:="SIP_MG_RR_V_001", selection:= false},
+  {tc_name:="SIP_MG_RR_V_002", selection:= false},
+  {tc_name:="SIP_MG_RR_V_003", selection:= false},
+  {tc_name:="SIP_MG_RR_V_004", selection:= false},
+  {tc_name:="SIP_MG_RR_V_005", selection:= false},
+  {tc_name:="SIP_MG_RR_V_006", selection:= false},
+  {tc_name:="SIP_MG_RR_V_007", selection:= false},
+  {tc_name:="SIP_MG_RR_V_008", selection:= false},
+  {tc_name:="SIP_MG_RR_V_009", selection:= false},
+  {tc_name:="SIP_MG_RR_V_010", selection:= false},
+  {tc_name:="SIP_MG_RR_V_011", selection:= false},
+  {tc_name:="SIP_MG_RR_V_012", selection:= false},
+  {tc_name:="SIP_MG_RR_V_013", selection:= false},
+  {tc_name:="SIP_MG_RT_I_001", selection:= false},
+  {tc_name:="SIP_MG_RT_I_002", selection:= false},
+  {tc_name:="SIP_MG_RT_I_003", selection:= false},
+  {tc_name:="SIP_MG_RT_I_004", selection:= false},
+  {tc_name:="SIP_MG_RT_I_005", selection:= false},
+  {tc_name:="SIP_MG_RT_V_001", selection:= false},
+  {tc_name:="SIP_MG_RT_V_002", selection:= false},
+  {tc_name:="SIP_MG_RT_V_003", selection:= false},
+  {tc_name:="SIP_MG_RT_V_004", selection:= false},
+  {tc_name:="SIP_MG_RT_V_005", selection:= false},
+  {tc_name:="SIP_MG_RT_V_006", selection:= false},
+  {tc_name:="SIP_MG_RT_V_007", selection:= false},
+  {tc_name:="SIP_MG_RT_V_008", selection:= false},
+  {tc_name:="SIP_MG_TE_I_001", selection:= false},
+  {tc_name:="SIP_MG_TE_I_002", selection:= false},
+  {tc_name:="SIP_MG_TE_I_003", selection:= false},
+  {tc_name:="SIP_MG_TE_I_004", selection:= false},
+  {tc_name:="SIP_MG_TE_I_005", selection:= false},
+  {tc_name:="SIP_MG_TE_I_006", selection:= false},
+  {tc_name:="SIP_MG_TE_I_007", selection:= false},
+  {tc_name:="SIP_MG_TE_I_008", selection:= false},
+  {tc_name:="SIP_MG_TE_V_001", selection:= false},
+  {tc_name:="SIP_MG_TE_V_002", selection:= false},
+  {tc_name:="SIP_MG_TE_V_003", selection:= false},
+  {tc_name:="SIP_MG_TE_V_004", selection:= false},
+  {tc_name:="SIP_MG_TE_V_005", selection:= false},
+  {tc_name:="SIP_MG_TE_V_006", selection:= false},
+  {tc_name:="SIP_MG_TE_V_007", selection:= false},
+  {tc_name:="SIP_MG_TE_V_008", selection:= false},
+  {tc_name:="SIP_MG_TE_V_009", selection:= false},
+  {tc_name:="SIP_MG_TE_V_010", selection:= false},
+  {tc_name:="SIP_MG_TE_V_011", selection:= false},
+  {tc_name:="SIP_MG_TE_V_012", selection:= false},
+  {tc_name:="SIP_MG_TE_V_013", selection:= false},
+  {tc_name:="SIP_MG_TE_V_014", selection:= false},
+  {tc_name:="SIP_MG_TE_V_015", selection:= false},
+  {tc_name:="SIP_RG_RR_I_001", selection:= false},
+  {tc_name:="SIP_RG_RR_I_002", selection:= false},
+  {tc_name:="SIP_RG_RR_I_003", selection:= false},
+  {tc_name:="SIP_RG_RR_I_004", selection:= false},
+  {tc_name:="SIP_RG_RR_O_001", selection:= false},
+  {tc_name:="SIP_RG_RR_O_002", selection:= false},
+  {tc_name:="SIP_RG_RR_O_003", selection:= false},
+  {tc_name:="SIP_RG_RR_V_001", selection:= false},
+  {tc_name:="SIP_RG_RR_V_002", selection:= false},
+  {tc_name:="SIP_RG_RR_V_003", selection:= false},
+  {tc_name:="SIP_RG_RR_V_004", selection:= false},
+  {tc_name:="SIP_RG_RR_V_005", selection:= false},
+  {tc_name:="SIP_RG_RR_V_006", selection:= false},
+  {tc_name:="SIP_RG_RR_V_007", selection:= false},
+  {tc_name:="SIP_RG_RR_V_008", selection:= false},
+  {tc_name:="SIP_RG_RR_V_009", selection:= false},
+  {tc_name:="SIP_RG_RR_V_010", selection:= false},
+  {tc_name:="SIP_RG_RR_V_011", selection:= false},
+  {tc_name:="SIP_RG_RR_V_012", selection:= false},
+  {tc_name:="SIP_RG_RR_V_013", selection:= false},
+  {tc_name:="SIP_RG_RR_V_014", selection:= false},
+  {tc_name:="SIP_RG_RR_V_015", selection:= false},
+  {tc_name:="SIP_RG_RR_V_016", selection:= false},
+  {tc_name:="SIP_RG_RR_V_017", selection:= false},
+  {tc_name:="SIP_RG_RR_V_018", selection:= false},
+  {tc_name:="SIP_RG_RR_V_019", selection:= false},
+  {tc_name:="SIP_RG_RT_V_001", selection:= false},
+  {tc_name:="SIP_RG_RT_V_002", selection:= false},
+  {tc_name:="SIP_RG_RT_V_003", selection:= false},
+  {tc_name:="SIP_RG_RT_V_004", selection:= false},
+  {tc_name:="SIP_RG_RT_V_005", selection:= false},
+  {tc_name:="SIP_RG_RT_V_006", selection:= false},
+  {tc_name:="SIP_RG_RT_V_007", selection:= false},
+  {tc_name:="SIP_RG_RT_V_008", selection:= false},
+  {tc_name:="SIP_RG_RT_V_009", selection:= false},
+  {tc_name:="SIP_RG_RT_V_010", selection:= false},
+  {tc_name:="SIP_RG_RT_V_011", selection:= false},
+  {tc_name:="SIP_RG_RT_V_012", selection:= false},
+  {tc_name:="SIP_RG_RT_V_013", selection:= false}
+}
+
+
+
+
+group SIP_PICs_PIXITs {
+  group PICS_Items {
+    
+    // PICS question
+    // TRUE if
+    // PC_UAS : IUT behaves as UAS
+    modulepar boolean PC_UAS := true
+    with {extension "Description: Does IUT behaves as UA Server ?"}
+    
+    // PC_UAC : IUT behaves as UAC
+    modulepar boolean PC_UAC := true
+    with {extension "Description: Does IUT behaves as UA Client ?"}
+    
+    // PC_UA : IUT behaves as UA
+    modulepar boolean PC_UA := true
+    with {extension "Description: Does IUT behaves as UA ?"}
+    
+    // PC_PROXY : IUT behaves as a Proxy
+    modulepar boolean PC_PROXY := true
+    with {extension "Description: Does IUT behaves as a Proxy ?"}
+    
+    // PC_STATELESS : IUT is a stateless PROXY otherwise stateful
+    modulepar boolean PC_STATELESS := true
+    with {extension "Description: Does IUT behaves as stateless PROXY (otherwise stateful) ?"}
+    
+    // PC_REDIRECTS : IUT behaves as a redirect server
+    modulepar boolean PC_REDIRECTS := true
+    with {extension "Description: Does IUT behaves as a redirect server ?"}
+    
+    // PC_REGISTRATION : IUT supports Registration procedure
+    modulepar boolean PC_REGISTRATION := true
+    with {extension "Description: Does IUT (UA) supports Registration procedure ?"}
+    
+    // PC_PRECONFIGURED_REGISTRAR : IUT uses its configuration to determine its registrar address
+    // This one has to be set to the Local ETS domain
+    modulepar boolean PC_PRECONFIGURED_REGISTRAR := false
+    with {extension "Description: Does IUT uses its configuration to determine its registrar address ?"}
+    
+    // PC_ADDR_RECORD_REGISTRAR : IUT uses address-of-record to determine its registrar address
+    modulepar boolean PC_ADDR_RECORD_REGISTRAR := false
+    with {extension  "Description: Does IUT uses address-of-record to determine its registrar address ?"}
+    
+    // PC_MULTICAST_REGISTRAR : IUT uses multicast to determine its registrar address
+    modulepar boolean PC_MULTICAST_REGISTRAR := false
+    with {extension "Description: Does IUT uses multicast to determine its registrar address ?"}
+    
+    // PC_THIRD_PARTY : IUT supports third party registration
+    modulepar boolean PC_THIRD_PARTY := false
+    with {extension "Description: Does IUT supports third party registration ?"}
+    
+    // PC_SHOULD : IUT supports SHOULD requirements of RFC3261 [1]
+    modulepar boolean PC_SHOULD := false
+    with {extension "Description: Does IUT supports SHOULD requirements of RFC3261 [1] ?"}
+    
+    // PC_REDIRECTION : IUT is able to manage redirection message for INVITE transaction
+    modulepar boolean PC_REDIRECTION := false
+    with {extension "Description: Does IUT is able to manage redirection message for INVITE transaction ?"}
+    
+    // PC_FORK : IUT forks when target set contains more than one contact (q parameter used)
+    modulepar boolean PC_FORK := false
+    with {extension "Description: Does IUT forks when target set contains more than one contact (q parameter used) ?"}
+    
+    
+  } //end group PICS_items
+  
+  group PIXIT_Items {
+    group AddressInfo_Test_System {
+      
+      // Display name used by the ETS to excahnge SIP messages on MTC side
+      modulepar charstring PX_ETS_DISP_NAME := "TESTER1"
+      with {extension "Description: Display name 1 used by the ETS to exchange SIP messages"}
+      
+      // IP address used by the ETS to exchange SIP messages
+      // on MTC side
+      modulepar charstring PX_ETS_IPADDR := "127.0.0.1"
+      with {extension "Description: IP address 1 used by the ETS to exchange SIP messages"}
+      
+      // Port number used by the ETS to exchange SIP messages
+      // on MTC side
+      modulepar integer PX_ETS_PORT := 5061
+      with {extension "Description: Port number 1 used by the ETS to exchange SIP messages"}
+      
+      // Display name used by the ETS to excahnge SIP messages on MTC side
+      modulepar charstring PX_ETS_DISP_NAME2 := "TESTER2"
+      with {extension "Description: Display name 1 used by the ETS to exchange SIP messages"}
+      
+      // IP address used by the ETS to exchange SIP messages
+      // on PTC side
+      modulepar charstring PX_ETS_IPADDR2 := "127.0.0.1"
+      with {extension "Description: IP address 2 used by the ETS to exchange SIP messages"}
+      
+      // Port number used by the ETS to exchange SIP messages
+      // on PTC side
+      modulepar integer PX_ETS_PORT2 := 5062
+      with {extension "Description: Port number 2 used by the ETS to exchange SIP messages"}
+      
+      // IP address used by the ETS to exchange SIP messages
+      // on PTC2 side
+      modulepar charstring PX_ETS_IPADDR3 := "127.0.0.1"
+      with {extension "Description: IP address 3 used by the ETS to exchange SIP messages"}
+      
+      // Port number used by the ETS to exchange SIP messages
+      // on PTC2 side
+      modulepar integer PX_ETS_PORT3 := 5063
+      with {extension "Description: Port number 3 used by the ETS to exchange SIP messages"}
+      
+      // Default IP address used in Routes or in 305 Response
+      modulepar charstring PX_PROXY_IPADDR := "127.0.01"
+      with {extension "Description: IP address 1 used by the ETS to exchange SIP messages"}
+      
+      // Default port number used in Routes or in 305 Response
+      modulepar integer PX_PROXY_PORT := 5060
+      with {extension "Description: Default port number of Proxy used in Routes or in 305 Response"}
+      
+      // PX_ETS_LOCAL_USER : identity of the tester local user
+      // on MTC side
+      modulepar charstring PX_ETS_LOCAL_USER := "LOCAL_USER1"
+      with {extension "Description: Identity 1 of the tester local user"}
+      
+      // PX_ETS_LOCAL_DOMAIN : identity of the tester local domain
+      // on MTC side
+      modulepar charstring PX_ETS_LOCAL_DOMAIN
+      with {extension "Description: Identity 1 of the tester local domain"}
+      
+      // PX_ETS_LOCAL_USER2 : identity of the tester local user
+      // on PTC side
+      modulepar charstring PX_ETS_LOCAL_USER2 := "LOCAL_USER2"
+      with {extension "Description: Identity 2 of the tester local user"}
+      
+      // PX_ETS_LOCAL_USER2_TEL : identity of the tester local user OR telephone number
+      // on PTC side
+      modulepar charstring PX_ETS_LOCAL_USER2_TEL := "11223344"
+      with {extension "Description: Identity of the tester local user OR telephone number"}
+      
+      // PX_ETS_LOCAL_DOMAIN2 : identity of the tester local domain
+      // on MTC or PTC side
+      modulepar charstring PX_ETS_LOCAL_DOMAIN2
+      with {extension "Description: Identity 2 of the tester local domain"}
+      
+      
+      // PX_ETS_UNAUTHORIZED_USER : identity of the tester local user
+      // on MTC side which is not authorized to update registration
+      modulepar charstring PX_ETS_UNAUTHORIZED_USER := "LOCAL UNAUTHORIZED_USER"
+      with {extension "Description: Identity of the tester local user which is not authorized to update registration"}
+      
+      // PX_ETS_LOCAL_THIRD_USER : identity of another tester local user
+      // (third party tester)
+      modulepar charstring PX_ETS_LOCAL_THIRD_USER := "LOCAL_THIRD_USER"
+      with {extension "Description: Identity of another tester local user (third party tester)"}
+      
+    } //end group AddressInfo_Test_System
+    
+    group AddressInfo_IUT {
+      
+      // IUT IP address to exchange SIP messages
+      modulepar charstring PX_IUT_IPADDR := "127.0.0.1"
+      with {extension "Description: IUT IP address 1 to exchange SIP messages"}
+      
+      // IUT port number to exchange SIP messages
+      modulepar integer PX_IUT_PORT := 5060
+      with {extension "Description: IUT port number 1 to exchange SIP messages"}
+      
+      // IUT domain
+      modulepar charstring PX_IUT_HOME_DOMAIN
+      with {extension "Description: Default Home Domain used by the IUT to exchange SIP messages."}
+      
+      // Additional IUT IP address to exchange SIP messages
+      // on PTC side
+      modulepar charstring PX_IUT_IPADDR2 := "127.0.0.1"
+      with {extension "Description: IUT IP address 2 to exchange SIP messages."}
+      
+      // Additionnal IUT port number to exchange SIP messages
+      // on PTC side
+      modulepar integer PX_IUT_PORT2 := 5061
+      with {extension "Description: IUT port number 2 to exchange SIP messages"}
+      
+      // Additional IUT IP address to exchange SIP messages
+      // on PTC2 side
+      modulepar charstring PX_IUT_IPADDR3 := "127.0.0.1"
+      with {extension "Description: IUT IP address 3 to exchange SIP messages"}
+      
+      // Additionnal IUT port number to exchange SIP messages
+      // on PTC2 side
+      modulepar integer PX_IUT_PORT3 := 5062
+      with {extension "Description: IUT port number 3 to exchange SIP messages"}
+      
+      // PX_TE_CALLEE_USERINFO : userinfo of the callee when IUT is the callee
+      modulepar charstring PX_TE_CALLEE_USERINFO := "CALLEE_USERINFO"
+      with {extension "Description: Userinfo of the callee when IUT is the callee"}
+      
+      // PX_TE_CALLEE_DOMAIN : hostname of the callee when IUT is the callee
+      modulepar charstring PX_TE_CALLEE_DOMAIN
+      with {extension "Description: Hostname of the callee when IUT is the callee"}
+      
+    } //end group AddressInfo_IUT
+    
+    group Registration {
+      
+      // PX_HOME_REGISTRATION : IUT needs to register itself to its home registar first
+      modulepar boolean PX_HOME_REGISTRATION := false
+      with {extension "Description: Does IUT needs to register itself to its home registar first ?"}
+      
+      // PX_PR_MTC_REGISTRATION : Does the ETS has to register itself before running proxy test case on MTC side (Sender of the INVITE)?
+      modulepar boolean PX_PR_MTC_REGISTRATION := false
+      with {extension "Description: Does the ETS has to register itself before running proxy test case (Sender of the INVITE) ?"}
+      
+      // PX_PR_PTC_REGISTRATION : Does the ETS has to register itself before running proxy test case on PTC side (receiver of the INVITE)?
+      modulepar boolean PX_PR_PTC_REGISTRATION := false
+      with {extension "Description: Does the ETS has to register itself before running proxy test case (Receiver of the INVITE) ?"}
+      
+    } //end group Registration
+    
+    group Timer {
+      
+      // T1 RTT estimate (500 ms)
+      modulepar float PX_T1 := 0.5
+      with {extension "Description: RTT estimate"}
+      
+      // T2 Maximum retransmit interval for non-INVITE requests and INVITE response (4000 ms)
+      modulepar float PX_T2 := 4.0
+      with {extension "Description: Maximum retransmit interval for non-INVITE requests and INVITE response"}
+      
+      // T4 Maximum duration a message will remain in the network
+      modulepar float PX_T4 := 1.0
+      with {extension  "Description: Maximum duration a message will remain in the network"}
+      
+      // TWait default value for waiting an operator action
+      modulepar float PX_TWAIT := 10.0
+      with {
+        extension "Description: Default value for waiting an operator action"}
+      
+      // TAck  default value for waiting an acknowledgement
+      modulepar float PX_TACK := 5.0
+      with {extension "Description: Default value for waiting an acknowledgement"}
+      
+      // TResp default value for waiting for a response from the IUT
+      modulepar float PX_TRESP := 5.0
+      with {extension "Description: Default value for waiting for a response from the IUT"}
+      
+      // TNoAct default value for waiting no message from the IUT
+      modulepar float PX_TNOACT := 1.0
+      with {extension "Description: Default value for waiting no message from the IUT"}
+      
+      // TSYNC default value to synchronise ptc
+      modulepar float PX_TSYNC := 10.0
+      with {extension "Description: Default value to synchronise ptc"}
+      
+      // TGUARD default value for an extra long timer to limit test execution
+      modulepar float PX_TGUARD := 120.0
+      with {extension "Description: Default value for an extra long timer to limit test execution"}
+      
+      // TRespRetention minimum time that a Proxy will wait before sending a final response
+      modulepar float PX_TRespRetention := 1.0
+      with {extension "Description: Minimum time that a Proxy will wait before sending a final response"}
+      
+      // Short delta-second used in expires parameter to acknowledge a registration
+      modulepar float SHORT_REGISTRATION := 3.0
+      with {extension "Description: Value for a short registration"}
+      
+    } //end group Timer
+    group SIP_Messages {
+      
+      // True if UDP Transport is used by the IUT to run campaign
+      modulepar boolean PX_UDP := true
+      with {extension "Description: True if UDP Transport is used by the IUT to run campaign (else TCP)"}
+      
+      // Used Transport in upper case "UDP"/"TCP"
+      modulepar charstring PX_TRANSPORT := "UDP"
+      with {extension "Description: Used Transport in upper case 'UDP'/'TCP'"}
+      
+      // Delta-seconds used in
+      // expires header field in 200 OK message to answer REGISTRATION request
+      modulepar charstring PX_DELTA_REGISTRATION := "100"
+      with {extension "Description: Delta-seconds used in expires header field in 200 OK message to answer REGISTRATION request"}
+      
+      // PX_UNKNOWN_DOMAIN : unknown IP address
+      modulepar charstring PX_UNKNOWN_IPADDR := "192.168.89.99"
+      with {extension "Description: Unknown IP address"}
+      
+      // PX_UNKNOWN_DOMAIN : unknown hostname
+      modulepar charstring PX_UNKNOWN_DOMAIN
+      with {extension "Description: Unknown hostname"}
+      
+      // PX_UNKNOWN_USERINFO : unknown userinfo
+      modulepar charstring PX_UNKNOWN_USERINFO := "tip2"
+      with {extension "Description: Unknown userinfo"}
+      
+      // PX_AMBIGUOUS_USERINFO: ambiguous userinfo
+      modulepar charstring PX_AMBIGUOUS_USERINFO := "tip"
+      with {extension "Description: Ambiguous userinfo"}
+      
+      // enable the usage of Registration with Authentication
+      modulepar boolean PX_REGISTRATION_AUTHENTICATION_ENABLED := false
+      with {extension "Description: Enable the usage of Registration with Authentication"}
+      
+      // RFC 2617 3.2.2 username:
+      // The name of user in the specified realm.
+      modulepar charstring PX_RFC2617_USERNAME := "abcd"
+      with {extension "Description: The name of user in the specified realm"}
+      
+      // RFC 2617 3.2.2 username:
+      // The name of second user in the specified realm.
+      modulepar charstring PX_RFC2617_USERNAME2 := "abcd"
+      with {extension "Description: The name of second user in the specified realm"}
+      
+      // RFC 2617 3.2.2.2 passwd:
+      // A known shared secret, the password of user of the specified
+      // username.
+      modulepar charstring PX_RFC2617_PASSWD := "1234"
+      with {extension "Description: A known shared secret, the password of user of the specified username"}
+      
+      // RFC 2617 3.2.2.2 passwd:
+      // A known shared secret, the password of user2 of the specified
+      // username.
+      modulepar charstring PX_RFC2617_PASSWD2 := "5679"
+      with {extension "Description: A known shared secret, the password of user2 of the specified username"}
+      
+      //charstring PX_RFC2617_URI := sip:}
+      //PX_REALM : realm value for digest scheme understood by the IUT
+      modulepar charstring PX_REALM := "123"
+      with {extension "Description: Realm value for digest scheme understood by the IUT"}
+      
+      // RFC 2617 3.2.1 qop options:
+      // Quoted string of one or more tokens indicating the "quality of
+      // protection" values supported by the server. The value "auth"
+      // indicates authentication; the value "auth-int" indicates
+      // authentication with integrity protection.
+      // Example: "auth, auth-int"
+      //PX_QOP : QoP value for digest scheme understood by the IUT
+      modulepar charstring PX_QOP := "auth"
+      with {extension "Description: QoP value for digest scheme understood by the IUT"}
+      
+      //PX_SDPBODY : SDP parameter proposed by the ETS
+      modulepar charstring PX_SDPBODY :=
+      "v=0 \n o=voicesession 12345 12345 IN IP4 193.174.154.20 \n s=Voice Session\n c=IN IP4 195.174.154.20 \n t=0 0 \n m=audio 8500 RTP/AVP 0 \n a=rtpmap:0 PCMU/8000"
+      with {extension "Description: SDP parameter proposed by the ETS"}
+      
+      //PX_SDPBODY2 : additional SDP parameter proposed by the ETS
+      //for session modification testing
+      modulepar charstring PX_SDPBODY2 :=
+      "v=0 \n o=voicesession 12345 12345 IN IP4 127.0.0.1 \n s=Voice Session\n c=IN IP4 127.0.0.1 \n t=0 0 \n m=audio 8500 RTP/AVP 0 \n a=rtpmap:0 PCMU/8000"
+      with {extension "Description: Additional SDP parameter proposed by the ETS for session modification testing"}
+      
+      //PX_SDPBODY_UNSUPPORTED : SDP parameter proposed by the ETS
+      //that is not supported by the IUT
+      modulepar charstring PX_SDPBODY_UNSUPPORTED := "a charstring"
+      with {extension "Description: SDP parameter proposed by the ETS that is not supported by the IUT"}
+      
+      //PX_SDPBODY_65535 : SDP parameter proposed by the ETS
+      //that makes the 200 OK or INVITE request of 63.535 bytes long
+      modulepar charstring PX_SDPBODY_65535 := "a charstring"
+      with {extension "Description: SDP parameter proposed by the ETS that makes the 200 OK or INVITE request of 63.535 bytes long"}
+      
+      //PX_SDPBODY_TOO_LARGE : SDP parameter proposed by the ETS
+      //that makes the 200 OK or INVITE request too large
+      modulepar charstring PX_SDPBODY_TOO_LARGE := "a charstring"
+      with {extension "Description: SDP parameter proposed by the ETS that makes the 200 OK or INVITE request too large"}
+      
+      //PX_CONTENCOD_UNSUPPORTED : Content encoding mechanism
+      //that is not supported by the IUT
+      modulepar charstring PX_CONTENCOD_UNSUPPORTED := "unsupported value"
+      with {extension "Description: Content encoding mechanism that is not supported by the IUT"}
+      
+      //PX_LANGUAGE_UNSUPPORTED : Language content
+      //that is not supported by the IUT
+      modulepar charstring PX_LANGUAGE_UNSUPPORTED := "unsupported value"
+      with {extension "Description: Language content that is not supported by the IUT"}
+      
+      //PX_OPTION_UNSUPPORTED : Option set in Request header field
+      // that is not supported
+      modulepar charstring PX_OPTION_UNSUPPORTED := "unsupported value"
+      with {extension "Description: Option set in Require or Proxy-Require header-field that is not supported"}
+      
+      // PX_SIPURL_PARAM_ID: Sip Url parameter ID which may is required to establish a call
+      modulepar charstring PX_SIPURL_PARAM_ID:= "line"
+      with {extension "Description: Sip Url parameter ID which may is required to establish a call"}
+      
+      //PX_SIPURL_PARAM_ID: Sip Url parameter value which may is required to establish a call
+      modulepar charstring PX_SIPURL_PARAM_VALUE:= "3ho1pv84"
+      with {extension "Description: Sip Url parameter value which may is required to establish a call"}
+      
+    } //end group SIP_Messages
+  } //end group PIXIT_items
+} // end group SIP_PIXITs
+group Types {
+  // ***************************************************************
+  //
+  // No specific TTCN-3 group is made for externals.
+  // Externals are unified and placed into the appropriate group.
+  //
+  // ***************************************************************
+  group SimpleTypes {
+    group SimpleConstants {
+      // SIP name protocol plus version
+      const charstring SIP_NAME_VERSION := "SIP/2.0";
+      
+      // SIP name protocol
+      const charstring SIP_NAME := "SIP";
+      
+      // SIP version
+      const charstring SIP_VERSION := "2.0";
+      
+      // SIP scheme
+      const charstring SIP_SCHEME := "sip";
+      
+      // TAG_ID
+      const charstring TAG_ID := "tag";
+      
+      // BRANCH_ID
+      const charstring BRANCH_ID := "branch";
+      
+      // BRANCH_COOKIE
+      const charstring BRANCH_COOKIE := "z9hG4bK";
+      
+      // EXPIRES_ID
+      const charstring EXPIRES_ID := "expires";
+      
+      // MADDR_ID
+      const charstring MADDR_ID := "maddr";
+      
+      // METHOD_ID
+      const charstring METHOD_ID := "method";
+      
+      // RECEIVED_ID
+      const charstring RECEIVED_ID := "received";
+      
+      // TTL_ID
+      const charstring TTL_ID := "ttl";
+      
+      // USER_ID
+      const charstring USER_ID := "user";
+      
+      // SDP name application
+      const charstring SDP_APPLICATION := "application/sdp";
+      
+      // @ (at) sign
+      const specialchar AT := "@";
+      
+      // * (wildchard) sign
+      const specialchar WILDCARD := "*";
+      
+      // / (slash) sign
+      const specialchar SLASH := "/";
+      
+      // < (less than) sign
+      const specialchar LT := "<";
+      
+      // > (greater than) sign
+      const specialchar GT := ">";
+      
+      // ( (left parenthesis) sign
+      const charstring LP := " (";
+      
+      // ) (right parenthesis) sign
+      const charstring RP := ") ";
+      
+      // Quote sign
+      const specialchar QUOTE := int2char (34);
+      
+      // %d32 ; US-ASCII SP, space character
+      const specialchar SP := int2char (32);
+      
+      // %d09  ; US-ASCII HT, horizontal tab character
+      const specialchar TAB := int2char (9);
+      
+      // %d13  ; US-ASCII CR, carriage return character
+      const specialchar CR := int2char (13);
+      
+      // %d10  ; US-ASCII LF, line feed character
+      const specialchar LF := int2char (10);
+      
+      // CR LF  ; typically the end of a line
+      const charstring CRLF := CR & LF;
+      
+      // Default SIP port number : 5060
+      const integer DEFAULT_SIP_PORT := 5060;
+      
+      // Default SIP protocol : UDP
+      const charstring DEFAULT_SIP_PROT := "UDP";
+      
+      // Fixed IP multicast address
+      const charstring MCAST_SIP_IPADDR := "224.0.1.75";
+      
+    } //end Group SimpleConstants
+    
+    group ComplexConstants {
+      type record of charstring CharList;
+      const CharList SIP_TOKEN := {
+        "1","2","3","4","5","6","7","8","9","0",
+        "a","b","c","d","e","f","g","h","i","j","k","l","m",
+        "n","o","p","q","r","s","t","u","v","w","x","y","z",
+        "A","B","C","D","E","F","G","H","I","J","K","L","M",
+        "N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        "-",".","!","%","*","_","+","`","'","~"
+      }//summa 72 members
+    } //end group ComplexConstants
+  } // end Group SimpleTypes
+  
+}
+
+
+
+
+group AdressTypes {
+  // Type to adress the IUT to send it message
+  /*   type record address {
+  //HostPort
+  charstring host, // hostname, IPv4 or IPv6
+  integer portField // represented as an integer
+  }
+  
+  */
+  
+  type SIP_address_type address;
+  //address type has to be aliased to make it importable
+  type address Addr;
+} // end group AddressTypes
+type charstring specialchar length (1);  
+/*
+group SubTypes { // Subtypes
+//charstring instead of char
+
+
+group TokenTypes // TokensTypes
+{
+// [20]
+type enumerated FieldName {
+ACCEPT_E,
+ACCEPT_ENCODING_E,
+ACCEPT_LANGUAGE_E,
+ALERT_INFO_E,
+ALLOW_E,
+AUTHENTICATION_INFO_E,
+AUTHORIZATION_E,
+CALL_ID_E,
+CALL_INFO_E,
+CONTACT_E,
+CONTENT_DISPOSITION_E,
+CONTENT_ENCODING_E,
+CONTENT_LANGUAGE_E,
+CONTENT_LENGTH_E,
+CONTENT_TYPE_E,
+CSEQ_E,
+DATE_E,
+ERROR_INFO_E,
+EXPIRES_E,
+FROM_E,
+IN_REPLY_TO_E,
+MAX_FORWARDS_E,
+MIME_VERSION_E,
+MIN_EXPIRES_E,
+ORGANIZATION_E,
+PRIORITY_E,
+PROXY_AUTHENTICATE_E,
+PROXY_AUTHORIZATION_E,
+PROXY_REQUIRE_E,
+RECORD_ROUTE_E,
+REPLY_TO_E,
+REQUIRE_E,
+RETRY_AFTER_E,
+ROUTE_E,
+SERVER_E,
+SUBJECT_E,
+SUPPORTED_E,
+TIMESTAMP_E,
+TO_E,
+UNSUPPORTED_E,
+USER_AGENT_E,
+VIA_E,
+WARNING_E,
+WWW_AUTHENTICATE_E,
+MY_MESSAGE_E
+}
+
+// [7.1]
+type enumerated Method {
+ACK_E,
+BYE_E,
+CANCEL_E,
+INVITE_E,
+OPTIONS_E,
+REGISTER_E,
+PRACK_E
+}
+
+// [20.1, 20.3, 20.4, 20.7, 20.9, 20.10, 20.11, 20.18, 20.20, 20.27, 20.28, 20.30, 20.31,
+// 20.33, 20.34, 20.39, 20.42, 20.44]
+type record GenericParam {
+charstring id optional,
+charstring paramValue optional
+}
+
+// [20.1, 20.3, 20.4, 20.7, 20.9, 20.10, 20.11, 20.18, 20.20, 20.27, 20.28, 20.30, 20.31,
+// 20.33, 20.34, 20.39, 20.42, 20.44]
+//type set of GenericParam GenericParam_List;
+// [?]
+type set of GenericParam SemicolonParam_List;
+
+type SemicolonParam_List AmpersandParam_List;
+
+type SemicolonParam_List CommaParam_List;
+
+// [20.10, 20.20, 20.30, 20.31, 20.34, 20.39, 20.42, 20.43]
+type record HostPort {
+// "host" field changed to be optional: when tel-URI is used, it is
+// sent in the userInfo field of SipUrl; in this case the hostPort
+// field is present in SipUrl (mandatory field) but empty; hence both
+// the host and portField fields of hostPort shall be omitted
+charstring host optional, // hostname, IPv4 or IPv6
+integer portField optional // represented as an integer
+}
+
+// [20.10, 20.20, 20.30, 20.31, 20.34, 20.39]
+type record UserInfo {
+charstring userOrTelephoneSubscriber optional,
+charstring password optional
+}
+
+// [19.1.1 ;used in: 20.10, 20.20, 20.30, 20.31, 20.34, 20.39]
+type record SipUrl {
+charstring scheme, // contains "sip:"
+UserInfo userInfo optional,
+HostPort hostPort,
+SemicolonParam_List urlParameters optional,
+AmpersandParam_List headers optional
+}
+
+// [20.1, RFC2616 14.1]
+type record AcceptBody {
+charstring mediaRange,
+SemicolonParam_List acceptParam optional
+}
+
+// [20.1, RFC2616 14.1]
+type set of AcceptBody AcceptBody_List;
+
+// [10.14, 10.25, 10.34, 10.38, 10.43]
+// type SipUrl AddrSpec;
+// the absolute URI is not used AddrSpec type has been replaced by SipUrl
+//      type union AddrSpec
+//      {
+//    SipUrl      sipUrl,
+//    charstring    absoluteUri
+//      }
+// [20.4]
+type record AlertInfoBody {
+charstring url, // any URI
+SemicolonParam_List genericParams optional
+}
+
+// [20.4]
+type set of AlertInfoBody AlertInfoBody_List;
+
+// [20.8]
+type charstring CallidString;
+// token ["@" token]
+// [20.8]
+type set of CallidString CallidString_List;
+
+// [20.9]
+type record CallInfoBody {
+charstring url, // any URI
+SemicolonParam_List infoParams optional
+}
+
+// [20.9]
+type set of CallInfoBody CallInfoBody_List;
+
+// [20.27, 20.44, .......10.32, 10.48; RFC2616 14.33, 14.47; RFC2617 1.2]
+type union Challenge {
+CommaParam_List digestCln,
+OtherAuth otherChallenge
+}
+
+// [20.10, 20.20, 20.30, 20.31, 20.34, 20.39]
+type record NameAddr {
+charstring displayName optional,
+SipUrl addrSpec
+}
+
+// [20.10, 20.20, 20.31, 20.39]
+type union Addr_Union {
+NameAddr nameAddr,
+SipUrl addrSpecUnion // STS: "Union" added to filed name to avoid dangerous name equivalence with 2nd NameAddr field
+}
+
+// [20.10]
+type record ContactAddress {
+Addr_Union addressField,
+SemicolonParam_List contactParams optional
+}
+
+// [20.10]
+type set of ContactAddress ContactAddress_List;
+// 1 or more elements
+// [20.10]
+type union ContactBody {
+charstring wildcard,
+ContactAddress_List contactAddresses
+}
+
+// [20.2, 20.12; RFC2616 14.3, 14.11]
+type charstring ContentCoding;
+
+// [20.2, 20.12; RFC2616 14.3, 14.11]
+type set of ContentCoding ContentCoding_List;
+
+// [20.7, 20.28; RFC2616 14.35 RFC2617 1.2]
+type union Credentials {
+CommaParam_List digestResponse,
+OtherAuth otherResponse
+}
+
+// [20.19, 20.23, 20.33]
+type charstring DeltaSec;
+// an external operation can handle this field
+// [20.18]
+type record ErrorInfoBody {
+charstring uri, // any URI
+SemicolonParam_List genericParams optional
+}
+
+// [20.18]
+type set of ErrorInfoBody ErrorInfoBody_List;
+
+// [20.3 RFC2616 14.4]
+type record LanguageBody {
+charstring languageRange,
+SemicolonParam_List acceptParam optional
+}
+
+// [20.3 RFC2616 14.4]
+type set of LanguageBody LanguageBody_List;
+
+// [20.13; RFC2616 14.12]
+type charstring LanguageTag;
+
+// [20.13; RFC2616 14.12]
+type set of LanguageTag LanguageTag_List;
+
+// [20.5]
+type set of charstring Method_List;
+
+// [20.29, 20.32, 20.37, 20.40]
+type charstring OptionTag;
+
+// [20.29, 20.32, 20.37, 20.40]
+type set of OptionTag OptionTag_List;
+
+// [20.7, 20.27, 20.28, 20.44  ; RFC2616 14.33, 14.47; RFC2617 1.2]
+type record OtherAuth {
+charstring authScheme,
+CommaParam_List authParams
+}
+
+type record Payload {
+integer payloadlength,
+charstring payloadvalue
+}
+
+// [20.30,20.34]
+type record RouteBody {
+NameAddr nameAddr,
+SemicolonParam_List rrParam optional
+}
+
+// [20.30,20.34]
+type record of RouteBody RouteBody_List;
+
+// [20.42]
+type record SentProtocol {
+charstring protocolName,
+charstring protocolVersion,
+charstring transport
+}
+
+// [20.35, 20.41; RFC2616 14.43]
+type charstring ServerVal;
+
+// [20.35, 20.41; RFC2616 14.43]
+type set of ServerVal ServerVal_List;
+
+// [20.38]
+type record TimeValue {
+integer majorDigit, // represented as an integer
+integer minorDigit optional // represented as an integer
+}
+
+// [20.42]
+type record ViaBody {
+SentProtocol sentProtocol,
+HostPort sentBy,
+SemicolonParam_List viaParams optional
+}
+
+// [20.42]
+type record of ViaBody ViaBody_List;
+
+// [20.43]
+type union WarnAgent {
+HostPort hostPort,
+charstring pseudonym
+}
+
+// [20.43]
+type record WarningValue {
+integer warnCode, // represented as an integer
+WarnAgent warnAgent,
+charstring warnText
+}
+
+// [20.43]
+type set of WarningValue WarningValue_List;
+
+} // end group TokensType
+group HeaderFieldTypes // Header Fields
+{
+// [20.1, RFC2616 14.1]
+type record Accept {
+FieldName fieldName(ACCEPT_E),
+AcceptBody_List acceptArgs optional
+}
+
+// [20.2, RFC2616 14.3]
+type record AcceptEncoding {
+FieldName fieldName(ACCEPT_ENCODING_E),
+ContentCoding_List contentCoding optional
+}
+
+// [20.3, RFC2616 14.4]
+type record AcceptLanguage {
+FieldName fieldName(ACCEPT_LANGUAGE_E),
+LanguageBody_List languageBody optional
+}
+
+// [20.4]
+type record AlertInfo {
+FieldName fieldName(ALERT_INFO_E),
+AlertInfoBody_List alertInfoBody optional
+}
+
+// [20.5]
+type record Allow {
+FieldName fieldName(ALLOW_E),
+Method_List methods optional
+}
+
+// [20.6]
+type record AuthenticationInfo {
+FieldName fieldName(AUTHENTICATION_INFO_E),
+CommaParam_List ainfo
+}
+
+// [20.7 RFC2617 3.2.2]
+type record Authorization {
+FieldName fieldName(AUTHORIZATION_E),
+//dbo:uses as a charstring
+//Credentials body
+charstring body optional
+}
+
+// [20.8]
+type record CallId {
+FieldName fieldName(CALL_ID_E) optional,
+CallidString callid optional
+}
+
+// [20.9]
+type record CallInfo {
+FieldName fieldName(CALL_INFO_E),
+CallInfoBody_List callInfoBody optional
+}
+
+// [20.10]
+type record Contact {
+FieldName fieldName(CONTACT_E),
+ContactBody contactBody
+}
+
+// [20.11]
+type record ContentDisposition {
+FieldName fieldName(CONTENT_DISPOSITION_E),
+charstring dispositionType,
+SemicolonParam_List dispositionParams optional
+}
+
+// [20.12 RFC2616 14.11]
+type record ContentEncoding {
+FieldName fieldName(CONTENT_ENCODING_E),
+ContentCoding_List contentCoding
+}
+
+// [20.13 RFC2616 14.12]
+type record ContentLanguage {
+FieldName fieldName(CONTENT_LANGUAGE_E),
+LanguageTag_List languageTag
+}
+
+// [20.14]
+type record ContentLength {
+FieldName fieldName(CONTENT_LENGTH_E),
+integer len // this field is represented as an integer
+}
+
+// [20.15]
+type record ContentType {
+FieldName fieldName(CONTENT_TYPE_E),
+charstring mediaType optional
+}
+
+// [20.16]
+type record CSeq {
+FieldName fieldName(CSEQ_E),
+integer seqNumber,
+// this field is represented as an integer
+charstring method
+}
+
+// [20.17]
+type record Date {
+FieldName fieldName(DATE_E),
+charstring sipDate
+}
+
+// [20.18]
+type record ErrorInfo {
+FieldName fieldName(ERROR_INFO_E),
+ErrorInfoBody_List errorInfo optional
+}
+
+// [20.19]
+type record Expires {
+FieldName fieldName(EXPIRES_E),
+DeltaSec deltaSec
+}
+
+// [20.20]
+type record From {
+FieldName fieldName(FROM_E),
+Addr_Union addressField,
+SemicolonParam_List fromParams optional
+}
+
+// [20.21]
+type record InReplyTo {
+FieldName fieldName(IN_REPLY_TO_E),
+CallidString_List callids
+}
+
+// [20.22]
+type record MaxForwards {
+FieldName fieldName(MAX_FORWARDS_E),
+integer forwards // this field is represented as an integer
+}
+
+// [20.23]
+type record MinExpires {
+FieldName fieldName(MIN_EXPIRES_E),
+DeltaSec deltaSec
+}
+
+// [20.24 RFC2616 19.4.1]
+type record MimeVersion {
+FieldName fieldName(MIME_VERSION_E),
+integer majorNumber,
+// this field is represented as an integer
+integer minorNumber // this field is represented as an integer
+}
+
+// [20.25]
+type record Organization {
+FieldName fieldName(ORGANIZATION_E),
+charstring organization
+}
+
+// [20.26]
+type record Priority {
+FieldName fieldName(PRIORITY_E),
+charstring priorityValue
+}
+
+// [20.27 RFC2616 14.33 RFC2617 1.2]
+type record ProxyAuthenticate {
+FieldName fieldName(PROXY_AUTHENTICATE_E),
+Challenge challenge
+}
+
+// [20.28 RFC2616 14.35 RFC2617 1.2]
+type record ProxyAuthorization {
+FieldName fieldName(PROXY_AUTHORIZATION_E),
+//Credentials credentials
+charstring credentials
+}
+
+// [20.29]
+type record ProxyRequire {
+FieldName fieldName(PROXY_REQUIRE_E),
+OptionTag_List optionsTags
+}
+
+// [20.30]
+type record RecordRoute {
+FieldName fieldName(RECORD_ROUTE_E),
+RouteBody_List routeBody
+}
+
+// [20.31]
+type record ReplyTo {
+FieldName fieldName(REPLY_TO_E),
+Addr_Union addressField,
+SemicolonParam_List replyToParams optional
+}
+
+// [20.32]
+type record Require {
+FieldName fieldName(REQUIRE_E),
+OptionTag_List optionsTags
+}
+
+// [20.33]
+type record RetryAfter {
+FieldName fieldName(RETRY_AFTER_E),
+DeltaSec deltaSec,
+charstring comment optional,
+SemicolonParam_List retryParams optional
+}
+
+// [20.34]
+type record Route {
+FieldName fieldName(ROUTE_E),
+RouteBody_List routeBody
+}
+
+// [20.35 RFC2616 14.38]
+type record Server {
+FieldName fieldName(SERVER_E),
+ServerVal_List serverBody
+}
+
+// [20.36]
+type record Subject {
+FieldName fieldName(SUBJECT_E),
+charstring summary
+}
+
+// [20.37]
+type record Supported {
+FieldName fieldName(SUPPORTED_E),
+OptionTag_List optionsTags optional
+}
+
+// [20.38]
+type record Timestamp {
+FieldName fieldName(TIMESTAMP_E),
+TimeValue timeValue optional,
+TimeValue delay optional
+}
+
+// [20.39]
+type record To {
+FieldName fieldName(TO_E),
+Addr_Union addressField,
+SemicolonParam_List toParams optional
+}
+
+// [20.40]
+type record Unsupported {
+FieldName fieldName(UNSUPPORTED_E),
+OptionTag_List optionsTags
+}
+
+// Undefined header field
+type record UndefinedHeader {
+charstring headerName,
+charstring headerValue
+}
+
+type set of UndefinedHeader UndefinedHeader_List;
+
+// [20.41 RFC2616 14.43]
+type record UserAgent {
+FieldName fieldName(USER_AGENT_E),
+ServerVal_List userAgentBody
+}
+
+// [20.42]
+type record Via {
+FieldName fieldName(VIA_E),
+ViaBody_List viaBody
+}
+
+// [20.43]
+type record Warning {
+FieldName fieldName(WARNING_E),
+WarningValue_List warningValue
+}
+
+// [20.44 RFC2616 14.47 RFC2617 1.2]
+type record WwwAuthenticate {
+FieldName fieldName(WWW_AUTHENTICATE_E),
+Challenge challenge
+}
+type record MyMessageValue {
+charstring name,
+charstring msg
+}
+type record MyMessage {
+FieldName fieldName(MY_MESSAGE_E),
+MyMessageValue messageValue
+}
+} // end group HeaderFieldTypes
+
+group MessageHeaderTypes {
+// Message-Header for all SIP requests and responses [20]
+type set MessageHeader {
+Accept accept optional,
+AcceptEncoding acceptEncoding optional,
+AcceptLanguage acceptLanguage optional,
+AlertInfo alertInfo optional,
+Allow allow optional,
+AuthenticationInfo authenticationInfo optional,
+// only in responses
+Authorization authorization optional,
+// only in requests
+CallId callId optional,
+// optional only in Invalid test cases mandatory otherwise
+CallInfo callInfo optional,
+Contact contact optional,
+// optional in response and all requests except INVITE where mandatory
+ContentDisposition contentDisposition optional,
+ContentEncoding contentEncoding optional,
+ContentLanguage contentLanguage optional,
+ContentLength contentLength optional,
+// optional in responses and all requests except ACK where mandatory
+ContentType contentType optional,
+CSeq cSeq optional,
+// optional only in Invalid test cases mandatory otherwise
+Date date optional,
+ErrorInfo errorInfo optional, // only in responses
+Expires expires optional,
+From fromField optional,
+InReplyTo inReplyTo optional, // only in requests
+MaxForwards maxForwards optional,
+// mandatory in requests not required in responses!
+MimeVersion mimeVersion optional,
+MinExpires minExpires optional, // only in responses
+Organization organization optional,
+Priority priority optional, // only in requests
+ProxyAuthenticate proxyAuthenticate optional,
+// only in responses
+ProxyAuthorization proxyAuthorization optional,
+// only in requests
+ProxyRequire proxyRequire optional,
+// only in requests
+RecordRoute recordRoute optional,
+ReplyTo replyTo optional,
+// optional in responses and INVITE requests
+Require require optional,
+RetryAfter retryAfter optional, // only in responses
+Route route optional, // only in requests
+Server server optional, // only in responses
+Subject subject optional, // only in requests
+Supported supported optional,
+Timestamp timestamp optional,
+To toField optional,
+Unsupported unsupported optional, // only in responses
+UserAgent userAgent optional,
+Via via optional,
+Warning warning optional, // only in responses
+WwwAuthenticate wwwAuthenticate optional,
+//MyMessage myMessage optional,
+// only in responses
+UndefinedHeader_List undefinedHeader_List optional
+}
+} // end group MessageHeaderTypes
+group StartLineTypes {
+// Request-Line [7.1]
+type record RequestLine {
+Method method,
+SipUrl requestUri,
+charstring sipVersion
+}
+
+// Status-Line [7.2]
+type record StatusLine {
+charstring sipVersion,
+integer statusCode,
+charstring reasonPhrase
+}
+} // end group StartLineTypes
+group SubTypesConstants {}
+} // end group Subtypes
+group MSGtypes {
+group RequestTypes {
+// [7.1]
+type record Request {
+RequestLine requestLine,
+MessageHeader msgHeader,
+charstring messageBody optional,
+Payload payload optional
+}
+type Request REGISTER_Request;
+type Request INVITE_Request;
+type Request OPTIONS_Request;
+type Request BYE_Request;
+type Request CANCEL_Request;
+type Request ACK_Request
+
+} // end group RequestTypes
+
+group ResponseTypes {
+// [7.2]
+type record Response {
+StatusLine statusLine,
+MessageHeader msgHeader,
+charstring messageBody optional,
+Payload payload optional
+}
+} // end group ResponseTypes
+// This MSG type is defined for sending synctactic variations, and syntactically
+// erroneous messages, and receving messages failed parsing.
+group SyntacticTypes {
+type charstring Raw;
+type Raw Raw_Response;
+type Raw Raw_REGISTER_Request;
+type Raw Raw_BYE_Request;
+type Raw Raw_Unknown_Request;
+type Raw Raw_INVITE_Request;
+} // end group SyntacticTypes
+
+group CMTypes {
+type charstring CM_Message;
+} // end group CMTypes
+} // end group MSGTypes
+} // end group Types
+
+*/
+
+group SystemConfiguration {
+  group TestComponents {
+    group TestSystemInterfaces {
+      type component SipInterfaces {
+        port   SIPmsg_PT   UDP1,
+        //port SipPort UDP1,
+        UDP2,
+        UDP3,
+        TCP1,
+        TCP2,
+        TCP3;
+      }
+    } // end Group TestSystemInterfaces
+    
+    
+    group TestAbstractComponents {
+      type component SipComponent {
+        // general variables
+        
+        // current address to send TCP/UDP messages
+        var address v_sent_label := {
+          host := PX_IUT_IPADDR,
+          portField := PX_IUT_PORT
+        };
+        
+        // current address to send UDP multicast messages
+        var address v_sent_mcast_label := {
+          host := MCAST_SIP_IPADDR,
+          portField := DEFAULT_SIP_PORT
+        };
+        // ETS address
+        var address v_ets_label := {
+          host := PX_ETS_IPADDR,
+          portField := PX_ETS_PORT
+        };
+        var boolean v_white_space := false;
+        
+        var SipUrl v_RequestUri := {
+          scheme := SIP_SCHEME,
+          userInfo := omit,
+          hostPort := {
+            host := "", portField := DEFAULT_SIP_PORT },
+          urlParameters := omit,
+          headers := omit
+        };
+        
+        var SipUrl v_RequestUri2 := {
+          scheme := SIP_SCHEME,
+          userInfo := omit,
+          hostPort := {
+            host := "", portField := DEFAULT_SIP_PORT },
+          urlParameters := omit,
+          headers := omit
+        };
+        var charstring v_Branch := "";
+        var CallId v_CallId := { // value of CallId header
+          fieldName := CALL_ID_E,
+          callid := ""
+        };
+        var CallId v_CallIdReg := {
+          // value of CallId header for Registration
+          fieldName := CALL_ID_E,
+          callid := ""
+        };
+        var From v_From := { // value of From header
+          fieldName := FROM_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          fromParams := omit
+        };
+        var To v_To := { // value of To header
+          fieldName := TO_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          toParams := omit
+        };
+        var To v_Cancel_To := { // value of To header
+          fieldName := TO_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          toParams := omit
+        };
+        
+        var Via v_Via := { // value of Via header
+          fieldName := VIA_E,
+          viaBody := {
+            {
+              sentProtocol := {
+                protocolName := SIP_NAME,
+                protocolVersion := SIP_VERSION,
+                transport := DEFAULT_SIP_PROT },
+              sentBy := {
+                host := "", portField := DEFAULT_SIP_PORT },
+              viaParams := omit }
+          }
+        };
+        
+        var RecordRoute v_RecordRoute;//ATS problem! := ?;
+        
+        // value of RecordRoute header
+        var boolean v_BOO_RecordRoute := false;
+        
+        var Route v_Route := // := ?; // value of Route header
+        {
+          fieldName := ROUTE_E,
+          routeBody :={}
+        };
+        //  STF296 - maintenance action
+        //  v_route variable initialized as per CR2
+        //  from V. M. Puro : 12.11.2004 12:04
+        var boolean v_BOO_Route := false;
+        
+        var Contact v_Contact;
+        
+        var CSeq v_CSeq := {
+          fieldName := CSEQ_E,
+          seqNumber := 1,
+          method := "INVITE"
+        };
+        
+        // value of CSeq header
+        var CSeq v_IUT_CSeq := {
+          fieldName := CSEQ_E,
+          seqNumber := 1,
+          method := "INVITE"
+        };
+        
+        // value of last CSeq header used by the IUT in request
+        var To v_callee_To := { // value of To header
+          fieldName := TO_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          toParams := omit
+        };
+        
+        var From v_callee_From := { // value of From header
+          fieldName := FROM_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          fromParams := omit
+        };
+        
+        var To v_caller_To := { // value of To header
+          fieldName := TO_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          toParams := omit
+        };
+        
+        var From v_caller_From := { // value of From header
+          fieldName := FROM_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          fromParams := omit
+        };
+        
+        var HostPort v_reqHostPort := {
+          host := PX_IUT_IPADDR,
+          portField := PX_IUT_PORT
+        }; // address to send request
+        
+        var charstring v_date;
+        
+        // Declaration of a variable for the handling of defaults
+        var Request v_def_REGISTER_Request;
+        
+        var CallId v_def_CallId := { // value of CallId header
+          fieldName := CALL_ID_E,
+          callid := ""
+        };
+        
+        var CSeq v_def_CSeq := {
+          fieldName := CSEQ_E,
+          seqNumber := 1,
+          method := "REGISTER"
+        }; // value of CSeq header
+        
+        var From v_def_From := { // value of From header
+          fieldName := FROM_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          fromParams := omit
+        };
+        
+        var To v_def_To := { // value of To header
+          fieldName := TO_E,
+          addressField := {
+            nameAddr := {
+              displayName := omit,
+              addrSpec := {
+                scheme := SIP_SCHEME,
+                userInfo := omit,
+                hostPort := {
+                  host := "",
+                  portField := DEFAULT_SIP_PORT },
+                urlParameters := omit,
+                headers := omit }
+            }
+          },
+          toParams := omit
+        };
+        
+        var Via v_def_Via := { // value of Via header
+          fieldName := VIA_E,
+          viaBody := {
+            {
+              sentProtocol := {
+                protocolName := SIP_NAME,
+                protocolVersion := SIP_VERSION,
+                transport := DEFAULT_SIP_PROT },
+              sentBy := {
+                host := "", portField := DEFAULT_SIP_PORT },
+              viaParams := omit }
+          }
+        };
+        
+        var Contact v_def_Contact;
+        // value of Contact header
+        
+        //RGy (2007-09-14) null is added to avoid runtime error at deactivation
+        //     of a non-activated default(also allows checking if the default is activated or not)
+        var default v_Default := null;
+        
+        // used for the Invite Request if 407/401 received from Proxy
+        var Request v_RequestFor407;
+        
+        // Declaration of a variable for the handling of message raw
+        var charstring v_Raw_CallId;
+        var charstring v_Raw_CSeq;
+        var charstring v_Raw_From;
+        var charstring v_Raw_To;
+        var charstring v_Raw_Via;
+        var charstring v_Raw_Contact;
+        var charstring v_Raw_Date;
+        var charstring v_Raw_RequestUri;
+        var charstring v_Raw_Route;
+        var charstring v_Raw_RecordRoute;
+        var charstring v_Raw_Authorization;
+        var ContentType v_ContentType;
+        
+        var charstring px_sdpBody := PX_SDPBODY & CRLF;
+        
+        var charstring px_sdpBody2 := PX_SDPBODY2 & CRLF;
+        var charstring px_sdpBody_UNSUPPORTED := PX_SDPBODY_UNSUPPORTED & CRLF;
+        var charstring px_sdpBody_65535 := PX_SDPBODY_65535 & CRLF;
+        var charstring px_sdpBody_TOO_LARGE := PX_SDPBODY_TOO_LARGE & CRLF;
+        
+        
+        var boolean v_cancel_sent := false;
+        var boolean v_bye_sent := false;
+        var boolean v_ack_sent := false;
+        var boolean v_reg_done := false;
+        
+        // general timers
+        timer T1 := PX_T1;
+        timer TWait := PX_TWAIT;
+        timer TAck := PX_TACK;
+        timer TResp := PX_TRESP;
+        timer TNoAct := PX_TNOACT;
+        timer TRept;
+        timer TNoRept;
+        timer TSync := PX_TSYNC;
+        timer TGuard := PX_TGUARD;
+        timer TDelay := 32.0;
+        //RGy  (2007-09-03) Timer value for timer J
+        //DON'T CHANGE THE VALUE OF v_TJ IN THE DYNAMIC BEHAVIOUR!
+        //1 extra PX_T1 is given to ensure that timer J has expired
+        var float v_TJ := 65.0 * PX_T1;
+        
+        //port SipPort SIPP;
+        port  SIPmsg_PT  SIPP;
+        
+        port Coordination cpA;
+        port Coordination cpB;
+        port Coordination cpC;
+      }
+    } // end Group TestComponents
+  } // end Group SystemConfiguration
+  group Ports {
+    /*    type port SipPort message {
+    inout Request,
+    Response,
+    Raw
+    //TODO Alias port message types
+    //(Pls. do not delete or change the above comment,
+    // it helps to find the place when using Eclipse)
+    ,REGISTER_Request,
+    INVITE_Request,
+    OPTIONS_Request,
+    BYE_Request,
+    CANCEL_Request,
+    ACK_Request,
+    Raw_REGISTER_Request,
+    Raw_INVITE_Request,
+    Raw_BYE_Request,
+    Raw_Response,
+    Raw_Unknown_Request 
+    }
+    with {
+    extension "address"
+    }
+    
+    */
+    type port Coordination message {
+      inout charstring
+    }
+    with {
+      extension "internal"
+    }
+  } // End Group Ports
+  
+  
+} //end group SystemConfiguration
+
+
+
+//aliases      
+type  PDU_SIP_Response  Response;
+type PDU_SIP_Request    Request;
+
+type PDU_SIP_Request REGISTER_Request;
+type PDU_SIP_Request INVITE_Request;
+type PDU_SIP_Request OPTIONS_Request;
+type PDU_SIP_Request BYE_Request;
+type PDU_SIP_Request CANCEL_Request;
+type PDU_SIP_Request ACK_Request;
+
+
+type PDU_SIP_Raw Raw_Response;
+type PDU_SIP_Raw Raw_REGISTER_Request;
+type PDU_SIP_Raw Raw_BYE_Request;
+type PDU_SIP_Raw Raw_Unknown_Request;
+type PDU_SIP_Raw Raw_INVITE_Request;
+
+
+
+function  f_convertCredentials( in Credentials p_in )  return charstring //FIXME
+
+{
+  
+  var charstring v_ret:="";
+  
+  if (ischosen(p_in.digestResponse)) {
+    
+    for(var integer i:=0; i< sizeof(p_in.digestResponse); i:=i+1 )
+    
+    {
+      
+      v_ret:=v_ret&p_in.digestResponse[i].id &""""&p_in.digestResponse[i].paramValue&"""," 
+      
+    }
+    
+    
+  }
+  else 
+  
+  {
+    
+    v_ret:=v_ret&p_in.otherResponse.authScheme&"""";
+    
+    for(var integer i:=0;i< sizeof(p_in.otherResponse.authParams); i:=i+1 )
+    
+    {
+      
+      v_ret:=v_ret&p_in.otherResponse.authParams[i].id &""""&p_in.otherResponse.authParams[i].paramValue&"""," 
+      
+    }
+    
+    
+  }
+  
+  return v_ret;
+}
+
+
+type record TestCaseSelection
+{
+  charstring tc_name,
+  boolean    selection
+}
+
+
+type record of TestCaseSelection TestCaseSelectionArray; 
+
+
+
+
+}//endmodule
+
+

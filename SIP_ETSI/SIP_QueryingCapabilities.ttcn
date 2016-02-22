@@ -1,0 +1,2657 @@
+/*
+//-----------------------------------------------------------------------------
+//AUTHOR:      Gyorgy Rethy, L.M. Ericsson (STF296, STF270, STF246, STF196, STF166)
+//DATE:        September 2007
+//VERSION:     4.2.1
+//
+//DTS/MTS 0097-3
+//
+//Methods for Testing and Specification (MTS);
+//Conformance Test Specification for SIP (RFC32361);
+//Part 3: Abstract Test Suite (TTCN-3 code)
+//
+//(c) European Telecommunications Standards Institute 2001.
+//All rights reserved.
+//
+//-----------------------------------------------------------------------------
+//HISTORY: ---> see History in SIP_MainModule.ttcn
+//
+//References
+//The following documents contain provisions which, through reference in this text, constitute provisions of the present document.
+//- References are either specific (identified by date of publication, edition number, version number, etc.) or non-specific.
+//- For a specific reference, subsequent revisions do not apply.
+//- For a non-specific reference, the latest version applies.
+//- A non-specific reference to an ETS shall also be taken to refer to later versions published as an EN with the same number.
+//[1]  RFC 3261, "Session Description Protocol", SDP: Session Description Protocol. M. Handley, V. Jacobson. April 1998. (Status: PROPOSED STANDARD).
+//[3]  ISO/IEC 9646-1: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 1: General concepts
+//[4]  ISO/IEC 9646-2: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 2: Abstract Test Suite specification".
+//[5] ISO/IEC 9646-3: "Information technology - Open Systems Interconnection - Conformance testing methodology and framework - Part 3: The Tree and Tabular Combined Notation".
+//[6]  ETS 300 406: "Methods for Testing and Specification (MTS); Protocol and profile conformance testing specifications; Standardization methodology".
+*/
+
+//**************************************************************************************************
+//compiled with Titan 5 R4C 2016.02.22 Elemer Lelik
+//**************************************************************************************************
+
+
+module SIP_QueryingCapabilities {
+
+import from SIPmsg_Types all;
+import from SIP_TypesAndConf all;
+import from SIP_Templates all;
+import from SIP_Steps all;
+
+group TestPurposesforQueryingCapabilities {
+  // Ref:
+  //
+  group OriginatingEndpoint {
+    group ValidBehaviour {
+      testcase SIP_QC_OE_V_001(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request including at least To,
+      // From, CSeq, Call-ID, Max-Forwards and Via headers.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_5) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including at least To, From, CSeq, Call-ID, Max-Forwards and Via headers.";
+        extension "Reference: 11 and 8.1.1 [1]";
+      } // end testcase SIP_QC_OE_CE_V_001
+      testcase SIP_QC_OE_V_002(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request with a Request-URI set
+      // to the same URI value of the To header.
+      //
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var SipUrl vl_To_SipUrl;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_5) -> value vl_OPTIONS_Request sender v_sent_label {
+            TWait.stop;
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            if (ischosen (v_To.addressField.nameAddr)) {
+              vl_To_SipUrl :=
+              v_To.addressField.nameAddr.addrSpec;
+            } else {
+              vl_To_SipUrl := v_To.addressField.addrSpecUnion;
+            }
+            if (eqURIs(vl_To_SipUrl,
+                vl_OPTIONS_Request.requestLine.requestUri)) {
+              setverdict (pass);
+            } else {
+              log ("BEGIN_TRACE_INFO Request-URI unequal to URI value of To header. END_TRACE_INFO");
+              setverdict (fail);
+            }
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request with a Request-URI set to the same URI value of the To header.";
+        extension "Reference: 11 and 8.1.1[1]";
+      } // end testcase SIP_QC_OE_CE_V_002
+      testcase SIP_QC_OE_V_003(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1.3
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a From header
+      // with a TAG parameter.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_5) -> value vl_OPTIONS_Request sender v_sent_label {
+            var From vl_from;
+            TWait.stop;
+            vl_from := valueof(vl_OPTIONS_Request.msgHeader.fromField);
+            if (ispresent (vl_from.fromParams)) {
+              var SemicolonParam_List vl_params :=
+              valueof(
+                vl_OPTIONS_Request
+                .msgHeader
+                .fromField
+                .fromParams);
+              if (checkTagPresent(vl_params)) {
+                setverdict (pass);
+              } else {
+                log ("BEGIN_TRACE_INFO Missing TAG parameter in From header. END_TRACE_INFO");
+                setverdict (fail);
+              }
+            } else {
+              setverdict (fail);
+            }
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a From header with a TAG parameter. ";
+        extension "Reference: 11 and 8.1.1.3 [1]";
+      } // end testcase SIP_CC_OE_CE_V_003
+      testcase SIP_QC_OE_V_004(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1.5.
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a CSeq header
+      // with a method that matches "OPTIONS".
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_1) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a CSeq header with a method that matches ""OPTIONS"".";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a CSeq header with a method that matches *OPTIONS*.";
+        extension "Reference: 11 and 8.1.1.5 [1]";
+      } // end testcase SIP_CC_OE_CE_V_004
+      testcase SIP_QC_OE_V_005(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1.6.
+      // Purpose:  Ensure that the IUT, to query for capabilities sends an OPTIONS request including a
+      // Max-Forward header set to 70.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_6) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a Max-Forward header set to 70.";
+        extension "Reference: 11 and 8.1.1.6.[1]";
+      } // end testcase SIP_CC_OE_CE_V_005
+      
+      //        TestCase in ETSI document not included
+      //        testcase SIP_QC_OE_V_006(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      //        Ref: ?
+      //        Purpose: ?
+      //        { log("No purpose given for this TestCase in ETSI documentation.");
+      //          setverdict("inconc");
+      //          stop;
+      //        }
+      //        with {
+      //          extension "Preconditions: IUT can behave as User Agent client";
+      //          extension "Description: ?";
+      //          extension "Reference: ?";
+      //
+      //        } // end testcase SIP_CC_OE_CE_V_006
+      
+      testcase SIP_QC_OE_V_007(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 8.1.1.7
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a Via header
+      // with a protocol name set to SIP, a protocol version set to 2.0 and a branch parameter set to a value
+      // beginning with "z9hG4bK".
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var charstring vl_branch := "";
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_7) -> value vl_OPTIONS_Request sender v_sent_label {
+            TWait.stop;
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            if (ispresent (v_Via.viaBody[0].viaParams)) {
+              var SemicolonParam_List vl_params :=
+              valueof(v_Via.viaBody[0].viaParams);
+              if (checkBranchPresent(vl_params,
+                  vl_branch)) {
+                if (match(vl_branch,
+                    ValidBranch)) {
+                  setverdict (pass);
+                } else {
+                  log ("BEGIN_TRACE_INFO Invalid branch parameter in Via header. END_TRACE_INFO");
+                  setverdict (fail);
+                }
+              } else {
+                log ("BEGIN_TRACE_INFO Missing branch parameter in Via header. END_TRACE_INFO");
+                setverdict (fail);
+              }
+            } else {
+              log ("BEGIN_TRACE_INFO Missing parameter in Via header. END_TRACE_INFO");
+              setverdict (fail);
+            }
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            all timer.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including a Via header with a protocol name set to SIP, a protocol version set to 2.0 and a branch parameter set to a value beginning with ""z9hG4bK"".";
+        extension "Reference: sections 11 and 8.1.1.7 [1]";
+      } // end testcase SIP_CC_OE_CE_V_007
+      testcase SIP_QC_OE_V_008(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11.1.
+      // Purpose: Ensure that the IUT, to query for capabilities sends an OPTIONS request including an Accept
+      // header set to the type of message body expected in the response.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_8) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, to query for capabilities sends an OPTIONS request including an Accept header set to the type of message body expected in the response.";
+        extension "Reference: section 11.1 [1]";
+      } // end testcase SIP_CC_OE_CE_V_008
+      testcase SIP_QC_OE_V_009(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11.2
+      // Purpose: Ensure that the IUT having sent an OPTIONS request is able to receive a Success (200 OK)
+      // response.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_5) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            send200OK();
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request is able to receive a Success (200 OK) response.";
+        extension "Reference: 11.2. [1] ";
+      } // end testcase SIP_CC_OE_CE_V_009
+      testcase SIP_QC_OE_V_010(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11.2.
+      // Purpose: Ensure that the IUT having sent an OPTIONS request is able to receive a Busy here (486 Busy here) response.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_1) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            rejectOptions(loc_CSeq_s);
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request is able to receive a Busy here (486 Busy here) response.";
+        extension "Reference: 11.2 [1]";
+      } // end testcase SIP_CC_OE_CE_V_010
+      testcase SIP_QC_OE_V_011(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11.2
+      // Purpose: Ensure that the IUT having sent an OPTIONS request is able to receive a Success (200 OK)
+      // response including Allow, Accept, Accept-Encoding, Accept-Language and Supported header.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        iUTRegistration();
+        action ("Please send OPTIONS request");
+        TWait.start (PX_TWAIT);
+        alt {
+          [] SIPP.receive (
+            OPTIONS_Request_r_5) -> value vl_OPTIONS_Request {
+            TWait.stop;
+            setverdict (pass);
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            SIPP.send (
+              Response_200_s_7(
+                v_CallId,
+                v_CSeq,
+                v_From,
+                v_To,
+                v_Via)) to v_sent_label;
+          }
+          [] SIPP.receive {
+            TWait.stop;
+            setverdict (fail);
+            stop;
+          }
+          [] TWait.timeout {
+            setverdict (fail);
+            stop;
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request is able to receive a Success (200 OK) response including Allow, Accept, Accept-Encoding, Accept-Language and Supported header.";
+        extension "Reference: 11.2. [1]";
+      } // end testcase SIP_CC_OE_CE_V_011
+      testcase SIP_QC_OE_V_012(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 22.2.
+      // Purpose: Ensure that the IUT having sent an OPTIONS request, on receipt of an Unauthorized
+      // (401 Unauthorized) response including a WWW-Authenticate header, repeats its OPTIONS request
+      // with an Authorization header and with an incremented Cseq value.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var CSeq vl_first_CSeq;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        vl_first_CSeq := v_CSeq;
+        
+        // Send a Unauthorized (401 Unauthorized) response
+        SIPP.send (
+          Response_401_s_1(
+            v_CallId,
+            v_CSeq,
+            v_From,
+            v_To,
+            v_Via)) to v_sent_label;
+        
+        TAck.start (PX_TACK);
+        alt {
+          // OPTIONS message can be either received on multicast or unicast address
+          // OPTIONS including an Authorization header and with an incremented
+          // Cseq value.
+          [] SIPP.receive (
+            OPTIONS_Request_r_4_1) -> value vl_OPTIONS_Request sender v_sent_label {
+            TAck.stop;
+            // Catch and prepare informations to answer
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            if (v_CSeq.seqNumber > vl_first_CSeq.seqNumber) {
+              setverdict (pass);
+            } else {
+              log ("BEGIN_TRACE_INFO Cseq value not incremented. END_TRACE_INFO");
+              setverdict (fail);
+              SIPP.send (
+                Response_400_s_1(
+                  v_CallId,
+                  v_CSeq,
+                  v_From,
+                  v_To,
+                  v_Via)) to v_sent_label;
+              
+              stop
+            }
+            rejectOptions(loc_CSeq_s);
+          }
+          [] TAck.timeout {
+            setverdict (fail);
+            stop
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request, on receipt of an Unauthorized (401 Unauthorized) response including a WWW-Authenticate header, repeats its OPTIONS request with an Authorization header and with an incremented Cseq value.";
+        extension "Reference: 11 and 22.2 [1]";
+      } // end testcase SIP_CC_OE_CE_V_012
+      testcase SIP_QC_OE_V_013(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 22.2.
+      // Purpose: Ensure that the IUT having sent an OPTIONS request, on receipt of an Unauthorized
+      // (401 Unauthorized) response including a WWW-Authenticate header, repeats its OPTIONS
+      // request with an Authorization header including proper values for username, realm, nonce, digest-uri
+      // and response HTTP parameters.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var CSeq vl_first_CSeq;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        vl_first_CSeq := v_CSeq;
+        
+        // Send a Unauthorized (401 Unauthorized) response
+        SIPP.send (
+          Response_401_s_1(
+            v_CallId,
+            v_CSeq,
+            v_From,
+            v_To,
+            v_Via)) to v_sent_label;
+        
+        TAck.start (PX_TACK);
+        alt {
+          // OPTIONS message can be either received on multicast or unicast address
+          // OPTIONS including an Authorization header and with an incremented
+          // Cseq value.
+          [] SIPP.receive (
+            OPTIONS_Request_r_4_1a) -> value vl_OPTIONS_Request sender v_sent_label {
+            var charstring vl_myinput;
+            TAck.stop;
+            // Catch and prepare informations to answer
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            // check if values for username, realm, nonce, digest-uri and response HTTP parameters
+            // are included
+            // vl_myinput := vl_OPTIONS_Request.msgHeader.authorization.body;
+            vl_myinput := f_convertCredentials(vl_OPTIONS_Request.msgHeader.authorization.body);
+            
+            if (not (match(vl_myinput,
+                  pattern "*username:*"))) {
+              log ("Username missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*realm:*"))) {
+              log ("Realm missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*nonce:*"))) {
+              log ("Nonce missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*uri:*"))) {
+              log ("Digest-URI missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*response:*"))) {
+              log ("Response param missing in credentials.");
+              setverdict (fail);
+            }
+            rejectOptions(loc_CSeq_s);
+          }
+          [] TAck.timeout {
+            setverdict (fail);
+            stop
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request, on receipt of an Unauthorized (401 Unauthorized) response including a WWW-Authenticate header, repeats its OPTIONSrequest with an Authorization header including proper values for username, realm nonce, digesturiand response HTTP parameters.";
+        extension "Reference: 11 and 22.2 [1]";
+      } // end testcase SIP_CC_OE_CE_V_013
+      testcase SIP_QC_OE_V_014(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 22.2.
+      // Purpose: Ensure that the IUT having sent an OPTIONS request, on receipt of a Proxy Authentication
+      // Required (407 Proxy Authentication Required) response including a Proxy-Authenticate header,
+      // repeats its OPTIONS request with a Proxy-Authorization header and with an incremented Cseq
+      // value.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var CSeq vl_first_CSeq;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        vl_first_CSeq := v_CSeq;
+        
+        // Send a Unauthorized (407 Proxy Authentication Required) response
+        SIPP.send (
+          Response_407_s_1(
+            v_CallId,
+            v_CSeq,
+            v_From,
+            v_To,
+            v_Via)) to v_sent_label;
+        
+        TAck.start (PX_TACK);
+        alt {
+          // OPTIONS message can be either received on multicast or unicast address
+          // OPTIONS including an Authorization header and with an incremented
+          // Cseq value.
+          [] SIPP.receive (
+            OPTIONS_Request_r_4_2) -> value vl_OPTIONS_Request sender v_sent_label {
+            TAck.stop;
+            // Catch and prepare informations to answer
+            setHeadersOnReceiptOfOptions(vl_OPTIONS_Request);
+            if (v_CSeq.seqNumber > vl_first_CSeq.seqNumber) {
+              setverdict (pass);
+            } else {
+              log ("BEGIN_TRACE_INFO Cseq value not incremented. END_TRACE_INFO");
+              setverdict (fail);
+              SIPP.send (
+                Response_400_s_1(
+                  v_CallId,
+                  v_CSeq,
+                  v_From,
+                  v_To,
+                  v_Via)) to v_sent_label;
+              
+              stop
+            }
+            rejectOptions(loc_CSeq_s);
+          }
+          [] TAck.timeout {
+            setverdict (fail);
+            stop
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request, on receipt of a Proxy Authentication Required (407 Proxy Authentication Required) response including a Proxy-Authenticate header, repeats its OPTIONS request with a Proxy-Authorization header and with an incremented Cseq value.";
+        extension "Reference: 11 and 22.2 [1]";
+      } // end testcase SIP_CC_OE_CE_V_014
+      testcase SIP_QC_OE_V_015(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: 11 and 22.2
+      // Purpose: Ensure that the IUT having sent an OPTIONS request, on receipt of a Proxy Authentication
+      // Required (407 Proxy Authentication Required) response including a Proxy-Authenticate header,
+      // repeats its OPTIONS request with a Proxy-Authorization header including proper values for
+      // username, realm nonce, digest-uri and response HTTP parameters.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        var CSeq vl_first_CSeq;
+        var charstring vl_mystring := "";
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        vl_first_CSeq := v_CSeq;
+        
+        // Send a Unauthorized (407 Proxy Authentication Required) response
+        SIPP.send (
+          Response_407_s_1(
+            v_CallId,
+            v_CSeq,
+            v_From,
+            v_To,
+            v_Via)) to v_sent_label;
+        
+        TAck.start (PX_TACK);
+        alt {
+          // OPTIONS message can be either received on multicast or unicast address
+          // OPTIONS including an Authorization header and with an incremented
+          // Cseq value.
+          [] SIPP.receive (
+            OPTIONS_Request_r_4_2a) -> value vl_OPTIONS_Request sender v_sent_label {
+            var charstring vl_myinput;
+            TAck.stop;
+            setverdict (pass);
+            
+            // check if values for username, realm, nonce, digest-uri and response HTTP parameters
+            // are included
+            /*    vl_myinput :=
+            vl_OPTIONS_Request
+            .msgHeader
+            .proxyAuthorization
+            .credentials;
+            */
+            vl_myinput :=
+            f_convertCredentials(vl_OPTIONS_Request
+              .msgHeader
+              .proxyAuthorization
+              .credentials);
+
+            
+            if (not (match(vl_myinput,
+                  pattern "*username:*"))) {
+              log ("Username missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*realm:*"))) {
+              log ("Realm missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*nonce:*"))) {
+              log ("Nonce missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*uri:*"))) {
+              log ("Digest-URI missing in credentials.");
+              setverdict (fail);
+            }
+            if (not (match(vl_myinput,
+                  pattern "*response:*"))) {
+              log ("Response param missing in credentials.");
+              setverdict (fail);
+            }
+            rejectOptions(loc_CSeq_s);
+          }
+          [] TAck.timeout {
+            setverdict (fail);
+            stop
+          }
+        }
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT having sent an OPTIONS request, on receipt of a Proxy Authentication Required (407 Proxy Authentication Required) response including a Proxy-Authenticate header, repeats its OPTIONS request with a Proxy-Authorization header including proper values for username, realm nonce, digest-uri and response HTTP parameters. ";
+        extension "Reference: 11 and 22.2 [1]";
+      } // end testcase SIP_CC_OE_CE_V_015
+    } //end group ValidBehaviour
+    group Timers {
+      testcase SIP_QC_OE_TI_001(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.2.2.
+      // Purpose: If an unreliable transport is used, ensure that the IUT, having sent an OPTIONS request, repeats its
+      // request after timer E set to T1 value expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T1);
+        rejectOptions(loc_CSeq_s);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: If an unreliable transport is used, ensure that the IUT, having sent an OPTIONS request, repeats its request after timer E set to T1 value expires.";
+        extension "Reference: Annex A and 17.1.2.2 [1]";
+      } // end testcase SIP_QC_OE_TI_001
+      testcase SIP_QC_OE_TI_002(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.3.
+      // Purpose: If an unreliable transport is used, ensure that the IUT, having sent twice times an OPTIONS
+      // request, repeats its request after timer E set to the MIN(2*T1,T2) value expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T1);
+        SIPP.clear;
+        notRepeatOPTIONS(
+          v_CallId,
+          v_CSeq,
+          2.0 * PX_T1 * 90.0 / 100.0);
+        repeatOPTIONS(v_CallId, v_CSeq, 2.0 * PX_T1 * 20.0 / 100.0);
+        rejectOptions(loc_CSeq_s);
+        
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: If an unreliable transport is used, ensure that the IUT, having sent twice times an OPTIONS request, repeats its request after timer E set to the MIN(2*T1,T2) value expires.";
+        extension "Reference: Annex A and 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_002
+      testcase SIP_QC_OE_TI_003(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.3.
+      // Purpose: If an unreliable transport is used, ensure that the IUT, having sent three times an OPTIONS
+      // request, repeats its request after timer E set to the MIN(4*T1,T2) value expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T1);
+        SIPP.clear;
+        notRepeatOPTIONS(
+          v_CallId,
+          v_CSeq,
+          2.0 * PX_T1 * 90.0 / 100.0);
+        repeatOPTIONS(v_CallId, v_CSeq, 2.0 * PX_T1 * 20.0 / 100.0);
+        SIPP.clear;
+        notRepeatOPTIONS(
+          v_CallId,
+          v_CSeq,
+          4.0 * PX_T1 * 90.0 / 100.0);
+        repeatOPTIONS(v_CallId, v_CSeq, 4.0 * PX_T1 * 20.0 / 100.0);
+        rejectOptions(loc_CSeq_s);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: If an unreliable transport is used, ensure that the IUT, having sent three times an OPTIONS request, repeats its request after timer E set to the MIN(4*T1,T2) value expires.";
+        extension "Reference: Annex A and 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_003
+      testcase SIP_QC_OE_TI_004(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.3.
+      // Purpose: If an unreliable transport is used, ensure that the IUT does not repeat an OPTIONS request, after
+      // timer F set to 64*T1 expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        waitForTimeout_Options(64.0 * PX_T1);
+        notRepeatOPTIONS(
+          v_CallId,
+          v_CSeq,
+          2.0 * PX_T1 * 90.0 / 100.0);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: If an unreliable transport is used, ensure that the IUT does not repeat an OPTIONS request, after timer F set to 64*T1 expires.";
+        extension "Reference: Annex A and 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_004
+      testcase SIP_QC_OE_TI_005(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and section 17.1.3
+      // Purpose: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state, repeats its
+      // OPTIONS request after timer E set to T1 value expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptionsProceeding(vl_OPTIONS_Request);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T1);
+        rejectOptions(loc_CSeq_s);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state, repeats its OPTIONS request after timer E set to T1 value expires.";
+        extension "Reference: Annex A and section 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_005
+      testcase SIP_QC_OE_TI_006(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.3.
+      // Purpose: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state and
+      // OPTIONS request have been already repeated in this state, repeats its OPTIONS request after
+      // timer E set to T2 value expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptions(vl_OPTIONS_Request);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T1);
+        repeatOPTIONS(v_CallId, v_CSeq, PX_T2);
+        rejectOptions(loc_CSeq_s);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state and OPTIONS request have been already repeated in this state, repeats its OPTIONS request after timer E set to T2 value expires.";
+        extension "Reference: Annex A and 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_006
+      testcase SIP_QC_OE_TI_007(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+      // Ref: Annex A and 17.1.3
+      // Purpose: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state,
+      // does not repeat its OPTIONS request, after timer F set to 64*T1 expires.
+      {
+        var OPTIONS_Request vl_OPTIONS_Request;
+        
+        initPort(mtc, system);
+        v_Default := activate (defaultCCOE());
+        havingSentAOptionsProceeding(vl_OPTIONS_Request);
+        waitForTimeout_Options(64.0 * PX_T1);
+        notRepeatOPTIONS(
+          v_CallId,
+          v_CSeq,
+          2.0 * PX_T1 * 90.0 / 100.0);
+      }
+      with {
+        extension "Preconditions: IUT can behave as User Agent client";
+        extension "Description: Ensure that the IUT, when an OPTIONS client transaction is in the Proceeding state, does not repeat its OPTIONS request, after timer F set to 64*T1 expires.";
+        extension "Reference: Annex A and 17.1.3 [1]";
+      } // end testcase SIP_QC_OE_TI_007
+    } //end group Timers
+  } // end OriginatingEndpoint
+  group TerminatingEndpoint {
+    group Callestablishment {
+      group ValidBehaviour {
+        testcase SIP_QC_TE_V_001(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2 and 8.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK).
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_1(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK).";
+          extension "Reference: 11.2 and 8.2 [1]";
+        } // end testcase SIP_QC_OE_TI_001
+        testcase SIP_QC_TE_V_002(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2 and 8.2.6.2
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK) including the headers From, Call-ID, CSeq and Via headers copy from the OPTIONS request.
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_5(
+                v_CallId,
+                loc_CSeq_s,
+                v_From,
+                v_Via)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK) including the headers From, Call-ID, CSeq and Via headers copy from the OPTIONS request.";
+          extension "Reference: 11.2 and 8.2.6.2 [1]";
+        } // end testcase SIP_QC_OE_TI_002
+        testcase SIP_QC_TE_V_003(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2 and 8.2.6.2
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request with no TAG set on the To header, sends a
+        // Success (200 OK) including the same URI and an additional TAG for the To header.
+        {
+          var Response vl_Response;
+          var SemicolonParam_List vl_params;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_9(
+                v_CallId,
+                loc_CSeq_s,
+                getAddressFromToHeader(v_To))) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              vl_params := valueof(v_To.toParams);
+              if (checkTagPresent(vl_params)) {
+                setverdict (pass);
+              } else {
+                log ("BEGIN_TRACE_INFO TAG in To header missing. END_TRACE_INFO");
+                setverdict (fail);
+              }
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request with no TAG set on the To header, sends a Success (200 OK) including the same URI and an additional TAG for the To header.";
+          extension "Reference: 11.2 and 8.2.6.2 [1]";
+        } // end testcase SIP_QC_OE_TI_003
+        testcase SIP_QC_TE_V_004(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2 and 8.2.6.2
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request with a TAG set on the To header, sends a
+        // Success (200 OK) including the same URI and the same TAG for the To header.
+        {
+          var Response vl_Response;
+          var SemicolonParam_List vl_params := {
+            {
+              id := TAG_ID,
+              paramValue := getRndTag()
+            }
+          };
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          v_To.toParams := vl_params;
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_11(
+                v_CallId,
+                loc_CSeq_s,
+                v_To)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request with a TAG set on the To header, sends a Success (200 OK) including the same URI and the same TAG for the To header.";
+          extension "Reference: 11.2 and 8.2.6.2 [1]";
+        } // end testcase SIP_QC_OE_TI_004
+        testcase SIP_QC_TE_V_005(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK) including
+        // Allow, Accept, Accept-Encoding, Accept-Language and Supported headers.
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_15(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request, sends a Success (200 OK) including Allow, Accept, Accept-Encoding, Accept-Language and Supported headers.";
+          extension "Reference: 11.2 [1]";
+        } // end testcase SIP_QC_OE_TI_005
+        testcase SIP_QC_TE_V_006(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request with an Accept header set to
+        // "application/sdp", sends a Success (200 OK) including a message Body.
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_2(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_16(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request with an Accept header set to ""application/sdp"", sends a Success (200 OK) including a message Body.";
+          extension "Reference: 11.2 [1]";
+        } // end testcase SIP_QC_OE_TI_006
+        testcase SIP_QC_TE_V_007(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref:11.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request with no Accept header, sends
+        // a Success (200 OK) including a message Body.
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_16(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request with no Accept header, sends a Success (200 OK) including a message Body.";
+          extension "Reference: 11.2 [1]";
+        } // end testcase SIP_QC_OE_TI_007
+        testcase SIP_QC_TE_V_008(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11 and 22.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request not including an Authorization header
+        // field, sends an Unauthorized (401 Unauthorized) response, containing a WWW-Authenticate
+        // header.
+        {
+          var Response vl_Response;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_401_r_1(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+          sendACK(loc_CSeq_s);
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request not including an Authorization header field, sends an Unauthorized (401 Unauthorized) response, containing a WWW-Authenticate header.";
+          extension "Reference: 11 and 22.2 [1]";
+        } // end testcase SIP_QC_OE_TI_008
+        testcase SIP_QC_TE_V_009(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11 and 22.2.
+        // Purpose: Ensure that the IUT on receipt of an OPTIONS request not including an Authorization header
+        // field, sends an Unauthorized (401 Unauthorized) response, containing a WWW-Authenticate
+        // header including proper value for realm and nonce HTTP parameters.
+        {
+          var Response vl_Response;
+          var CommaParam_List vl_challenge;
+          var charstring vl_nonce;
+          var charstring vl_realm;
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_401_r_1(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              //check if values for realm and nonce are included
+              if (ischosen (vl_Response
+                  .msgHeader
+                  .wwwAuthenticate
+                  .challenge[0]
+                  .digestCln)) {
+                vl_challenge :=
+                vl_Response
+                .msgHeader
+                .wwwAuthenticate
+                .challenge[0]
+                .digestCln;
+                vl_nonce :=
+                extractParamValueFromChallenge(
+                  vl_challenge,
+                  "nonce");
+                if (vl_nonce == "") {
+                  setverdict (fail);
+                  stop;
+                }
+                vl_realm :=
+                extractParamValueFromChallenge(
+                  vl_challenge,
+                  "realm");
+                if (vl_realm == "") {
+                  setverdict (fail);
+                }
+              } else {
+                log ("No scheme in www-Authenticate header !!");
+                setverdict (inconc);
+                stop;
+              }
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+          sendACK(loc_CSeq_s);
+          
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT on receipt of an OPTIONS request not including an Authorization header field, sends an Unauthorized (401 Unauthorized) response, containing a WWW-Authenticate header including proper value for realm and nonce HTTP parameters.";
+          extension "Reference: 11 and 22.2 [1]";
+        } // end testcase SIP_QC_OE_TI_009
+        testcase SIP_QC_TE_V_010(inout CSeq loc_CSeq_s) runs on SipComponent system SipInterfaces
+        // Ref: 11 and 22.2.
+        // Purpose: Ensure that the IUT having sent an Unauthorized (401 Unauthorized ) response to an OPTIONS
+        // request, on receipt of a OPTIONS request including a valid Authorization header field, sends a
+        // Success (200 OK) response.
+        {
+          var Response vl_Response;
+          var CommaParam_List vl_challenge;
+          // var charstring vl_Credentials;
+          var Credentials vl_Credentials;
+          
+          var Request vl_Request :=
+          valueof(
+            OPTIONS_Request_s_2(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via));
+          
+          v_Default := activate (defaultCCTE());
+          initPort(mtc, system);
+          iUTRegistration();
+          setHeadersIUTOptions(loc_CSeq_s);
+          SIPP.send (
+            OPTIONS_Request_s_1(
+              v_RequestUri,
+              v_CallId,
+              loc_CSeq_s,
+              v_From,
+              v_To,
+              v_Via)) to v_sent_label;
+          
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_401_r_1(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              // resent the REGISTER message with Authorization header include
+              // Extract challenge and calculate credentials for a response.
+              if (ischosen (vl_Response
+                  .msgHeader
+                  .wwwAuthenticate
+                  .challenge[0]
+                  .digestCln)) {
+                vl_challenge :=
+                vl_Response
+                .msgHeader
+                .wwwAuthenticate
+                .challenge[0]
+                .digestCln;
+                vl_Credentials :=
+                calculateCredentials(
+                  "OPTIONS",
+                  vl_challenge,
+                  PX_RFC2617_USERNAME,
+                  PX_RFC2617_PASSWD);
+                
+              } else {
+                log ("No scheme in www-Authenticate header !!");
+                setverdict (inconc);
+                stop;
+              }
+              
+              // Increment CSeq sequence number of and add the credentials
+              // to the original saved REGEISTER message.
+              loc_CSeq_s.seqNumber :=
+              loc_CSeq_s.seqNumber + 1;
+              vl_Request.msgHeader.cSeq.seqNumber :=
+              loc_CSeq_s.seqNumber;
+              vl_Request.msgHeader.authorization.fieldName :=
+              AUTHORIZATION_E;
+              vl_Request.msgHeader.authorization.body :=
+              vl_Credentials;
+              
+              // Re-send the saved REGISTER with Authorization header
+              // included.
+              SIPP.send (vl_Request) to v_sent_label;
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+              
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+          TResp.start (PX_TRESP);
+          alt {
+            [] SIPP.receive (
+              Response_200_r_1(
+                v_CallId,
+                loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+              TResp.stop;
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              send200OKACK(loc_CSeq_s);
+              setverdict (pass);
+            }
+            [] SIPP.receive (
+              Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+              repeat;
+            }
+            [] SIPP.receive (
+              Response_Any_r_1) -> value vl_Response sender v_sent_label {
+              all timer.stop;
+              setverdict (fail);
+              setHeadersOnReceiptOfResponse(
+                loc_CSeq_s,
+                vl_Response);
+              sendACK(loc_CSeq_s);
+              stop;
+            }
+            [] TResp.timeout {
+              setverdict (fail);
+              stop;
+            }
+          }
+        }
+        with {
+          extension "Preconditions: IUT can behave as User Agent server";
+          extension "Description: Ensure that the IUT having sent an Unauthorized (401 Unauthorized ) response to an OPTIONS request, on receipt of a OPTIONS request including a valid Authorization header field, sends a Success (200 OK) response.";
+          extension "Reference: 11 and 22.2 [1]";
+        } // end testcase SIP_QC_OE_TI_010
+      } // end ValidBehavior
+    } //end Callestablishment
+  } // end TerminatingEndpoint
+  group Proxy {
+    testcase SIP_QC_PR_V_001(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI
+    // without user part, sends a Success (200 OK).
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_1(
+            v_CallId,
+            v_CSeq)) -> value vl_Response {
+          TResp.stop;
+          setverdict (pass);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI without user part, sends a Success (200 OK).";
+      extension "Reference: 11 [1]";
+    } // end testcase SIP_QC_PR_V_001
+    testcase SIP_QC_PR_V_002(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2 and 8.2.
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS identified by a Request-URI addressing another
+    // UA, forwards the message to the target indicated in the Request-URI.
+    {
+      var SipComponent vl_ptc;
+      
+      v_Default := activate (defaultCCPR());
+      vl_ptc := SipComponent.create;
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (
+        ptc_OPTIONS_Forwarded(
+          OPTIONS_Request_r_1,
+          v_CallId,
+          loc_CSeq_ptc_s,
+          v_cancel_sent,
+          v_bye_sent));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      awaitingPRPtcCheck_Options(loc_CSeq_s);
+      wait_end_ptc(vl_ptc);
+      
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS identified by a Request-URI addressing another UA, forwards the message to the target indicated in the Request-URI.";
+      extension "Reference: 11.2 and 8.2 [1]";
+    } // end testcase SIP_QC_PR_V_002
+    testcase SIP_QC_PR_V_003(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2 and 8.2.6.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI
+    // without user part, sends a Success (200 OK) including the headers From, Call-ID, CSeq and Via
+    // headers copy from the OPTIONS request.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_5(
+            v_CallId,
+            v_CSeq,
+            v_From,
+            v_Via)) -> value vl_Response {
+          TResp.stop;
+          setverdict (pass);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI without user part, sends a Success (200 OK) including the headers From, Call-ID, CSeq and Via headers copy from the OPTIONS request.";
+      extension "Reference: 11.2 and 8.2.6.2 [1]";
+    } // end testcase SIP_QC_PR_V_003
+    
+    testcase SIP_QC_PR_V_004(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2 and 8.2.6.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request , addressing itself with a Request-URI
+    // without user part, with no TAG set on the To header, sends a Success (200 OK) including the
+    // same URI and an additional TAG for the To header.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      var SemicolonParam_List vl_params := {
+        {
+          id := TAG_ID,
+          paramValue := getRndTag()
+        }
+      };
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_9(
+            v_CallId,
+            loc_CSeq_s,
+            getAddressFromToHeader(v_To))) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          vl_params := valueof(v_To.toParams);
+          if (checkTagPresent(vl_params)) {
+            setverdict (pass);
+          } else {
+            log ("BEGIN_TRACE_INFO TAG in To header missing. END_TRACE_INFO");
+            setverdict (fail);
+          }
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request , addressing itself with a Request-URI without user part, with no TAG set on the To header, sends a Success (200 OK) including the same URI and an additional TAG for the To header.";
+      extension "Reference: 11.2 and 8.2.6.2 [1]";
+    } // end testcase SIP_QC_PR_V_004
+    testcase SIP_QC_PR_V_005(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2 and 8.2.6.2.
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI
+    // without user part, with a TAG set on the To header, sends a Success (200 OK) including the same
+    // URI and the same TAG for the To header.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_11(
+            v_CallId,
+            loc_CSeq_s,
+            v_To)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          setverdict (pass);
+          
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI without user part, with a TAG set on the To header, sends a Success (200 OK) including the same URI and the same TAG for the To header.";
+      extension "Reference: 11.2 and 8.2.6.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_005
+    testcase SIP_QC_PR_V_006(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI
+    // without user part, sends a Success (200 OK) including Allow, Accept, Accept-Encoding, Accept-
+    // Language and Supported headers.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_15(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          setverdict (pass);
+          
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request addressing itself with a Request-URI without user part, sends a Success (200 OK) including Allow, Accept, Accept-Encoding, Accept-Language and Supported headers.";
+      extension "Reference: 11.2 [1]";
+    } // end testcase SIP_QC_PR_V_006
+    testcase SIP_QC_PR_V_007(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI
+    // without user part, with an Accept header set to "application/sdp", sends a Success (200 OK)
+    // including a message Body.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_2(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_2(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_16(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          setverdict (pass);
+          
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI without user part, with an Accept header set to ""application/sdp"", sends a Success (200 OK) including a message Body.";
+      extension "Reference: 11.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_007
+    testcase SIP_QC_PR_V_008(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI
+    // without user part, with no Accept header, sends a Success (200 OK) including a message Body.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      v_RequestFor407 :=
+      valueof(OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_16(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          setverdict (pass);
+          
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI without user part, with no Accept header, sends a Success (200 OK) including a message Body.";
+      extension "Reference: 11.2 [1] ";
+      
+    } // end testcase SIP_QC_PR_V_008
+    testcase SIP_QC_PR_V_009(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s,
+      inout CSeq loc_CSeq_ptc2_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request and the determined target set is containing
+    // two URIs forwards the message (forking) to both URIs.
+    {
+      var SipComponent vl_ptc1 := SipComponent.create;
+      var SipComponent vl_ptc2 := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR2());
+      initConfig2(mtc, vl_ptc1, vl_ptc2, system);
+      vl_ptc1.start (
+        ptc1_OPTIONS_Forwarded(
+          OPTIONS_Request_r_1,
+          loc_CSeq_ptc_s));
+      vl_ptc2.start (
+        ptc2_OPTIONS_Forwarded(
+          OPTIONS_Request_r_1,
+          loc_CSeq_ptc2_s));
+      initMTC2(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      awaitingPRTwoPtcCheck_Options(loc_CSeq_s);
+      wait_end_Two_ptc(vl_ptc1, vl_ptc2);
+      
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request and the determined target set is containing two URIs forwards the message (forking) to both URIs.";
+      extension "Reference: 11.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_009
+    testcase SIP_QC_PR_V_010(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s,
+      inout CSeq loc_CSeq_ptc2_s) runs on SipComponent system SipInterfaces
+    // Ref: 11.2
+    // Purpose: Ensure that the IUT, after forking an OPTIONS to two locations and having received (and
+    // forwarded) a 200 response from one client transaction, on receipt of a 200 response from the other
+    // client transaction, does not forward the additional 200 response.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc1 := SipComponent.create;
+      var SipComponent vl_ptc2 := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR2());
+      initConfig2(mtc, vl_ptc1, vl_ptc2, system);
+      vl_ptc1.start (
+        ptc1_FinalAnswer_Options(
+          200,
+          "OK",
+          loc_CSeq_ptc_s,
+          v_CallId));
+      vl_ptc2.start (
+        ptc2_FinalAnswer_Options(
+          200,
+          "OK",
+          loc_CSeq_ptc2_s,
+          v_CallId));
+      initMTC2(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      if (PX_REGISTRATION_AUTHENTICATION_ENABLED) {
+        v_RequestFor407 :=
+        valueof(OPTIONS_Request_s_1(
+            v_RequestUri,
+            v_CallId,
+            loc_CSeq_s,
+            v_From,
+            v_To,
+            v_Via));
+        v_CSeq.seqNumber := v_CSeq.seqNumber + 1;
+      };
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_1(
+            v_CallId,
+            v_CSeq)) -> value vl_Response {
+          TResp.stop;
+          setverdict (pass);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [PX_REGISTRATION_AUTHENTICATION_ENABLED] ALTSTEP_407(loc_CSeq_s) {
+          TResp.stop;
+          TResp.start (PX_TRESP);
+          repeat;
+        }
+        [] SIPP.receive (Response_Any_r_1) -> value vl_Response {
+          all timer.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] SIPP.receive {
+          TResp.stop;
+          setverdict (fail);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+      cpA.send (CM_Check_Done);
+      cpB.send (CM_Check_Done);
+      wait_end_Two_ptc(vl_ptc1, vl_ptc2);
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT, after forking an OPTIONS to two locations and having received (and forwarded) a 200 response from one client transaction, on receipt of a 200 response from the other client transaction, does not forward the additional 200 response.";
+      extension "Reference: 11.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_010
+    testcase SIP_QC_PR_V_011(
+      inout CSeq loc_CSeq_s,
+      inout CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 22.2.
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI
+    // without user part, not including a Proxy-Authorization header field, sends a Proxy Authentication
+    // Required (407 Proxy Authentication Required) response, containing a Proxy-Authenticate header.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_401_r_1(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          setverdict (pass);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [] SIPP.receive (
+          Response_Any_r_1) -> value vl_Response sender v_sent_label {
+          all timer.stop;
+          setverdict (fail);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+      sendACK(loc_CSeq_s);
+      
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI without user part, not including a Proxy-Authorization header field, sends a Proxy Authentication Required (407 Proxy Authentication Required) response, containing a Proxy-Authenticate header.";
+      extension "Reference: 22.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_011
+    testcase SIP_QC_PR_V_012(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 22.2.
+    // Purpose: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI
+    // without user part, not including a Proxy-Authorization header field, sends a Proxy Authentication
+    // Required (407 Proxy Authentication Required) response, containing a Proxy-Authenticate header
+    // including proper value for realm and nonce HTTP parameters.
+    {
+      var Response vl_Response;
+      var CommaParam_List vl_challenge;
+      var charstring vl_nonce;
+      var charstring vl_realm;
+      var SipComponent vl_ptc := SipComponent.create;
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_401_r_1(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          //check if values for realm and nonce are included
+          if (ischosen (vl_Response
+              .msgHeader
+              .wwwAuthenticate
+              .challenge[0]
+              .digestCln)) {
+            vl_challenge :=
+            vl_Response
+            .msgHeader
+            .wwwAuthenticate
+            .challenge[0]
+            .digestCln;
+            vl_nonce :=
+            extractParamValueFromChallenge(
+              vl_challenge,
+              "nonce");
+            if (vl_nonce == "") {
+              setverdict (fail);
+              stop;
+            }
+            vl_realm :=
+            extractParamValueFromChallenge(
+              vl_challenge,
+              "realm");
+            if (vl_realm == "") {
+              setverdict (fail);
+            }
+          } else {
+            log ("No scheme in www-Authenticate header !!");
+            setverdict (inconc);
+            stop;
+          }
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          setverdict (pass);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [] SIPP.receive (
+          Response_Any_r_1) -> value vl_Response sender v_sent_label {
+          all timer.stop;
+          setverdict (fail);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+      sendACK(loc_CSeq_s);
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT on receipt of an OPTIONS request, addressing itself with a Request-URI without user part, not including a Proxy-Authorization header field, sends a Proxy Authentication Required (407 Proxy Authentication Required) response, containing a Proxy-Authenticate header including proper value for realm and nonce HTTP parameters.";
+      extension "Reference: 22.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_012
+    testcase SIP_QC_PR_V_013(
+      inout CSeq loc_CSeq_s,
+      CSeq loc_CSeq_ptc_s) runs on SipComponent system SipInterfaces
+    // Ref: 22.2.
+    // Purpose: Ensure that the IUT having sent a Proxy Authentication Required (407 Proxy Authentication
+    // Required) response to an OPTIONS request, addressing itself with a Request-URI without user
+    // part on receipt of an OPTIONS request including a valid Proxy-Authenticate header field,
+    // sends a Success (200 OK) response.
+    {
+      var Response vl_Response;
+      var SipComponent vl_ptc := SipComponent.create;
+      var CommaParam_List vl_challenge;
+      //var charstring vl_Credentials;
+      var Credentials vl_Credentials;
+      
+      var Request vl_Request :=
+      valueof(
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via));
+      
+      v_Default := activate (defaultCCPR());
+      initConfig1(mtc, vl_ptc, system);
+      vl_ptc.start (initPTC(loc_CSeq_ptc_s));
+      initMTC(loc_CSeq_s);
+      setHeadersPtcOptions(loc_CSeq_s);
+      v_RequestUri := valueof(SipUrl_forOptions_Proxy);
+      SIPP.send (
+        OPTIONS_Request_s_1(
+          v_RequestUri,
+          v_CallId,
+          loc_CSeq_s,
+          v_From,
+          v_To,
+          v_Via)) to v_sent_label;
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_401_r_1(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          // resent the REGISTER message with Authorization header include
+          // Extract challenge and calculate credentials for a response.
+          if (ischosen (vl_Response
+              .msgHeader
+              .wwwAuthenticate
+              .challenge[0]
+              .digestCln)) {
+            vl_challenge :=
+            vl_Response
+            .msgHeader
+            .wwwAuthenticate
+            .challenge[0]
+            .digestCln;
+            vl_Credentials :=
+            calculateCredentials(
+              "OPTIONS",
+              vl_challenge,
+              PX_RFC2617_USERNAME,
+              PX_RFC2617_PASSWD);
+            
+          } else {
+            log ("No scheme in www-Authenticate header !!");
+            setverdict (inconc);
+            stop;
+          }
+          
+          // Increment CSeq sequence number of and add the credentials
+          // to the original saved REGEISTER message.
+          loc_CSeq_s.seqNumber := loc_CSeq_s.seqNumber + 1;
+          vl_Request.msgHeader.cSeq.seqNumber :=
+          loc_CSeq_s.seqNumber;
+          vl_Request.msgHeader.authorization.fieldName :=
+          AUTHORIZATION_E;
+          vl_Request.msgHeader.authorization.body := vl_Credentials;
+          
+          // Re-send the saved REGISTER with Authorization header
+          // included.
+          SIPP.send (vl_Request) to v_sent_label;
+          setverdict (pass);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [] SIPP.receive (
+          Response_Any_r_1) -> value vl_Response sender v_sent_label {
+          all timer.stop;
+          setverdict (fail);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          sendACK(loc_CSeq_s);
+          stop;
+          
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+      TResp.start (PX_TRESP);
+      alt {
+        [] SIPP.receive (
+          Response_200_r_1(
+            v_CallId,
+            loc_CSeq_s)) -> value vl_Response sender v_sent_label {
+          TResp.stop;
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          send200OKACK(loc_CSeq_s);
+          setverdict (pass);
+        }
+        [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
+          repeat;
+        }
+        [] SIPP.receive (
+          Response_Any_r_1) -> value vl_Response sender v_sent_label {
+          all timer.stop;
+          setverdict (fail);
+          setHeadersOnReceiptOfResponse(loc_CSeq_s, vl_Response);
+          sendACK(loc_CSeq_s);
+          stop;
+        }
+        [] TResp.timeout {
+          setverdict (fail);
+          stop;
+        }
+      }
+    }
+    with {
+      extension "Preconditions: IUT is a Proxy";
+      extension "Description: Ensure that the IUT having sent a Proxy Authentication Required (407 Proxy Authentication Required) response to an OPTIONS request, addressing itself with a Request-URI without user part, on receipt of an OPTIONS request including a valid Proxy-Authenticate header field, for sends a Success (200 OK) response.";
+      extension "Reference: 22.2 [1]";
+      
+    } // end testcase SIP_QC_PR_V_013
+  } //end Proxy
+}
+}

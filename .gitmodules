@@ -10,3 +10,9 @@
 [submodule "VSBOT/TestPorts/HTTPmsg_CNL113312"]
 	path = VSBOT/TestPorts/HTTPmsg_CNL113312
 	url = https://github.com/eclipse/titan.TestPorts.HTTPmsg
+[submodule "SIP_ETSI/TestPorts/SIPmsg"]
+	path = SIP_ETSI/TestPorts/SIPmsg
+	url = https://github.com/eclipse/titan.TestPorts.SIPmsg
+[submodule "SIP_ETSI/Libraries/TCCUsefulFunctions"]
+	path = SIP_ETSI/Libraries/TCCUsefulFunctions
+	url = https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
