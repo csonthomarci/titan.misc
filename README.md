@@ -2,7 +2,7 @@
 
 This repo is intended to collect TTCN-3 based applications, demo and instructional code etc.
 
-#VSBOT is a vulnerability scanner based on TTCN-3. 
+#VSBOT is a vulnerability scanner based on TTCN-3 
 Currently scans for web application vulnerabilities, namely directory traversal, SQL injection and XSS; next to this, it also contains a SYN Flood generator. This is not necessarily meant for industrial usage, it's rather a prototype that can constitute a good starting point to build your own vulnerability scanning application.
 The execution is based on TTCN-3 code executed by Titan, with a number of building blocks from the Titan toolbox(test ports etc.)  and it also has a Python-based GUI.
 
