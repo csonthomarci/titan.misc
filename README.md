@@ -18,6 +18,13 @@ edited to be compatible with Titan and the SIPmsg test port.
 Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
 will have to be issued.
 
+#DIAMETER_Rx_ETSI is based on the DIAMETER Rx Test Suite from ETSI 
+(http://webapp.etsi.org/WorkProgram/Frame_WorkItemList.asp?SearchPage=TRUE&qSORT=DocNbr&qINCLUDE_SUB_TB=True&qETSI_STANDARD_TYPE=%27TS%27&qETSI_NUMBER=101580&qMILESTONE=&qREPORT_TYPE=SUMMARY&optDisplay=ALL&includeNonActiveTB=FALSE)  
+edited to be compatible with Titan and the SIPmsg test port.
+
+Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
+will have to be issued.
+
 
 Main project page:
 
