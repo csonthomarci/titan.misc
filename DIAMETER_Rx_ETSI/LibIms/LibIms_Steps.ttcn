@@ -1,0 +1,1561 @@
+/*
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibIms_Steps.ttcn 492 2011-05-06 09:45:01Z rennoch $
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-IMS tests.
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibIms_Steps
+{	
+
+     import from SIPmsg_Types all;
+     import from SDP_Types all;
+
+	//LibSip
+	import from LibSip_SIPTypesAndValues all;
+	import from LibSip_SDPTypes all;
+	import from LibSip_Templates all;
+	import from LibSip_Steps all;
+	import from LibSip_PIXITS all;
+	import from LibSip_Interface all;
+	import from LibSip_XMLTypes all;
+	//LibIms
+	import from LibIms_Templates all;
+	import from LibIms_Interface all;
+	import from LibIms_PIXITS all;	
+	import from LibIms_SIPTypesAndValues all;
+		
+	group externalfunctions {
+	}
+	group parameterOperations {
+	}
+	group fieldOperations {
+
+	/*
+	 * 
+	 * @desc sets BYE header fields (IMS addresses)
+	 *			extension of general settings from LibSip basic function
+	 * @param p_cSeq_s current cSeq 
+	 * @param p_to_user user_profile id of the user to send Bye
+	 * @verdict 
+	 */
+		function f_setHeadersBYE(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+//		  vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+//		  
+//		  vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+        
+		  vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+		  vc_route 		:= f_route(); 		// update the route header field depending on vc_boo_route
+		  vc_recordRoute := f_recordroute(); // update the route header field depending on vc_boo_route
+		
+		  LibSip_Steps.f_setHeadersBYE(p_cSeq_s);
+	  
+		}// end f_setHeadersBYE
+		
+	/*
+	 * 
+	 * @desc sets CANCEL header fields (IMS addresses)
+	 *			extension of general settings from LibSip basic function
+	 * @param p_cSeq_s current cSeq 
+	 * @param p_to_user user_profile id of the user to send Cancel
+	 * @verdict 
+	 */
+		function f_setHeadersCANCEL(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+		  vc_route 		:= f_route(); 		// update the route header field depending on vc_boo_route
+		  vc_recordRoute := f_recordroute(); // update the route header field depending on vc_boo_route
+		
+		  LibSip_Steps.f_setHeadersCANCEL(p_cSeq_s);
+	  
+		}// end f_setHeadersCANCEL
+		
+
+		/**
+		 * 
+		 * @desc sets headers for forward request from AS in case if AS acts as Proxy
+		 */
+		function f_setHeadersForwardRequestFromAS (inout CSeq p_cSeq_s) runs on ImsComponent
+		{
+			var Request v_request;
+			v_request := vc_request;
+			
+			vc_via := v_request.msgHeader.via; // TODO via header need to be adapted due to standards
+			
+			vc_route := v_request.msgHeader.route; // TODO route header need to be adapted due to standards
+			 
+		}// end function f_setHeadersForwardRequest
+		
+		/**
+		 * 
+		 * @desc sets header fields for forward request from AS in case if AS acts as Proxy
+		 */
+		function f_setHeadersForwardResponseFromAS (inout CSeq p_cSeq_s) runs on ImsComponent
+		{
+			var Response v_response;
+			v_response := vc_response;
+			
+			vc_via:= v_response.msgHeader.via; // TODO via header need to be adapted due to standards
+			
+			if (ispresent(v_response.msgHeader.recordRoute)) {
+			vc_recordRoute:= v_response.msgHeader.recordRoute; // TODO recordRoute header need to be adapted due to standards
+			}
+		}// end function f_setHeadersForwardResponse
+
+		/*
+		 * 
+		 * @desc sets Invite header fields (IMS addresses)
+		 *			extension of general settings from LibSip basic function
+		 * @param p_cSeq_s current cSeq 
+		 * @param p_to_user user_profile id of the user to be invited
+		 * @verdict 
+		 */
+		function f_setHeadersINVITE(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+		  vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+		  vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+            
+		  vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+      
+		  if (vc_boo_route)
+		  { vc_route := valueof(m_route_interface(vc_interfaceprofile))};
+		  if (vc_boo_recordRoute)
+		  { vc_recordRoute := valueof(m_recordRoute_currIpAddr(vc_userprofile))};
+		  
+		  LibSip_Steps.f_setHeadersINVITE(p_cSeq_s);
+		  
+		}// end f_setHeadersINVITE
+
+		/*
+		* 
+		* @desc sets Invite header fields (IMS addresses)
+		*			extension of general settings from LibSip basic function
+		* @param p_cSeq_s current cSeq 
+		* @param p_to_user user_profile id of the user to be invited
+		* @verdict 
+		*/
+		function f_setHeadersUPDATE(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+			vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+			vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+        
+			vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+  
+			if (vc_boo_route)
+			{ vc_route := valueof(m_route_interface(vc_interfaceprofile))};
+			if (vc_boo_recordRoute)
+			{ vc_recordRoute := valueof(m_recordRoute_currIpAddr(vc_userprofile))};
+	  
+			LibSip_Steps.f_setHeadersUPDATE(p_cSeq_s);
+		  
+		}// end f_setHeadersUPDATE
+    	
+		/*
+		 * 
+		 * @desc sets Message header fields (IMS addresses)
+		 *			extension of general settings from LibSip basic function
+		 * @param p_cSeq_s current cSeq 
+		 * @param p_to_user user_profile id of the user to be invited
+		 * @verdict 
+		 */
+		function f_setHeadersMESSAGE(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+		  vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+		  vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+        
+		  vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+  
+		  LibSip_Steps.f_setHeadersMESSAGE(p_cSeq_s);
+	  
+		}// end f_setHeadersMESSAGE
+
+		/*
+		* 
+		* @desc sets Notify header fields (IMS addresses)
+		*			extension of general settings from LibSip basic function
+		* @param p_cSeq_s current cSeq 
+		* @param p_to_user user_profile id of the user to be invited
+		* @verdict 
+		*/
+		function f_setHeadersNOTIFY(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+				LibSip_Steps.f_setHeadersNOTIFY(p_cSeq_s);
+				
+				vc_branch := c_branchCookie & f_getRndTag();
+				vc_via:={
+					fieldName := VIA_E,
+					viaBody 	 := {valueof(m_ViaBody_virtual_XCSCF(vc_branch, vc_userprofile))}
+				};
+				
+				vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+				vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+        
+				vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+				
+				//contact header initialization for sending of NOTIFY from CSCF component
+				vc_contact := valueof(m_Contact(m_SipUrl_currIpaddr_CSCF(vc_userprofile)));
+	  
+		}// end f_setHeadersNOTIFY
+
+		/*
+		* 
+		* @desc sets Publish header fields (IMS addresses)
+		*			extension of general settings from LibSip basic function
+		* @param p_cSeq_s current cSeq 
+		* @param p_to_user user_profile id of the user to be invited
+		* @verdict 
+		*/
+		function f_setHeadersPUBLISH(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+				LibSip_Steps.f_setHeadersPUBLISH(p_cSeq_s);
+		
+				vc_branch := c_branchCookie & f_getRndTag();
+				vc_via:={
+					fieldName := VIA_E,
+					viaBody 	 := {valueof(m_ViaBody_virtual_XCSCF(vc_branch, vc_userprofile))}
+				};
+		
+				vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+				vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+
+				vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+		
+				if (vc_boo_route)
+				{ vc_route := valueof(m_route_interface(vc_interfaceprofile))};
+				if (vc_boo_recordRoute)
+				{ vc_recordRoute := valueof(m_recordRoute_currIpAddr(vc_userprofile))};
+				
+				//contact header initialization for sending of PUBLISH from CSCF component
+				vc_contact := valueof(m_Contact(m_SipUrl_currIpaddr_CSCF(vc_userprofile)));
+  
+			}// end f_setHeadersPUBLISH
+		
+		/**
+		**
+		* @desc sets Subscribe header fields (IMS addresses)
+		*			extension of general settings from LibSip basic function
+		* @param p_cSeq_s current cSeq 
+		* @param p_to_user user_profile id of the user to be invited
+		* @verdict 
+		*/
+		function f_setHeadersSUBSCRIBE(inout CSeq p_cSeq_s, in SipUrl p_to_user) runs on ImsComponent
+		{      
+    			vc_to := {	fieldName := TO_E,
+        			addressField :=
+        			{
+        				nameAddr := {
+        					displayName := omit, 	 			// optional charstring
+        					addrSpec :=	p_to_user	// SipUrl
+        				}
+        			},//end addressField
+        			toParams := omit
+    			};
+				vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+        
+				vc_requestUri :=p_to_user; // Request URI of Invite is identical with To header
+  
+				LibSip_Steps.f_setHeadersSUBSCRIBE(p_cSeq_s);
+	  
+		}// end f_setHeadersSUBSCRIBE
+		
+		/**
+		 * @desc  sets headers for ReINVITE method 
+		 * @param p_cSeq_s current cSeq 
+		 * @param p_orginatingSide true in case of Re-INVITE is send from the orgination endpoint otherwise false. 
+		 */
+		function f_setHeadersReINVITE (inout CSeq p_cSeq_s, in boolean p_orginatingSide) runs on ImsComponent
+		{
+		  f_setHeadersGeneral(p_cSeq_s, "INVITE"); // cseq, contact, branch, via	
+		
+		  vc_reqHostPort := vc_requestUri.hostPort;
+		  
+		  if(p_orginatingSide) {
+    		  vc_to := vc_caller_To;
+    		  vc_from := vc_caller_From;
+		  }   
+		  else {
+			vc_to := vc_callee_To;
+			vc_from := vc_callee_From;
+		  }   
+      
+		}// end function f_setHeadersReINVITE
+		
+	/**
+	 * 
+	 * @desc  sets component variables related to message header fields 
+	 *        when sending requests from the home I-CSCF (TS) to the visited P-CSCF (SUT)
+	 *		  (message type independent: CSeq, contact, via), function uses information from 
+	 *        userprofile and interfaceprofile
+	 *		
+	 * @param p_cSeq_s CSeq parameter
+	 * @param p_method method name for cSeq header field
+	 */	
+ 	function f_setHeadersGeneral_ICSCF(inout CSeq p_cSeq_s, in charstring p_method) runs on SipComponent
+	{
+	  var SemicolonParam_List v_params;
+
+	  p_cSeq_s.fieldName := CSEQ_E;
+	  p_cSeq_s.seqNumber := p_cSeq_s.seqNumber + 1;
+	  p_cSeq_s.method    := p_method ;
+	  vc_cSeq := p_cSeq_s;
+      
+	  vc_contact := valueof(m_Contact(m_SipUrl_contactIpaddr(vc_userprofile)));
+
+	  vc_branch := c_branchCookie & f_getRndTag();
+	  vc_branch_ICSCF := c_branchCookie & f_getRndTag();
+
+	  vc_via:={
+		fieldName := VIA_E,
+		viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile)),
+						 valueof(m_ViaBody_virtualUEinPCSCF(vc_branch_ICSCF, vc_userprofile))
+						 }
+	  };
+	}// end function f_setHeadersGeneral_ICSCF
+	
+	/**
+	 * 
+	 * @desc sets header field for the next outgoing REGISTER message
+	 *       from the visited P-CSCF to the home I-CSCF
+	 * @param p_cSeq_s CSeq parameter to be applied
+	 */
+ 	function f_setHeaders_REGISTER_PCSCF(inout CSeq p_cSeq_s) runs on SipComponent
+	{
+	  var SemicolonParam_List v_params;
+
+	  f_setHeadersGeneral(p_cSeq_s, "REGISTER"); // cseq, contact, branch, via
+
+	  vc_requestUri:=
+	  {
+		scheme := c_sipScheme,
+		userInfo := omit,
+		hostPort := {host:=vc_userprofile.registrarDomain, portField:=omit},
+		urlParameters := omit,
+		headers := omit
+	  };
+      
+	  vc_reqHostPort := vc_requestUri.hostPort;
+      
+	  vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+	  vc_callIdReg := vc_callId;
+      
+	  vc_to := valueof(m_To(m_SipUrl_currDomain(vc_userprofile)));
+	  v_params := {{id:=c_tagId, paramValue:=f_getRndTag()}}
+	  vc_from := {fieldName := FROM_E,
+		addressField :=vc_to.addressField,
+		fromParams := v_params
+	  };
+	  
+	  if(not vc_firstREGISTER_sent)
+	  {
+	  v_params := {{id:=c_expiresId, paramValue:=c_shortRegistration}};
+	  vc_contact.contactBody.contactAddresses[0].contactParams := v_params;
+	  }
+	  
+	  vc_firstREGISTER_sent := true;//f_setHeaders_Register is called in deREGISTER function
+	  
+	  vc_authorization := 
+	  {
+		fieldName := AUTHORIZATION_E,
+		body := f_calculatecCredentials_empty(vc_userprofile)
+	  }
+      
+	}// end function setHeaders_REGISTER_PCSCF
+	
+	
+	
+		/*
+		 * 
+		 * @desc sets REFER header fields (IMS addresses)
+		 *			extension of general settings from LibSip basic function
+		 * @param p_cSeq_s current cSeq 
+		 * @param p_to_user user_profile id of the user to be invited
+		 * @verdict 
+		 */
+		function f_setHeadersREFER(inout CSeq p_cSeq_s, in integer p_to_user) runs on ImsComponent
+		{      
+		  //vc_to := f_initToHeader(p_to_user); // init of vc_to using userProfile identifier
+
+		  //vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+            
+		  vc_requestUri := f_initSipUrl(p_to_user); // Request URI of Invite is identical with To header
+      
+		  if (vc_boo_route)
+		  { vc_route := valueof(m_route_interface(vc_interfaceprofile))};
+		  if (vc_boo_recordRoute)
+		  { vc_recordRoute := valueof(m_recordRoute_currIpAddr(vc_userprofile))};
+		  
+		  LibSip_Steps.f_setHeadersREFER(p_cSeq_s);
+		  
+		}// end f_setHeadersREFER
+		
+	    /*
+	     * @desc sets REFER header fields (IMS addresses)
+		 *			extension of general settings from LibSip basic function
+		 * @param p_cSeq_s current cSeq 
+		 * @param p_uri SipUrl for request URI and To header
+		 */
+		function f_setHeadersREFER_conf(inout CSeq p_cSeq_s, in SipUrl p_uri) runs on ImsComponent
+		{      
+		  vc_to := {	
+		  	fieldName := TO_E,
+			addressField := {
+				nameAddr := {
+					displayName := omit, 	 			// optional charstring
+					addrSpec :=	p_uri					// SipUrl
+				}
+			},//end addressField
+			toParams := omit
+		  };
+
+		  vc_from := f_initFromHeader(vc_userprofile.id, f_getRndTag()); // init of vc_from using userProfile identifier
+            
+		  vc_requestUri := p_uri; // Request URI of Invite is identical with To header
+      
+		  if (vc_boo_route) { 
+		  	vc_route := valueof(m_route_interface(vc_interfaceprofile))
+		  };
+		  if (vc_boo_recordRoute) { 
+		  	vc_recordRoute := valueof(m_recordRoute_currIpAddr(vc_userprofile))
+		  };
+		  
+		  LibSip_Steps.f_setHeadersREFER(p_cSeq_s);
+		}// end f_setHeadersREFER_conf
+
+	} // end group fieldOperations
+	
+	group awaitingMessage {
+	}
+	group sendMessage {
+	/**
+	* 
+	* @desc  send PRACK message
+	* @param p_request template of the message to be sent
+	*/
+	function f_SendPRACK_sdp(template MessageBody p_mb) runs on SipComponent
+	{
+		f_setHeadersGeneral(vc_cSeq, "PRACK"); // cseq, contact, branch, via	
+		vc_rAck := valueof(m_RAck(vc_response.msgHeader.rseq.response_num, vc_cSeq.seqNumber, vc_cSeq.method));
+		
+		SIPP.send(m_PRACK_Request_sdp(
+            vc_requestUri, 
+            vc_callId, 
+            vc_cSeq, 
+            vc_from, 
+            vc_to, 
+            vc_via,
+            vc_rAck,
+            p_mb
+    	)) to vc_sent_label;	  
+	}
+
+	}
+	group globalSteps {
+		
+		/*
+		 * 
+		 * @desc sets user parameters with PIXIT values
+		 * @param p_user identifies the selected user configuration and location
+		 * @verdict 
+		 */
+		function f_init_userprofile(in integer p_user) runs on ImsComponent
+		{
+		LibSip_Steps.f_init_userprofile(p_user);
+		
+		select(p_user){
+			case (c_userProfile_UE1atSUThome) { //variant c_userProfile_UE1atSUThome
+			vc_userprofile.currPort := PX_IMS_TS_UE1_PORT;
+			vc_userprofile.currIpaddr := PX_IMS_TS_UE1_IPADDR;	
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	
+			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;	
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR;
+			}
+			
+			case (c_userProfile_UE2atSUThome) { //variant c_userProfile_UE2atSUThome
+			vc_userprofile.currPort := PX_IMS_TS_UE2_PORT;
+			vc_userprofile.currIpaddr := PX_IMS_TS_UE2_IPADDR;	
+			vc_userprofile.contactPort := PX_IMS_TS_UE2_PORT;
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE2_IPADDR;
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE2_BEARER_IPADDR;
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE2_HOME_DOMAIN;	
+			vc_userprofile.publUsername := PX_IMS_SUT_UE2_PUBLIC_USER;
+			vc_userprofile.qop := PX_IMS_SUT_UE2_QOP;
+			vc_userprofile.privUsername := PX_IMS_SUT_UE2_PRIVAT_USERNAME;	
+			vc_userprofile.passwd := PX_IMS_SUT_UE2_PRIVAT_PASSWD;	
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE2_REGISTRAR;
+			}
+
+			case (c_userProfile_UE3atSUThome) { //variant c_userProfile_UE3atSUThome
+			vc_userprofile.currPort := PX_IMS_TS_UE3_PORT;
+			vc_userprofile.currIpaddr := PX_IMS_TS_UE3_IPADDR;	
+			vc_userprofile.contactPort := PX_IMS_TS_UE3_PORT;
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE3_IPADDR;
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE3_BEARER_IPADDR;
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE3_HOME_DOMAIN;	
+			vc_userprofile.publUsername := PX_IMS_SUT_UE3_PUBLIC_USER;
+			vc_userprofile.qop := PX_IMS_SUT_UE3_QOP;
+			vc_userprofile.privUsername := PX_IMS_SUT_UE3_PRIVAT_USERNAME;	
+			vc_userprofile.passwd := PX_IMS_SUT_UE3_PRIVAT_PASSWD;	
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE3_REGISTRAR;
+			}
+
+			case (c_userProfile_UE4atSUThome) { //variant c_userProfile_UE4atSUThome
+			vc_userprofile.currPort := PX_IMS_TS_UE4_PORT;
+			vc_userprofile.currIpaddr := PX_IMS_TS_UE4_IPADDR;	
+			vc_userprofile.contactPort := PX_IMS_TS_UE4_PORT;
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE4_IPADDR;
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE4_BEARER_IPADDR;
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE4_HOME_DOMAIN;	
+			vc_userprofile.publUsername := PX_IMS_SUT_UE4_PUBLIC_USER;
+			vc_userprofile.qop := PX_IMS_SUT_UE4_QOP;
+			vc_userprofile.privUsername := PX_IMS_SUT_UE4_PRIVAT_USERNAME;	
+			vc_userprofile.passwd := PX_IMS_SUT_UE4_PRIVAT_PASSWD;	
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE4_REGISTRAR;
+			}
+			
+			case (c_userProfile_UE1atSUTvisiting) { //variant c_userProfile_UE1atSUTvisiting - UE3 parameters
+			vc_userprofile.currPort := PX_IMS_TS_UE1_PORT;
+			vc_userprofile.currIpaddr := PX_IMS_TS_UE1_IPADDR;
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE3_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE3_HOME_DOMAIN;	
+			vc_userprofile.publUsername := PX_IMS_SUT_UE3_PUBLIC_USER;
+			vc_userprofile.qop := PX_IMS_SUT_UE3_QOP;
+			vc_userprofile.privUsername := PX_IMS_SUT_UE3_PRIVAT_USERNAME;	
+			vc_userprofile.passwd := PX_IMS_SUT_UE3_PRIVAT_PASSWD;	
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE3_REGISTRAR;
+			}
+			
+//			//temporary not used and it can be deleted during validation
+//			case (c_userProfile_UE1atSUTvisiting) { //variant c_userProfile_UE1atSUTvisiting
+//			vc_userprofile.currPort := PX_IMS_TS_UE2_PORT;
+//			vc_userprofile.currIpaddr := PX_IMS_TS_UE2_IPADDR;
+//			vc_userprofile.contactPort := PX_IMS_TS_UE2_PORT;
+//			vc_userprofile.contactIpaddr := PX_IMS_TS_UE2_IPADDR;
+//			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE2_BEARER_IPADDR;	
+//			vc_userprofile.homeDomain := PX_IMS_SUT_UE2_HOME_DOMAIN;	
+//			vc_userprofile.publUsername := PX_IMS_SUT_UE2_PUBLIC_USER;
+//			vc_userprofile.qop := PX_IMS_SUT_UE2_QOP;
+//			vc_userprofile.privUsername := PX_IMS_SUT_UE2_PRIVAT_USERNAME;	
+//			vc_userprofile.passwd := PX_IMS_SUT_UE2_PRIVAT_PASSWD;	
+//			vc_userprofile.registrarDomain := PX_IMS_TS_UE2_REGISTRAR;
+//			}
+
+			case (c_userProfile_IBCFwithHomeUE)			 { 				//variant c_userProfile_IBCFwithHomeUE
+			vc_userprofile.currPort := PX_IMS_TS_IBCF_PORT;				// via (Ic interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_IBCF_IPADDR;			// via
+			vc_userprofile.contactPort := PX_IMS_TS_IBCF_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_IBCF_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;		// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;				// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}	
+
+			case (c_userProfile_IBCFwithVisitingUE) { 					//variant c_userProfile_IBCFwithVisitingUE
+			vc_userprofile.currPort := PX_IMS_TS_IBCF_PORT;				// via (Ic interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_IBCF_IPADDR;			// via
+			vc_userprofile.contactPort := PX_IMS_TS_IBCF_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_IBCF_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;		// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;				// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+			
+			case (c_userProfile_ICSCFwithHomeUE) { 						//variant c_userProfile_ICSCFwithHomeUE - UE4 parameters
+			vc_userprofile.currPort := PX_IMS_TS_ICSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_ICSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE4_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE4_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE4_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE4_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE4_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE4_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE4_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE4_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE4_REGISTRAR; 	// Authorization
+			}
+	
+			case (c_userProfile_IBCFwithUnknownUE) { 					//variant 
+			vc_userprofile.currPort := PX_IMS_TS_ICSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_ICSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_unknownUE_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+
+			case (c_userProfile_PCSCFwithHomeUE) { 						//variant c_userProfile_PCSCFwithHomeUE
+			vc_userprofile.currPort := PX_IMS_TS_PCSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_PCSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+	
+			case (c_userProfile_PCSCFwithVisitingUE) { 					//variant c_userProfile_PCSCFwithVisitingUE
+			vc_userprofile.currPort := PX_IMS_TS_PCSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_PCSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_REGISTRAR;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+
+			// another visting user in IMS (cp. TP_IMST2_MW_REG_15: different public id, same private id)
+			case (c_userProfile_PCSCFwithVisitingUE2) { 				//variant
+			vc_userprofile.currPort := PX_IMS_TS_PCSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_PCSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE2_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE2_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE2_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE2_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+
+			// unknown visting user in IMS (cp. TP_IMST2_MW_REG_16)
+			case (c_userProfile_PCSCFwithUnknownVisitingUE) { 			//variant
+			vc_userprofile.currPort := PX_IMS_TS_PCSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_PCSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE2_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_unknownUE_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+
+			case (c_userProfile_SCSCFwithHomeUE) { 						//variant c_userProfile_SCSCFwithHomeUE  - UE4 parameters
+			vc_userprofile.currPort := PX_IMS_TS_SCSCF_PORT;			// via (Mw interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_SCSCF_IPADDR;		// via
+			vc_userprofile.contactPort := PX_IMS_TS_UE4_PORT;			// contact (simulated UE)
+			vc_userprofile.contactIpaddr := PX_IMS_TS_UE4_IPADDR;		// contact
+			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE4_BEARER_IPADDR;	
+			vc_userprofile.homeDomain := PX_IMS_SUT_UE4_HOME_DOMAIN;	// From, To (register)
+			vc_userprofile.publUsername := PX_IMS_SUT_UE4_PUBLIC_USER;	// From, To (register)
+			vc_userprofile.qop := PX_IMS_SUT_UE4_QOP;					// Authorization
+			vc_userprofile.privUsername := PX_IMS_SUT_UE4_PRIVAT_USERNAME;	// Authorization
+			vc_userprofile.passwd := PX_IMS_SUT_UE4_PRIVAT_PASSWD;			// Authorization
+			vc_userprofile.registrarDomain := PX_IMS_SUT_UE4_REGISTRAR; 	// Authorization
+			}
+
+            case (c_userProfile_SCSCFwithHomeUE_domain) { 						//variant c_userProfile_SCSCFwithHomeUE  - UE4 parameters
+            vc_userprofile.currPort := PX_IMS_TS_SCSCF_PORT;			// via (Mw interface of TS)
+            vc_userprofile.currIpaddr := PX_IMS_TS_SCSCF_IPADDR;		// via
+            vc_userprofile.contactPort := PX_IMS_TS_UE4_PORT;			// contact (simulated UE)
+            vc_userprofile.contactIpaddr := PX_IMS_TS_UE4_IPADDR;		// contact
+            vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE4_BEARER_IPADDR;	
+            vc_userprofile.homeDomain := PX_IMS_SUT_UE4_HOME_DOMAIN;	// From, To (register)
+            vc_userprofile.publUsername := PX_IMS_SUT_UE4_PUBLIC_USER;	// From, To (register)
+            vc_userprofile.qop := PX_IMS_SUT_UE4_QOP;					// Authorization
+            vc_userprofile.privUsername := PX_IMS_SUT_UE4_PRIVAT_USERNAME;	// Authorization
+            vc_userprofile.passwd := PX_IMS_SUT_UE4_PRIVAT_PASSWD;			// Authorization
+            vc_userprofile.registrarDomain := PX_IMS_SUT_UE4_REGISTRAR; 	// Authorization
+            }
+			
+			case (c_userProfile_AS1)  { 								//variant c_userProfile_AS1
+			vc_userprofile.currPort := PX_IMS_TS_AS1_PORT;				// via, route(Isc interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_AS1_IPADDR;			// via, route
+			vc_userprofile.homeDomain := PX_IMS_TS_AS1_HOME_DOMAIN;		// via, route
+			}
+			
+			case (c_userProfile_AS2)  { 								//variant c_userProfile_AS2
+			vc_userprofile.currPort := PX_IMS_TS_AS2_PORT;				// via, route(Isc interface of TS)
+			vc_userprofile.currIpaddr := PX_IMS_TS_AS2_IPADDR;			// via, route
+			vc_userprofile.homeDomain := PX_IMS_TS_AS2_HOME_DOMAIN;		// via, route
+			}
+			
+			case (c_userProfile_ECSCFwithHomeUE) { 						//variant c_userProfile_PCSCFwithHomeUE
+    			vc_userprofile.currPort := PX_IMS_TS_ECSCF_PORT;			// via (Mw interface of TS)
+    			vc_userprofile.currIpaddr := PX_IMS_TS_ECSCF_IPADDR;		// via
+    			vc_userprofile.contactPort := PX_IMS_TS_UE1_PORT;			// contact (simulated UE)
+    			vc_userprofile.contactIpaddr := PX_IMS_TS_UE1_IPADDR;		// contact
+    			vc_userprofile.bearerIpaddr := PX_IMS_SUT_UE1_BEARER_IPADDR;	
+    			vc_userprofile.homeDomain := PX_IMS_SUT_UE1_HOME_DOMAIN;	// From, To (register)
+    			vc_userprofile.publUsername := PX_IMS_SUT_UE1_PUBLIC_USER;	// From, To (register)
+    			vc_userprofile.qop := PX_IMS_SUT_UE1_QOP;					// Authorization
+    			vc_userprofile.privUsername := PX_IMS_SUT_UE1_PRIVAT_USERNAME;	// Authorization
+    			vc_userprofile.passwd := PX_IMS_SUT_UE1_PRIVAT_PASSWD;			// Authorization
+    			vc_userprofile.registrarDomain := PX_IMS_SUT_UE1_REGISTRAR; 	// Authorization
+			}
+			
+			}
+		}
+
+		function f_initToHeader(in integer p_user) runs on ImsComponent return To
+		{
+			var To p_to := c_empty_To;
+			p_to := {	fieldName := TO_E,
+						addressField :=
+						{nameAddr := {
+							displayName := omit, 	 			// optional charstring
+							addrSpec :=	f_initSipUrl(p_user)	// SipUrl
+						  }},//end addressField
+						toParams := omit
+					  };
+			return(p_to);
+		}
+
+
+		function f_initFromHeader(in integer p_user, charstring p_tag_str) runs on ImsComponent return From
+		{
+			var From p_from := c_empty_From;
+			p_from := {	fieldName := FROM_E,
+						addressField :=
+						{nameAddr := {
+							displayName := omit, 	 			// optional charstring
+							addrSpec :=	f_initSipUrl(p_user)	// SipUrl
+						  }},//end addressField
+						fromParams := {{id := c_tagId, paramValue := p_tag_str}}
+					  };
+			return(p_from)
+		}
+
+		function f_initSipUrl(in integer p_user) runs on ImsComponent return SipUrl
+		{
+			var SipUrl p_sipUrl := {	  
+				scheme := c_sipScheme,  			// contains "sip"
+				userInfo := omit,
+				hostPort := {
+        host := omit,          // hostname, IPv4 or IPv6
+        portField := omit      // represented as an integer
+      },
+				urlParameters := omit,
+				headers := omit};
+				
+			select(p_user){
+				case (c_userProfile_UE1atSUThome) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE1_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_UE1_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_userProfile_UE2atSUThome) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE2_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_UE2_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_userProfile_UE3atSUThome) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE3_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_UE3_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_userProfile_UE4atSUThome) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE4_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_UE4_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_userProfile_IBCFwithHomeUE) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_IMS1UE_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_IMS1UE_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_userProfile_ICSCFwithHomeUE) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_IMS1UE_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_IMS1UE_HOME_DOMAIN, portField :=omit}
+				}
+				case (c_userProfile_PCSCFwithHomeUE) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_IMS1UE_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_PCSCF_IPADDR, portField :=omit}
+				}
+				case (c_userProfile_SCSCFwithHomeUE) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE4_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_SCSCF_HOME_DOMAIN, portField :=PX_IMS_TS_SCSCF_PORT}
+				}
+				case (c_userProfile_SCSCFwithHomeUE_domain) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_UE4_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_SCSCF_HOME_DOMAIN, portField :=omit}
+				}
+                case (c_userProfile_AS1) {
+                        p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_IMS1UE_PUBLIC_USER, password:=omit};
+                        p_sipUrl.hostPort := {host := PX_IMS_TS_AS1_IPADDR, portField :=omit}
+                }                
+				case (c_userProfile_ECSCFwithHomeUE) {
+					p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_IMS1UE_PUBLIC_USER, password:=omit};
+					p_sipUrl.hostPort := {host := PX_IMS_TS_ECSCF_IPADDR, portField :=omit}
+				}
+				case (c_userProfile_ISUP) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_TS_ISUP_PUBLIC_USER, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_TS_ISUP_HOME_DOMAIN, portField :=omit}
+				}
+				case (c_serviceProfile_EMERGENCY) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_EMERGENCY_SERVICE, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_EMERGENCY_HOME_DOMAIN, portField :=omit}
+						}
+				case (c_serviceProfile_EMERGENCY_INVALID) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_EMERGENCY_SERVICE_INVALID, password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_EMERGENCY_HOME_DOMAIN, portField :=omit}
+						}
+						
+				// following setting is used for the assignment of the Path header field
+				case (c_interfaceProfile_IMS_SUT_PCSCF1) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:="", password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_PCSCF1_HOME_DOMAIN, portField :=PX_IMS_SUT_PCSCF1_PORT}
+						}						
+						
+				// following setting is used in relation to the route headers list elements
+				case (c_interfaceSIPURL_IMS_SUT_PCSCF1_domain) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:="", password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_PCSCF1_HOME_DOMAIN, portField :=PX_IMS_SUT_PCSCF1_PORT}
+						}						
+				case (c_interfaceSIPURL_IMS_SUT_PCSCF1_ip) {
+						p_sipUrl.userInfo := {userOrTelephoneSubscriber:="", password:=omit};
+						p_sipUrl.hostPort := {host := PX_IMS_SUT_PCSCF1_IPADDR, portField :=PX_IMS_SUT_PCSCF1_PORT}
+						}
+				case (c_conferenceProfile_factoryURI) {
+    				p_sipUrl.userInfo := {userOrTelephoneSubscriber:=PX_IMS_SUT_CONF_FACTORY_NAME, password:=omit};
+    				p_sipUrl.hostPort := {host := PX_IMS_SUT_CONF_HOME_DOMAIN, portField := omit}
+				}						
+				};
+			return(p_sipUrl)
+		}
+
+
+		/*
+		 * 
+		 * @desc sets user parameters with PIXIT values
+		 * @param p_user identifies the selected user configuration and location
+		 * @verdict 
+		 */
+		function f_init_interfaceprofile(in integer p_interface) runs on ImsComponent
+		{
+			select(p_interface){
+				case (c_interfaceProfile_IMS_SUT_IBCF1) { //variant c_interfaceProfile_IMS_SUT_IBCF1
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_IBCF1_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_IBCF1_IPADDR;	
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_IBCF1_HOME_DOMAIN;	
+				}
+				case (c_interfaceProfile_IMS_SUT_IBCF2) { //variant c_interfaceProfile_IMS_SUT_IBCF2
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_IBCF2_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_IBCF2_IPADDR;	
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_IBCF2_HOME_DOMAIN;
+				}
+				case (c_interfaceProfile_IMS_SUT_PCSCF1) { //variant c_interfaceProfile_IMS_SUT_PCSCF1
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_PCSCF1_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_PCSCF1_IPADDR;	
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_PCSCF1_HOME_DOMAIN;
+				}
+				case (c_interfaceProfile_IMS_SUT_PCSCF2) { //variant c_interfaceProfile_IMS_SUT_PCSCF2
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_PCSCF2_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_PCSCF2_IPADDR;	
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_PCSCF2_HOME_DOMAIN;
+				}
+				case (c_interfaceProfile_IMS_SUT_PCSCF) { //variant c_interfaceProfile_IMS_SUT_PCSCF
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_PCSCF_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_PCSCF_IPADDR;
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_PCSCF_HOME_DOMAIN;	
+				}
+				case (c_interfaceProfile_IMS_SUT_SCSCF) { //variant c_interfaceProfile_IMS_SUT_SCSCF
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_SCSCF_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_SCSCF_IPADDR;	
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_SCSCF_HOME_DOMAIN;				
+				}
+				case (c_interfaceProfile_IMS_SUT_ICSCF) { //variant c_interfaceProfile_IMS_SUT_ICSCF
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_ICSCF_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_ICSCF_IPADDR;		
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_ICSCF_HOME_DOMAIN;
+				}
+				case (c_interfaceProfile_IMS_SUT_MGCF) { //variant c_interfaceProfile_IMS_SUT_MGCF
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_IMGCF_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_IMGCF_IPADDR;		
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_IMGCF_HOME_DOMAIN;
+				}
+				case (c_interfaceProfile_IMS_SUT_AS) { //variant c_interfaceProfile_IMS_SUT_AS
+				vc_interfaceprofile.SUTPort := PX_IMS_SUT_AS_PORT;
+				vc_interfaceprofile.SUTIpaddr := PX_IMS_SUT_AS_IPADDR;		
+				vc_interfaceprofile.SUTHomeDomain := PX_IMS_SUT_AS_HOME_DOMAIN;
+				}
+			}
+		}
+		
+		/*
+		 * 
+		 * @desc retrieves HostPort value of the interface profile
+		 * @param p_interface identifies the selected interface
+		 * @return HostPort template 
+		 */
+		function f_get_interfaceHostPort (in ImsInterfaceProfile p_interface) runs on ImsComponent return /*template*/ HostPort // STS commented out template but check why in there in first place
+		{
+				return {p_interface.SUTIpaddr,p_interface.SUTPort}
+		}	
+		
+		/*
+		 * 
+		 * @desc retrieves DomainPort value of the interface profile
+		 * @param p_interface identifies the selected interface
+		 * @return DomainPort template 
+		 */
+		function f_get_interfaceDomainPort (in ImsInterfaceProfile p_interface) runs on ImsComponent return /*template*/ HostPort
+		{
+				return {p_interface.SUTHomeDomain,p_interface.SUTPort}
+		}	
+		
+		/*
+		 * @desc retrieves SipUrl of the interface profile
+		 * @param p_interface identifies the selected interface
+		 * @return SipUrl template 
+		 */
+		function f_get_interfaceNameAddr(in ImsInterfaceProfile p_interface) runs on ImsComponent return template NameAddr
+		{
+				return mw_SipUrl_SUTinterface(p_interface.SUTIpaddr,p_interface.SUTPort)
+		}		
+		
+		
+	}
+	group registration {
+
+		/**
+		 * 
+		 * @desc  registration and authentication with MD5
+		 * @param p_cSeq_s		cseq parameter 
+		 * @param p_auth		flag indicating if authentication is needed
+		 */
+		function f_Registration_IMS(inout CSeq p_cSeq_s, in boolean p_auth) runs on SipComponent
+		{
+			f_setHeaders_REGISTER(p_cSeq_s);
+			f_SendREGISTER(m_REGISTER_Request_IMS(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via_REG, vc_contact, m_add_Authorization_digest(vc_authorization,{c_Integrity_protected_no}))); //LibSip
+		
+			//awaiting of 401 and sending 2nd REGISTER and awaiting 200 OK REGISTER
+			if (p_auth)
+			{
+			  // receiving 401 Unauthorized response.
+			  // and Re-send REGISTER request with Authorization header
+			  tc_ack.start(PX_SIP_TACK);
+			  alt
+			  {
+				[] SIPP.receive	(mw_Response_Base(c_statusLine401, vc_callId, p_cSeq_s)) -> value vc_response
+				  {
+					tc_ack.stop;
+					// set headers via, cseq and authorization
+					f_setHeaders_2ndREGISTER(p_cSeq_s);
+					f_SendREGISTER(m_REGISTER_Request_IMS(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via_REG, vc_contact, m_add_Authorization_digest(vc_authorization,{c_Integrity_protected_yes}))); //LibSip
+	            
+					// awaiting 200 OK REGISTER
+					f_awaitingOkResponse(p_cSeq_s);
+					f_getServiceRouteMapIntoRouteInRegistration(p_cSeq_s, vc_response);
+				  }
+				[] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callId, p_cSeq_s))
+				  {
+					tc_ack.stop;
+					log ("Authorization was not requested as expected");
+					setverdict(inconc)
+				  }
+			  }
+			}
+			else
+			{
+			  f_awaitingOkResponse(p_cSeq_s);
+			  f_getServiceRouteMapIntoRouteInRegistration(p_cSeq_s, vc_response);
+			};
+		}//end function f_Registration_IMS
+
+		/**
+		 * 
+		 * @desc  awaiting UE1 registration (with authentication)
+		 * @param p_cSeq_s		cseq parameter 
+		 */
+		function f_awaitingRegistration_IMS(inout CSeq p_cSeq_s) runs on ImsComponent
+		{
+		var SipUrl v_passociated_url;
+		var Authorization p_authorization;
+		//Awaiting 1st REGISTER	
+		f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);
+
+		// 401 response
+		f_sendResponse(m_Response_WWWauthenticate_IMS(c_statusLine401,
+			vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via,
+			m_wwwAuthenticate(f_calculatecChallenge_forWWWAuthorization
+									(PX_IMS_SUT_UE1_QOP,vc_authorization.body.digestResponse)))
+			);
+
+		//Awaiting 2nd REGISTER	with authorization header
+		f_awaitingREGISTER(mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse((c_Integrity_protected_yes,c_Integrity_protected_ip_assoc_pending)))));
+
+		// 200OK to complete the request
+		vc_contact := vc_request.msgHeader.contact;
+		vc_contact.contactBody.contactAddresses[0].contactParams := {{"expires",int2str(3600)}};
+		v_passociated_url := vc_caller_From.addressField.nameAddr.addrSpec;
+		f_sendResponse(m_Response_2xxonREGISTER_IMS(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact,f_initSipUrl(c_userProfile_SCSCFwithHomeUE),v_passociated_url));
+
+		}//end function f_awaitingRegistration_IMS
+
+		/**
+		 * 
+		 * @desc  awaiting UE1 registration (with authentication)
+		 * @param p_cSeq_s		cseq parameter 
+		 */
+		function f_awaitingRegistration_IMS_gm(inout CSeq p_cSeq_s) runs on ImsComponent
+		{
+            var SipUrl v_passociated_url;
+            var Authorization p_authorization;
+            vc_ignore_subscribe := true;//handle SUBSCRIBE during the call
+    		//Awaiting 1st REGISTER	
+    		f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);
+    
+    		// 401 response
+    		f_sendResponse(m_Response_WWWauthenticate_IMS(c_statusLine401,
+    			vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via,
+    			m_wwwAuthenticate(f_calculatecChallenge_forWWWAuthorization
+    									(PX_IMS_SUT_UE1_QOP,vc_authorization.body.digestResponse)))
+    			);
+    
+    		//Awaiting 2nd REGISTER	with authorization header
+            f_awaitingREGISTER(mw_REGISTER_authorizedRequest_wo_securityheaders_IMS);
+    		//f_awaitingREGISTER(mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse((c_Integrity_protected_yes,c_Integrity_protected_ip_assoc_pending)))));
+    
+    		// 200OK to complete the request
+    		vc_contact := vc_request.msgHeader.contact;
+    		vc_contact.contactBody.contactAddresses[0].contactParams := {{"expires",int2str(3600)}};
+    		v_passociated_url := vc_caller_From.addressField.nameAddr.addrSpec;
+    		f_sendResponse(m_Response_2xxonREGISTER_IMS(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact,f_initSipUrl(c_userProfile_SCSCFwithHomeUE),v_passociated_url));
+            vc_DeregDone := false; 
+		}//end function f_awaitingRegistration_IMS_gm
+
+
+	/**
+	 * 
+	 * @desc remove registration
+	 * @param p_cSeq_s cseq parameter
+	 */	
+	function f_RemoveRegistration_IMS(inout CSeq p_cSeq) runs on SipComponent
+	{
+	  var CommaParam_List v_challenge;
+	  var Credentials v_credentials;
+	  var template REGISTER_Request v_request;
+	  
+	  if (PX_SIP_REGISTRATION)
+	  {
+		f_setHeaders_deREGISTER(p_cSeq);
+		v_request := m_REGISTER_Request_expires_IMS(vc_requestUri, vc_callIdReg,
+		p_cSeq,  vc_from, vc_to, vc_via, vc_contact, vc_authorization, "0");
+		v_request.msgHeader.route := f_route();
+		
+		f_SendREGISTER(v_request);
+		if (PX_SIP_REGISTER_AUTHENTICATION_ENABLED)
+		{
+			// receiving 401 Unauthorized response.
+			// and Re-send REGISTER request with Authorization header
+			tc_ack.start(PX_SIP_TACK);
+			alt
+			{
+			  [] SIPP.receive	(mw_Response_Base(c_statusLine401, vc_callIdReg, p_cSeq)) -> value vc_response
+				{
+				  tc_ack.stop;
+				  // set headers via, cseq and authorization
+				  f_setHeaders_2ndREGISTER(p_cSeq);
+					v_request := m_REGISTER_Request_expires_IMS(vc_requestUri, vc_callIdReg,
+					p_cSeq,  vc_from, vc_to, vc_via, vc_contact, vc_authorization, "0");
+					v_request.msgHeader.route := f_route();
+				  // Re-send protected REGISTER
+				  f_SendREGISTER(v_request);//LibSip
+				  
+				  // awaiting 200 OK REGISTER
+				  f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq));
+				}
+			  [] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq))-> value vc_response
+				{
+        			tc_ack.stop;
+        			f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+        			log ("Authorization was not requested as expected");
+				}
+			}
+		}
+		else
+		{
+		  f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq));
+		}
+	  }
+	} // end f_RemoveRegistration_IMS
+		
+
+	} // end group registration
+	
+	group preambles {
+		
+		/*
+		 * 
+		 * @desc  Sets variables and default initialization for user profile where proxy role is present
+		 * @param p_userprofile	user profile of call
+		 * @param p_cSeq_s 		cseq parameter
+		 */
+		function f_IMS_preamble_MGCF(in integer p_userprofile, inout CSeq p_cSeq_s)  runs on ImsComponent
+		{
+			vc_boo_recordRoute := true;
+			vc_boo_route := true;
+			f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_MGCF);
+			
+			f_IMS_preamble_woRegistration(p_userprofile, p_cSeq_s);
+		}
+		
+		/*
+		 * 
+		 * @desc  Sets variables and default initialization for user profile
+		 * @param p_userprofile	user profile of call
+		 * @param p_cSeq_s 		cseq parameter
+		 */
+		function f_IMS_preamble_woRegistration(in integer p_userprofile, inout CSeq p_cSeq_s)  runs on ImsComponent
+		{
+			// avoid deregistration in default behavior
+			vc_DeregDone := true; 
+			vc_boo_route := true;
+   			vc_boo_recordRoute := true;
+		 
+			//Variables & defaults initialization
+			LibSip_Steps.f_init_component(p_cSeq_s);
+
+			//Preamble
+			f_init_userprofile(p_userprofile); // assignment of PIXIT values to component variable
+			vc_sdp_local := valueof(m_SDP_bandwidth(valueof(m_media_dynPT(PX_SIP_SDP_dyn, PX_SIP_SDP_encoding)), vc_userprofile));
+			vc_contact := valueof(m_Contact(m_SipUrl_contactIpaddr(vc_userprofile)));
+		}
+
+		/*
+		*
+		* @desc  Sets variables and default initialization for user profile and handle registration and authentication with MD5 
+		* @param p_userprofile   	user profile of call
+		* @param p_cSeq_s		  	cseq parameter
+		* @param p_register		register template
+		*/
+		function f_IMS_preamble_withRegistration (in integer p_userprofile, inout CSeq p_cSeq_s, out template REGISTER_Request p_register) runs on ImsComponent
+		{
+		
+			//Variables & defaults initialization
+			f_IMS_preamble_woRegistration(p_userprofile, p_cSeq_s);
+	
+			//Preamble
+			f_Registration(p_cSeq_s, p_register, PX_SIP_REGISTER_AUTHENTICATION_ENABLED);
+
+			//	deregistration in case of successful registration
+			vc_DeregDone := false;
+						
+			f_setHeaders_SUBSCRIBE(p_cSeq_s);
+			//TODO REMOVE following comment
+			//f_Subscription(p_cSeq_s, m_SUBSCRIBE_Request_UE(vc_requestUri, vc_callId, p_cSeq_s, vc_from, vc_to, vc_via, vc_contact, vc_route_REG));
+
+		}	
+
+		/*
+		 * 
+		 * @desc  Sets variables and default initialization for user profile and handle registration and authentication with MD5 
+		 *			(basic registration template)
+		 * @param p_userprofile   	user profile of call
+		 * @param p_cSeq_s		  	cseq parameter
+		 */
+		function f_IMS_preamble_withRegistrationBasic (in integer p_userprofile, inout CSeq p_cSeq_s) runs on ImsComponent
+		{
+		
+			//Variables & defaults initialization
+			f_IMS_preamble_woRegistration(p_userprofile, p_cSeq_s);
+	
+			//Preamble
+   			f_Registration_IMS(p_cSeq_s, PX_SIP_REGISTER_AUTHENTICATION_ENABLED);
+			f_setHeaders_SUBSCRIBE(p_cSeq_s);
+			f_Subscription(p_cSeq_s, m_SUBSCRIBE_Request_UE(vc_requestUri, vc_callId, p_cSeq_s, vc_from, vc_to, vc_via, vc_contact, vc_route_REG));
+		}			
+		
+	} // end group preambles
+	
+	group postambles {
+	 
+		/*
+		*
+		* @desc  Sets variables and default initialization for user profile and handle deregistration
+		* @param p_cSeq_s		  	cseq parameter
+		*/
+	 	function f_IMS_postamble_withDeRegistration (CSeq p_CSeq) runs on ImsComponent {
+	 		f_RemoveRegistration(p_CSeq); // TODO check if applicable for IMS
+	 		
+    		f_terminate_component();
+	 	}
+		
+		function f_SIP_postamble_IMS1_withoutRegistration () runs on ImsComponent
+		{f_terminate_component()};
+			
+		function f_IMS_postamble_withoutDeRegistration () runs on ImsComponent
+		{f_terminate_component()};
+  
+  		function f_SIP_postamble_IMS1_awaitDeRegistration () runs on ImsComponent
+		{
+			var SipUrl v_passociated_url;
+			//Awaiting 1st REGISTER	
+			f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);
+
+			// 401 response
+			f_sendResponse(m_Response_WWWauthenticate_IMS(c_statusLine401,
+				vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via,
+				m_wwwAuthenticate(f_calculatecChallenge_forWWWAuthorization
+										(PX_IMS_SUT_UE1_QOP,vc_authorization.body.digestResponse)))
+				);
+
+			//Awaiting 2nd REGISTER	with authorization header
+			f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);//mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse(c_Integrity_protected_yes))));
+//			f_awaitingREGISTER(mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse(c_Integrity_protected_yes))));
+
+			// 200OK to complete the request
+//			vc_contact := vc_request.msgHeader.contact;
+//			vc_contact.contactBody.contactAddresses[0].contactParams := {{"expires",int2str(0)}};
+			v_passociated_url := vc_caller_From.addressField.nameAddr.addrSpec;
+			f_sendResponse(m_Response_2xxonREGISTER_IMS(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact,f_initSipUrl(c_userProfile_SCSCFwithHomeUE),v_passociated_url));
+
+			f_terminate_component()
+		};
+		
+  		function f_IMS_postamble_awaitDeRegistration () runs on ImsComponent
+		{	
+			var SipUrl v_passociated_url;
+			//Awaiting 1st REGISTER
+  	
+			f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);
+
+			// 401 response
+			f_sendResponse(m_Response_WWWauthenticate_IMS(c_statusLine401,
+				vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via,
+				m_wwwAuthenticate(f_calculatecChallenge_forWWWAuthorization
+										(PX_IMS_SUT_UE1_QOP,vc_authorization.body.digestResponse)))
+				);
+
+			//Awaiting 2nd REGISTER	with authorization header
+			f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);//mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse(c_Integrity_protected_yes))));
+
+			// 200OK to complete the request
+//			vc_contact := vc_request.msgHeader.contact;
+//			vc_contact.contactBody.contactAddresses[0].contactParams := {{"expires",int2str(0)}};
+			v_passociated_url := vc_caller_From.addressField.nameAddr.addrSpec;
+			f_sendResponse(m_Response_2xxonREGISTER_IMS(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact,f_initSipUrl(c_userProfile_SCSCFwithHomeUE),v_passociated_url));
+
+			f_terminate_component()
+		};
+
+		
+        function f_IMS_awaitDeRegistration () runs on ImsComponent
+        {	
+            var SipUrl v_passociated_url;
+            //Awaiting 1st REGISTER
+  	
+            f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);
+
+            // 401 response
+            f_sendResponse(m_Response_WWWauthenticate_IMS(c_statusLine401,
+                vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via,
+                m_wwwAuthenticate(f_calculatecChallenge_forWWWAuthorization
+                                        (PX_IMS_SUT_UE1_QOP,vc_authorization.body.digestResponse)))
+                );
+
+            //Awaiting 2nd REGISTER	with authorization header
+            f_awaitingREGISTER(mw_REGISTER_unauthorizedRequest_IMS);//mw_REGISTER_authorizedRequest_IMS(m_Authorization_digest(mw_digestResponse(c_Integrity_protected_yes))));
+
+            // 200OK to complete the request
+//          vc_contact := vc_request.msgHeader.contact;
+//          vc_contact.contactBody.contactAddresses[0].contactParams := {{"expires",int2str(0)}};
+            v_passociated_url := vc_caller_From.addressField.nameAddr.addrSpec;
+            f_sendResponse(m_Response_2xxonREGISTER_IMS(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact,f_initSipUrl(c_userProfile_SCSCFwithHomeUE),v_passociated_url));
+        };
+
+		function f_SIP_postamble_UE1_withoutRegistration () runs on ImsComponent
+		{f_terminate_component()};
+			
+		function f_SIP_postamble_UE2_withoutRegistration () runs on ImsComponent
+		{f_terminate_component()};
+		
+		/**
+		 * 
+		 * @desc sends BYE and awaits response
+		 * @param p_CallId parameter for outgoing BYE
+		 * @param p_cSeq parameter for outgoing BYE
+		 * @param p_from parameter for outgoing BYE
+		 * @param p_to parameter for outgoing BYE
+		 * @param p_reqHostPort parameter for outgoing BYE
+		 */
+		function f_terminateCall_IMS(SipUrl p_requestUri, CallId p_CallId, inout CSeq p_cSeq, From p_from,
+		  template To p_to) runs on ImsComponent
+		{
+          LibSip_Steps.f_setHeadersBYE(p_cSeq);
+		  // Sending of a BYE request to release the call and expect a final response
+		  f_SendBYE(m_BYE_Request_IMS(p_requestUri, p_CallId, p_cSeq, p_from, valueof(p_to), vc_via, vc_route));
+      
+		  tc_resp.start(PX_SIP_TRESP);
+		  alt
+		  {
+			[] SIPP.receive	(mw_Response_Base(mw_statusLine1xx, p_CallId, p_cSeq))
+			  {
+				repeat;
+			  }
+			[] SIPP.receive	(mw_Response_Base(mw_statusLineFinal, p_CallId, p_cSeq))
+			  {
+				tc_resp.stop;
+			  }
+			// timeout should be handled in default_alt_step
+		  }
+		} // end function f_terminateCall
+		
+		
+		/**
+		 * 
+		 * @desc  sends BYE and awaits response
+		 * @param p_CallId parameter for outgoing BYE
+		 * @param p_cSeq parameter for outgoing BYE
+		 * @param p_from parameter for outgoing BYE
+		 * @param p_to parameter for outgoing BYE
+		 * @param p_reqHostPort parameter for outgoing BYE
+		 */
+		function f_terminateCall_UE(SipUrl p_requestUri, CallId p_CallId, inout CSeq p_cSeq, From p_from,
+		  template To p_to) runs on ImsComponent
+		{
+		  LibSip_Steps.f_setHeadersBYE(p_cSeq);
+		  // Sending of a BYE request to release the call and expect a final response
+		  f_SendBYE(m_BYE_Request_UE(p_requestUri, p_CallId, p_cSeq, p_from, valueof(p_to), vc_via, vc_route));
+      
+		  tc_resp.start(PX_SIP_TRESP);
+		  alt
+		  {
+			[] SIPP.receive	(mw_Response_Base(mw_statusLine1xx, p_CallId, p_cSeq))
+			  {
+				repeat;
+			  }
+			[] SIPP.receive	(mw_Response_Base(mw_statusLineFinal, p_CallId, p_cSeq))
+			  {
+				tc_resp.stop;
+			  }
+			// timeout should be handled in default_alt_step
+		  }
+		} // end function f_terminateCall_UE
+		
+		
+        /**
+         * 
+         * @desc  sends BYE and awaits response and De-registration
+         * @param p_CallId parameter for outgoing BYE
+         * @param p_cSeq parameter for outgoing BYE
+         * @param p_from parameter for outgoing BYE
+         * @param p_to parameter for outgoing BYE
+         * @param p_reqHostPort parameter for outgoing BYE
+         */
+        function f_terminateCall_UE_withDeReg(SipUrl p_requestUri, CallId p_CallId, inout CSeq p_cSeq, From p_from,
+          template To p_to) runs on ImsComponent
+        {
+          LibSip_Steps.f_setHeadersBYE(p_cSeq);
+          // Sending of a BYE request to release the call and expect a final response
+          f_SendBYE(m_BYE_Request_UE(p_requestUri, p_CallId, p_cSeq, p_from, valueof(p_to), vc_via, vc_route));
+      
+          tc_resp.start(PX_SIP_TRESP);
+          alt
+          {
+            [] SIPP.receive	(mw_Response_Base(mw_statusLine1xx, p_CallId, p_cSeq))
+              {
+                repeat;
+              }
+            [] SIPP.receive	(mw_Response_Base(mw_statusLineFinal, p_CallId, p_cSeq))
+              {
+                tc_resp.stop;
+              }
+            // timeout should be handled in default_alt_step
+          };
+          action("Please de-register");          
+          f_IMS_awaitDeRegistration();
+          //f_terminate_component();
+        } // end function f_terminateCall_UE_withDeReg
+		
+		}
+	group defaults {
+	    
+        altstep a_clearRegistration_IMSuser() runs on ImsComponent //SipComponent FIXME
+        {
+            var Response v_response;
+            var Request v_request;
+		 
+            [] any timer.timeout 
+            {
+                setverdict(fail); 
+                all timer.stop; 
+                //TODO check how to solve release of call 
+                //f_SendCANCEL(m_CANCEL_Request(vc_callId, vc_cSeq, vc_from, vc_cancel_To, vc_reqHostPort, vc_via )); // difference between registration state or transaction state
+                vc_callId := vc_callIdReg;
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+            }
+            // allow repeated INVITEs
+            [vc_ignore_invite] SIPP.receive(mw_INVITE_Request_Base)
+            {
+              repeat
+            }
+		
+            // allow repeated BYEs after ack of the first BYE
+            [vc_ignore_bye] SIPP.receive (mw_BYE_Request_Base(?))
+            {
+              repeat
+            }
+            [] SIPP.receive (mw_ACK_Request_Base(?))
+            {
+                repeat
+            }
+            // allow 100 replies
+            [] SIPP.receive(mw_Response_Base(c_statusLine100,?, ?))
+              {
+                repeat
+              }
+			  
+            //	ignore 181 if flag is set (following TS 183004 Â§4.5.2.1)		  
+            [vc_ignore181] SIPP.receive(mw_Response_Base(c_statusLine181,vc_callId, vc_cSeq))-> value v_response sender vc_sent_label
+              { 
+                f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+                repeat;
+              } 
+	  
+            // according to SIP chap.8.1.3.2
+            [] SIPP.receive(mw_Response_Base(c_statusLine183,vc_callId, vc_cSeq))
+              { 
+                repeat;
+              } 
+
+            // ignore 484 if flag is set
+            [vc_ignore484] SIPP.receive(mw_Response_Base(c_statusLine484,vc_callId, vc_cSeq))
+                {
+                  repeat
+                }
+		
+            [vc_ignore4xx] SIPP.receive(mw_Response_Base(mw_statusLine4xx,vc_callId, ?))-> value v_response sender vc_sent_label
+              { 
+                f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+                f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, vc_route));
+                repeat
+              }			
+		
+            [vc_ignore200OKinv] SIPP.receive(mw_Response_Base(c_statusLine200, vc_callId, ?))
+              { 
+                repeat
+              }
+	
+            [] SIPP.receive(mw_INFO_Request_Base(vc_callId))->value v_request sender vc_sent_label
+              { 
+                f_setHeadersOnReceiptOfRequest(v_request); 
+                f_send200OK();
+                repeat
+              }
+		  
+            // awaiting of Notify
+            [] SIPP.receive(mw_NOTIFY_Request_Base(vc_callId))->value v_request sender vc_sent_label
+              { 
+                f_setHeadersOnReceiptOfRequest(v_request); 
+                f_send200OK();
+                repeat
+              }
+            // awaiting of subscribe from UE
+            [vc_ignore_subscribe] SIPP.receive(mw_SUBSCRIBE_Request_Base)-> value v_request sender vc_sent_label
+              {
+                f_setHeadersOnReceiptOfSUBSCRIBE(v_request);
+                f_send200OK();
+                repeat;
+              }
+		  
+            //awaiting of subscribe on proxy
+            [] SIPP.receive(mw_SUBSCRIBE_Request_Base)->value v_request sender vc_sent_label
+              { 
+                f_setHeadersOnReceiptOfRequest(v_request); 
+                f_sendResponse(m_Response_Contact(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact));
+                //f_setHeadersGeneral(vc_cSeq, "NOTIFY"); // cseq, contact, branch, via
+                //f_SendNOTIFY(m_NOTIFY_Request_contact(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via, vc_contact));
+                log(v_request.msgHeader.contact.contactBody.contactAddresses[0].addressField.nameAddr.addrSpec);
+                f_SendNOTIFY(m_NOTIFY_Request_contact(v_request.msgHeader.contact.contactBody.contactAddresses[0].addressField.nameAddr.addrSpec, vc_callId, vc_cSeq, vc_callee_From, vc_callee_To, vc_via, vc_contact));		
+                f_awaitingOkResponse(vc_cSeq);
+                repeat
+              }            
+            // unexpected BYE is acknowledged to avoid retransmissions
+            [] SIPP.receive(mw_BYE_Request_Base(?))-> value v_request sender vc_sent_label
+              {
+                setverdict(fail);
+                f_setHeadersOnReceiptOfRequest(v_request); 
+                f_send200OK();
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+                }			  
+			  
+            // unexpected CANCEL is acknowledged to avoid retransmissions
+            [] SIPP.receive(mw_CANCEL_Request_Base(?))-> value v_request sender vc_sent_label
+              {
+                setverdict(fail);
+                f_setHeadersOnReceiptOfRequest(v_request);
+                //Answer to the CANCEL
+                f_send200OK();
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+                }
+            // catch 4xx response
+            [] SIPP.receive(mw_Response_Base(mw_statusLine4xx, vc_callId, ?))-> value v_response sender vc_sent_label
+            { 
+                setverdict(fail);
+                f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+                LibSip_Steps.f_setHeadersACK();
+                f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, vc_route));
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+            }
+            // catch 5xx response
+            [] SIPP.receive(mw_Response_Base(mw_statusLine5xx, vc_callId, ?))-> value v_response sender vc_sent_label
+            { 
+                setverdict(fail);
+                f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+                LibSip_Steps.f_setHeadersACK();
+                f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, vc_route));
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+            }	
+            // catch invalid REGISTER	  
+            [] SIPP.receive(mw_REGISTER_Request_Base)-> value v_request sender vc_sent_label
+            {
+                setverdict(fail); 
+                f_componentStop(); 
+            }
+            // any	  
+            [] SIPP.receive
+            {
+                setverdict(fail); 
+                all timer.stop; 
+//              f_setHeadersCANCEL(vc_cSeq);
+//              f_SendCANCEL(m_CANCEL_Request_Base(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_cancel_To, vc_via )); // difference between registration state or transaction state
+                action("Please de-register");          
+                f_IMS_awaitDeRegistration();
+                f_componentStop(); 
+            }
+        }
+	}
+} // module LibIms_Steps

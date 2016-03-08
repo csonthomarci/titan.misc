@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ss="http://uri.etsi.org/ngn/params/xml/simservs/xcap" xmlns="http://uri.etsi.org/ngn/params/xml/simservs/xcap" targetNamespace="http://uri.etsi.org/ngn/params/xml/simservs/xcap" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:documentation>XML Schema Definition for the closed user group 	
+		parameter</xs:documentation>
+	</xs:annotation>
+	<!--Definition of simple types-->
+	<xs:simpleType name="twobitType">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-1][0-1]"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="networkIdentityType">
+		<xs:restriction base="xs:hexBinary">
+			<xs:length value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="sixteenbitType">
+		<xs:restriction base="xs:hexBinary">
+			<xs:length value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="cugIndexType">
+		<xs:restriction base="xs:integer">
+			<xs:minInclusive value="0"/>
+			<xs:maxInclusive value="32767"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!--Definition of complex types-->
+	<xs:complexType name="cugRequestType">
+		<xs:sequence>
+			<xs:element name="outgoingAccessRequest" type="xs:boolean"/>
+			<xs:element name="cugIndex" type="cugIndexType"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Definition of document structure-->
+	<xs:element name="cug" substitutionGroup="ss:absService">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="ss:simservType">
+					<xs:sequence>
+						<xs:element name="cugCallOperation" type="cugRequestType" minOccurs="0"/>
+						<xs:element name="networkIndicator" type="networkIdentityType" 
+						minOccurs="0"/>
+						<xs:element name="cugInterlockBinaryCode" type="sixteenbitType" 
+						minOccurs="0"/>
+						<xs:element name="cugCommunicationIndicator" type="twobitType" 
+						minOccurs="0"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

@@ -1,0 +1,550 @@
+/*
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibIms_PIXITS.ttcn 494 2011-10-24 14:27:57Z schmitting $
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-IMS tests. Module become from STF306 and STF334-336
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibIms_PIXITS
+{
+	//LibCommon
+	import from LibCommon_BasicTypesAndValues all;
+	import from LibCommon_TextStrings all;
+	import from LibCommon_DataStrings all;
+	
+group SUT {
+ 
+group SUT_UE {
+	/** @desc charstring for SUT - UE IP address to exchange SIP messages - connection point for PCSCF
+	*/
+	modulepar charstring  PX_IMS_SUT_UE_IPADDR := "172.31.10.99";
+
+	/** @desc	integer for SUT - UE port number to exchange SIP messages - connection point for PCSCF
+	*/
+	modulepar integer	  PX_IMS_SUT_UE_PORT := 5060;
+}//end group SUT_UE1
+group SUT_UE1 {
+	/** @desc charstring for SUT - PCSCF1 IP address to exchange SIP messages - connection point for UE1
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF1_IPADDR := "172.31.10.2";
+	
+	/** @desc	integer for SUT - PCSCF1 port number to exchange SIP messages - connection point for UE1
+	*/
+	  modulepar integer	  PX_IMS_SUT_PCSCF1_PORT := 5060;
+	
+	/** @desc	charstring for SUT/PCSCF1 domain - connection point for UE1
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF1_HOME_DOMAIN := "pcscf1.sut.net";
+	
+	/** @desc	charstring for IP address used by the TS to exchange media streams for UE1
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE1_BEARER_IPADDR := "172.31.10.2";
+	
+	/** @desc	charstring for identity of the tester UE1 local domain 
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE1_HOME_DOMAIN := "sut.net";
+
+	/** @desc	charstring for identity of the tester UE1 local user 
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE1_PUBLIC_USER := "2910";
+
+	/** @desc	charstring for RFC 2617 clause 3-2-2 username of UE1:
+	* The name of user in the specified realm
+	*/
+	  modulepar charstring PX_IMS_SUT_UE1_PRIVAT_USERNAME := "abcd";
+
+	/** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd of UE1: A known shared secret, the password of user of the specified username
+	*/
+	  modulepar charstring PX_IMS_SUT_UE1_PRIVAT_PASSWD := "1234";
+		 
+	/** @desc	charstring for RFC 2617 clause 3-2-1 qop options of UE1:
+	* Quoted string of one or more tokens indicating the "quality of protection" values supported by the server; the
+	* value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+	*/
+	  modulepar charstring PX_IMS_SUT_UE1_QOP := "auth";
+		 
+	/** @desc	charstring for home(SUT) REGISTRAR domain of UE1
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE1_REGISTRAR := "registrar.sut.net";
+
+	/** @desc	charstring for UE1 display name
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE1_DISPLAY := "UE1@SUT";
+} // end group SUT_UE1
+
+group SUT_UE2 {
+	/** @desc	charstring for SUT - PCSCF2 IP address to exchange SIP messages - connection point for UE2
+	*/
+	 modulepar charstring  PX_IMS_SUT_PCSCF2_IPADDR := "172.31.10.2";
+
+	/** @desc	integer for SUT - PCSCF2 port number to exchange SIP messages - connection point for UE2
+	*/
+	  modulepar integer	    PX_IMS_SUT_PCSCF2_PORT := 5060;
+
+	/** @desc	charstring for SUT/PCSCF2 domain - connection point for UE2
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF2_HOME_DOMAIN := "pcscf2.home.net";
+	
+	/** @desc	charstring for IP address used by the TS to exchange media streams for UE2
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE2_BEARER_IPADDR := "172.31.10.2";
+	
+	/** @desc	charstring for identity of the tester UE2 local domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE2_HOME_DOMAIN := "sut.net";
+
+	/** @desc	charstring for identity of the tester UE2 local user
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE2_PUBLIC_USER := "2910";
+
+      /** @desc	charstring for RFC 2617 clause 3-2-2 username of UE2:
+      * The name of user in the specified realm
+      */
+	  modulepar charstring PX_IMS_SUT_UE2_PRIVAT_USERNAME := "abcd";
+
+	/** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd: A known shared secret, the password of user of the specified username of UE2
+	*/
+	  modulepar charstring PX_IMS_SUT_UE2_PRIVAT_PASSWD := "1234";
+		 
+	/** @desc	charstring for RFC 2617 clause 3-2-1 qop options UE2:
+	* Quoted string of one or more tokens indicating the "quality of protection" values supported by the server, the
+	* value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+	*/
+	  modulepar charstring PX_IMS_SUT_UE2_QOP := "auth";
+		 
+	/** @desc	charstring for home(SUT) REGISTRAR domain of UE2
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE2_REGISTRAR := "registrar.sut.net";
+} // end group SUT_UE2
+
+group SUT_UE3 {
+	/** @desc	charstring for SUT - PCSCF3 IP address to exchange SIP messages - connection point for UE3
+	*/
+	 modulepar charstring  PX_IMS_SUT_PCSCF3_IPADDR := "172.31.10.2";
+
+	/** @desc	integer for SUT - PCSCF3 port number to exchange SIP messages - connection point for UE3
+	*/
+	  modulepar integer	    PX_IMS_SUT_PCSCF3_PORT := 5060;
+
+	/** @desc	charstring for SUT/PCSCF3 domain - connection point for UE3
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF3_HOME_DOMAIN := "pcscf3.home.net";
+	
+	/** @desc	charstring for IP address used by the TS to exchange media streams for UE3
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE3_BEARER_IPADDR := "172.31.10.2";
+	
+	/** @desc	charstring for identity of the tester UE2 local domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE3_HOME_DOMAIN := "sut.net";
+
+	/** @desc	charstring for identity of the tester UE3 local user
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE3_PUBLIC_USER := "2910";
+
+      /** @desc	charstring for RFC 2617 clause 3-2-2 username of UE3:
+      * The name of user in the specified realm
+      */
+	  modulepar charstring PX_IMS_SUT_UE3_PRIVAT_USERNAME := "abcd";
+
+	/** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd: A known shared secret, the password of user of the specified username of UE3
+	*/
+	  modulepar charstring PX_IMS_SUT_UE3_PRIVAT_PASSWD := "1234";
+		 
+	/** @desc	charstring for RFC 2617 clause 3-2-1 qop options UE3:
+	* Quoted string of one or more tokens indicating the "quality of protection" values supported by the server, the
+	* value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+	*/
+	  modulepar charstring PX_IMS_SUT_UE3_QOP := "auth";
+		 
+	/** @desc	charstring for home(SUT) REGISTRAR domain of UE3
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE3_REGISTRAR := "registrar.sut.net";
+} // end group SUT_UE3
+
+group SUT_UE4 {//UE4 can be used as UE1Visited
+	/** @desc	charstring for SUT - PCSCF4 IP address to exchange SIP messages - connection point for UE4
+	*/
+	 modulepar charstring  PX_IMS_SUT_PCSCF4_IPADDR := "172.31.10.2";
+
+	/** @desc	integer for SUT - PCSCF4 port number to exchange SIP messages - connection point for UE4
+	*/
+	  modulepar integer	    PX_IMS_SUT_PCSCF4_PORT := 5060;
+
+	/** @desc	charstring for SUT/PCSCF4 domain - connection point for UE4
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF4_HOME_DOMAIN := "pcscf4.home.net";
+	
+	/** @desc	charstring for IP address used by the TS to exchange media streams for UE4
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE4_BEARER_IPADDR := "172.31.10.2";
+	
+	/** @desc	charstring for identity of the tester UE2 local domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE4_HOME_DOMAIN := "sut.net";
+
+	/** @desc	charstring for identity of the tester UE4 local user
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE4_PUBLIC_USER := "2910";
+
+      /** @desc	charstring for RFC 2617 clause 3-2-2 username of UE4:
+      * The name of user in the specified realm
+      */
+	  modulepar charstring PX_IMS_SUT_UE4_PRIVAT_USERNAME := "abcd";
+
+	/** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd: A known shared secret, the password of user of the specified username of UE2
+	*/
+	  modulepar charstring PX_IMS_SUT_UE4_PRIVAT_PASSWD := "1234";
+		 
+	/** @desc	charstring for RFC 2617 clause 3-2-1 qop options UE4:
+	* Quoted string of one or more tokens indicating the "quality of protection" values supported by the server, the
+	* value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+	*/
+	  modulepar charstring PX_IMS_SUT_UE4_QOP := "auth";
+		 
+	/** @desc	charstring for home(SUT) REGISTRAR domain of UE4
+	*/
+	  modulepar charstring  PX_IMS_SUT_UE4_REGISTRAR := "registrar.sut.net";
+} // end group SUT_UE4
+
+group SUT_unknown{
+	/** @desc	charstring for identity of unknown UE public user
+	*/
+	  modulepar charstring  PX_IMS_SUT_unknownUE_PUBLIC_USER := "0007";
+} // end group SUT_unknown
+
+group EMERGENCY{
+	/** @desc	charstring for identity of emergency service local domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_EMERGENCY_HOME_DOMAIN := "home.net";
+
+	/** @desc	charstring for identity of the emergency service
+	*/
+	  modulepar charstring  PX_IMS_SUT_EMERGENCY_SERVICE := "service:sos";
+	
+	/** @desc	charstring for identity of the invalid emergency service
+	*/
+	  modulepar charstring  PX_IMS_SUT_EMERGENCY_SERVICE_INVALID := "service:sos.invalid";
+}// end group EMERGENCY service
+
+group SUT_IBCF {
+	/** @desc	charstring for SUT/IBCF1 IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_IBCF1_IPADDR := "172.31.10.5";	
+	
+	/** @desc	integer for SUT/IBCF1 port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_SUT_IBCF1_PORT := 5060;
+
+	/** @desc	charstring for SUT/IBCF1 domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_IBCF1_HOME_DOMAIN := "ibcf1.sut.net";
+
+	/** @desc	charstring for SUT/IBCF2 IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_IBCF2_IPADDR := "172.31.10.6";
+
+	/** @desc	integer for SUT/IBCF2 port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_SUT_IBCF2_PORT := 5060;
+
+	/** @desc	charstring for SUT/IBCF2 domain
+	*/
+	  modulepar charstring  PX_IMS_SUT_IBCF2_HOME_DOMAIN := "ibcf2.sut.net";
+} // end group SUT_IBCF
+group SUT_PCSCF {
+	/** @desc	charstring for SUT/P-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF_IPADDR := "172.31.10.2";	
+
+	/** @desc	integer for SUT/P-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_SUT_PCSCF_PORT := 5060;
+
+	/** @desc	charstring for SUT/P-CSCFdomain
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF_HOME_DOMAIN := "pcscf.sut.net";
+	
+	/** @desc	charstring for SUT/P-CSCF P_VisitedNetwork ID header (see RFC3455) 
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF_VisitedNetworkID := "sut token";
+	
+	/** @desc	charstring for SUT/P-CSCF Min-SE header lower bound for the session refresh interval (see RFC4028) 
+	*/
+	  modulepar charstring  PX_IMS_SUT_PCSCF_MinSE := "100";
+} // end group SUT_PCSCF
+group SUT_SCSCF {
+	/** @desc	charstring for SUT/S-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_SCSCF_IPADDR := "172.31.10.4";	
+
+	/** @desc	integer for SUT/S-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	  PX_IMS_SUT_SCSCF_PORT := 5060;
+
+	/** @desc	charstring for SUT/S-CSCFdomain
+	*/
+	  modulepar charstring  PX_IMS_SUT_SCSCF_HOME_DOMAIN := "scscf.sut.net";
+	
+	/** @desc	charstring for SUT/S-CSCF globally used realm name of IUT S-CSCF 
+	*/
+	  modulepar charstring  PX_IMS_SUT_SCSCF_REALM := "realm.scscf";
+} // end group SUT_SCSCF
+
+group SUT_ICSCF {
+	/** @desc	charstring for SUT/I-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_ICSCF_IPADDR := "172.31.10.3";	
+
+	/** @desc	integer for SUT/I-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_SUT_ICSCF_PORT := 5060;
+
+	/** @desc	charstring for SUT/I-CSCFdomain
+	*/
+	  modulepar charstring  PX_IMS_SUT_ICSCF_HOME_DOMAIN := "icscf.sut.net";
+} // end group SUT_ICSCF
+ 
+group SUT_AS {
+	/** @desc charstring for SUT - AS IP address to exchange SIP messages - connection point for SCSCF
+	*/
+	modulepar charstring  PX_IMS_SUT_AS_IPADDR := "172.31.10.7";
+
+	/** @desc	integer for SUT - AS port number to exchange SIP messages - connection point for SCSCF
+	*/
+	modulepar integer	  PX_IMS_SUT_AS_PORT := 5060;
+	
+	/** @desc	charstring for SUT/AS domain
+	*/
+	modulepar charstring  PX_IMS_SUT_AS_HOME_DOMAIN := "as.sut.net";
+
+}//end group SUT_UE1
+
+group SUT_IMGCF {
+	/** @desc	charstring for SUT/I-MGCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_SUT_IMGCF_IPADDR := "172.31.10.10";	
+
+	/** @desc	integer for SUT/I-MGCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_SUT_IMGCF_PORT := 5060;
+
+	/** @desc	charstring for SUT/I-MGCFdomain
+	*/
+	  modulepar charstring  PX_IMS_SUT_IMGCF_HOME_DOMAIN := "imgcf.sut.net";
+} // end group SUT_IMGCF
+
+group SUT_CONF {
+		/**
+		 * @desc
+		 *     charstring for SUT/conference IP address to exchange SIP messages
+		 */
+		modulepar charstring PX_IMS_SUT_CONF_IPADDR := "172.31.10.10";
+		/**
+		 * @desc integer for SUT/conference port number to exchange SIP messages
+		 */
+		modulepar integer PX_IMS_SUT_CONF_PORT := 5060;
+		/**
+		 * @desc charstring for SUT/conference domain
+		 */
+		modulepar charstring PX_IMS_SUT_CONF_HOME_DOMAIN := "conf.sut.net";
+		/**
+		 * @desc charstring for conference factory URI name
+		 */
+		modulepar charstring PX_IMS_SUT_CONF_FACTORY_NAME := "factory.uri.name";
+	
+} // end group SUT_CONF
+
+} // end group SUT
+group TS {	
+group TS_UE1 {
+	/** @desc	charstring for IP address used by the UE1 to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_UE1_IPADDR := "172.31.1.240";
+	
+	/** @desc	integer for port number used by the UE1 to exchange SIP messages
+	*/
+	  modulepar integer     PX_IMS_TS_UE1_PORT := 5060;
+
+	/** @desc	charstring for visited(TS) REGISTRAR domain
+	*/
+	  modulepar charstring  PX_IMS_TS_UE1_REGISTRAR := "registrar.ts.net";
+} // end group TS_UE1
+
+group TS_UE2 {
+	/** @desc	charstring for IP address used by the UE2 to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_UE2_IPADDR := "172.31.1.241";
+
+	/** @desc	integer for port number used by the UE2 to exchange SIP messages
+	*/
+	  modulepar integer     PX_IMS_TS_UE2_PORT := 5060;
+
+	/** @desc	charstring for visited(TS) REGISTRAR domain
+	*/
+	  modulepar charstring  PX_IMS_TS_UE2_REGISTRAR := "registrar.ts.net";
+} // end group TS_UE2
+
+group TS_UE3 {
+	/** @desc	charstring for IP address used by the UE3 to exchange SIP messages
+	*/
+			modulepar charstring  PX_IMS_TS_UE3_IPADDR := "172.31.1.242";
+
+	/** @desc	integer for port number used by the UE3 to exchange SIP messages
+	*/
+			modulepar integer     PX_IMS_TS_UE3_PORT := 5060;
+
+	/** @desc	charstring for visited(TS) REGISTRAR domain
+	*/
+			modulepar charstring  PX_IMS_TS_UE3_REGISTRAR := "registrar.ts.net";
+} // end group TS_UE3
+
+group TS_UE4 {
+	/** @desc	charstring for IP address used by the UE3 to exchange SIP messages
+	*/
+			modulepar charstring  PX_IMS_TS_UE4_IPADDR := "172.31.1.243";
+
+	/** @desc	integer for port number used by the UE3 to exchange SIP messages
+	*/
+			modulepar integer     PX_IMS_TS_UE4_PORT := 5060;
+
+	/** @desc	charstring for visited(TS) REGISTRAR domain
+	*/
+			modulepar charstring  PX_IMS_TS_UE4_REGISTRAR := "registrar.ts.net";
+} // end group TS_UE4
+
+group TS_IBCF {	
+	/** @desc	charstring for TS/IBCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_IBCF_IPADDR := "172.31.1.15";
+	
+	/** @desc	integer for TS/IBCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_TS_IBCF_PORT := 5060;
+
+	/** @desc	charstring for TS/IBCF domain
+	*/
+	  modulepar charstring  PX_IMS_TS_IBCF_HOME_DOMAIN := "ibcf.ts.net";
+} // end group TS_IBCF
+
+group TS_ICSCF {
+	/** @desc	charstring for TS/I-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_ICSCF_IPADDR := "172.31.1.13";
+	
+	/** @desc	integer for IUT/I-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_TS_ICSCF_PORT := 5060;
+
+	/** @desc	charstring for TS/I-CSCF domain
+	*/
+	  modulepar charstring  PX_IMS_TS_ICSCF_HOME_DOMAIN := "icscf.ts.net";
+} // end group TS_ICSCF
+
+group TS_PCSCF {
+	/** @desc	charstring for TS/P-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_PCSCF_IPADDR := "172.31.1.12";
+
+	/** @desc	integer for IUT/P-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_TS_PCSCF_PORT := 5060;
+
+	/** @desc	charstring for TS/P-CSCFdomain
+	*/
+	  modulepar charstring  PX_IMS_TS_PCSCF_HOME_DOMAIN := "pcscf.ts.net";
+} // end group TS_PCSCF
+
+group TS_SCSCF {
+	/** @desc	charstring for TS/S-CSCF IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_SCSCF_IPADDR := "172.31.1.14";
+	
+	/** @desc	integer for TS/S-CSCF port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_TS_SCSCF_PORT := 5060;
+
+	/** @desc	charstring for TS/S-CSCFdomain
+	*/
+	  modulepar charstring  PX_IMS_TS_SCSCF_HOME_DOMAIN := "scscf.ts.net";
+
+	/** @desc	charstring public user identity for Request-URI to be rejected by IUT S-CSCF as it is barred for incoming calls 
+	*/
+	  modulepar charstring  PX_IMS_SUT_BARRED_PUBLIC_USER;
+
+	/** @desc	charstring invalid GRUU for Request-URI to be rejected by IUT S-CSCF 
+	*/
+	  modulepar charstring  PX_IMS_SUT_INVALID_GRUU;
+
+	/** @desc	charstring Service value in P-Asserted-Service header to be rejected by IUT S-CSCF, as service is not subscribed-to 
+	*/
+	  modulepar charstring  PX_IMS_SUT_UNSUBSCRIBED_SERVICE;
+
+	/** @desc	charstring Service value in SDP message body to be rejected by IUT S-CSCF, as service is not subscribed-to;
+				** intentionally kept as charstring to allow maximum flexibility to construct unsubscribed service **
+	*/
+	  modulepar charstring  PX_IMS_SUT_UNSUBSCRIBED_SDP_SERVICE;
+} // end group TS_SCSCF
+
+group TS_ECSCF {
+    	/** @desc	charstring for TS/E-CSCF IP address to exchange SIP messages
+    	*/
+		modulepar charstring  PX_IMS_TS_ECSCF_IPADDR := "172.31.1.14";
+	
+    	/** @desc	integer for TS/E-CSCF port number to exchange SIP messages
+    	*/
+		modulepar integer	    PX_IMS_TS_ECSCF_PORT := 5060;
+
+    	/** @desc	charstring for TS/E-CSCFdomain
+    	*/
+		modulepar charstring  PX_IMS_TS_ECSCF_HOME_DOMAIN := "ECSCF.ts.net";
+} // end group TS_ECSCF
+
+group TS_IMS1user {
+	/** @desc	charstring for public userinfo/displayname addressing IMS1UE (simulated by the TS)
+	*/
+	  modulepar charstring  PX_IMS_TS_IMS1UE_PUBLIC_USER := "IMS1UE";
+
+	/** @desc	charstring for TS/domain
+	*/
+	  modulepar charstring  PX_IMS_TS_IMS1UE_HOME_DOMAIN := "ts.net";
+} // end group TS_IMS1user
+
+group TS_ISUPuser {
+	/** @desc	charstring for public userinfo addressing ISUPUE (simulated by the TS)
+	*/
+	  modulepar charstring  PX_IMS_TS_ISUP_PUBLIC_USER := "070123456";
+
+	/** @desc	charstring for ISUP TS/domain or IPAddres
+	*/
+	  modulepar charstring  PX_IMS_TS_ISUP_HOME_DOMAIN := "172.27.11.80";
+} // end group TS_ISUPuser
+
+
+group TS_AS {
+	/** @desc	charstring for TS/AS1 IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_AS1_IPADDR := "172.31.1.18";	
+
+	/** @desc	integer for TS/AS1 port number to exchange SIP messages
+	*/
+	  modulepar integer	    PX_IMS_TS_AS1_PORT := 5060;
+
+	/** @desc	charstring for TS/AS1 domain
+	*/
+	  modulepar charstring  PX_IMS_TS_AS1_HOME_DOMAIN := "as1.ts.net";
+
+	/** @desc	charstring for TS/AS2 IP address to exchange SIP messages
+	*/
+	  modulepar charstring  PX_IMS_TS_AS2_IPADDR := "172.31.1.19";	
+
+	/** @desc	integer for TS/AS2 port number to exchange SIP messages
+	*/
+	   modulepar integer	    PX_IMS_TS_AS2_PORT := 5060;
+
+	/** @desc	charstring for TS/AS2 domain
+	*/
+	  modulepar charstring  PX_IMS_TS_AS2_HOME_DOMAIN := "as2.ts.net";
+} // end group TS_AS
+} // end group TS
+} // end module LibIms_PIXITS

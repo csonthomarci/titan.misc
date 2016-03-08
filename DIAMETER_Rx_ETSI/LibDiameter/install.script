@@ -1,0 +1,28 @@
+#!/bin/sh
+
+
+
+ln -s ../LibCommon/LibCommon_AbstractData.ttcn     .
+ln -s ../LibCommon/LibCommon_BasicTypesAndValues.ttcn     .
+ln -s ../LibCommon/LibCommon_DataStrings.ttcn     .
+ln -s ../LibCommon/LibCommon_Sync.ttcn     .
+ln -s ../LibCommon/LibCommon_TextStrings.ttcn     .
+ln -s ../LibCommon/LibCommon_Time.ttcn     .
+ln -s ../LibCommon/LibCommon_VerdictControl.ttcn     .
+
+
+ln -s  ../titan.TestPorts.SCTPasp/src/SCTPasp_PortType.ttcn .
+ln -s  ../titan.TestPorts.SCTPasp/src/SCTPasp_PT.cc .
+ln -s  ../titan.TestPorts.SCTPasp/src/SCTPasp_PT.hh .
+ln -s  ../titan.TestPorts.SCTPasp/src/SCTPasp_Types.ttcn .
+
+ln -s  ../titan.TestPorts.TCPasp/src/TCPasp_PortType.ttcn .
+ln -s  ../titan.TestPorts.TCPasp/src/TCPasp_PT.cc .
+ln -s  ../titan.TestPorts.TCPasp/src/TCPasp_PT.hh .
+ln -s  ../titan.TestPorts.TCPasp/src/TCPasp_Types.ttcn .
+
+
+
+ln -s  ../titan.TestPorts.Common_Components.Abstract_Socket/src/Abstract_Socket.cc  .
+ln -s  ../titan.TestPorts.Common_Components.Abstract_Socket/src/Abstract_Socket.hh  .  
+

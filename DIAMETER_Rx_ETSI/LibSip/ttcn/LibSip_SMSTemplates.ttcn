@@ -1,0 +1,395 @@
+/*
+ *	@author 	STF 435
+ *  @version    $Id$
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-SMS over IMS as specified in 3GPP 24.341 tests.
+ */
+ //compiled with Titan 02.03.2106 Elemer Lelik
+module LibSip_SMSTemplates {
+    import from LibCommon_DataStrings all;
+    import from LibSip_SMSTypesAndValues all;
+    import from LibSip_SMSFunctions all;
+    
+    group SMS_Templates_Group {
+        
+        /* Non-SMS Type Constraints */
+        
+        
+        
+        template (present) TypeOfNumberingPlan cr_TypeOfNumberingPlanAny :=
+        {
+          extBit := ?,
+          typeOfNumber := ?,
+          numberingPlanId := ?
+        };
+        
+        template (value) TypeOfNumberingPlan cs_TypeOfNumberingPlan :=
+        {
+          extBit := '1'B,
+          typeOfNumber := '001'B, // international number
+          numberingPlanId := '0001'B // ISDN/telephony numbering plan (Rec. E.164/E.163)
+        };
+        
+        template (present) TypeOfNumberingPlan cr_TypeOfNumberingPlan :=
+        {
+          extBit := ?,
+          typeOfNumber := ?,
+          numberingPlanId := ?
+        };
+        
+        /* End Non-SMS Type Constraints */
+        
+        template (omit) RP_OriginatorAddress_dl cs_RP_OriginatorAddress_dl :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := '06'O, // 6 semi-octets
+          typeOfNumberingPlan := cs_TypeOfNumberingPlan,
+          digits := '001122'O
+        };
+        
+        template (omit) RP_OriginatorAddress_ul cr_RP_OriginatorAddress_ul :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := '00'O
+        };
+        
+        template RP_DestinationAddress_ul cr_RP_DestinationAddress_ul :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := ?,
+          typeOfNumberingPlan := cr_TypeOfNumberingPlan,
+          digits := ?
+        };
+        template (omit) RP_DestinationAddress_dl cs_RP_DestinationAddress_dl :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := '00'O
+        };
+        
+        template (omit) RP_UserData cs_RP_UserData_DELIVER (octetstring p_Digits) :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := int2oct ((153 + lengthof (p_Digits)), 1),
+          tP_PDU := {SMS_DELIVER := cs_SMS_DELIVER (p_Digits)}
+        };
+        
+        template (omit) RP_UserData cs_RP_UserData_SUBMIT_REPORT :=
+        {
+          spare := '0'B,
+          iei := tsc_IEI_RP_UserData,
+          iel := '0A'O, // the TPDU data length is 10 octets
+          tP_PDU := {SMS_SUBMIT_REPORT := cs_SMS_SUBMIT_REPORT}
+        };
+        template (omit) RP_UserData cs_RP_UserData_STATUS_REPORT  
+                                   (TP_MessageReference_Type p_MessageRef,
+                                   TP_Address_Type p_RecipientAddress,
+                                   TP_ServiceCentreTimeStamp_Type p_SCTP 
+                                   ) :=
+        {
+          spare := '0'B,
+          iei := tsc_IEI_RP_UserData,
+          iel := '0A'O, // the TPDU data length is 10 octets
+          tP_PDU := {SMS_STATUS_REPORT := cs_SMS_STATUS_REPORT(p_MessageRef, p_RecipientAddress, p_SCTP)}
+        };
+        
+        /*
+        template RP_UserData cr_RP_UserData (TP_PDU_Type p_TP_PDU) :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := ?,
+          tP_PDU := p_TP_PDU
+        };
+        */
+        template RP_UserData cr_RP_UserData_SUBMIT :=
+        {
+          spare := omit,
+          iei := omit,
+          iel := ?,
+          tP_PDU := {SMS_SUBMIT := cr_SMS_SUBMIT_VPF_REF} 
+        };
+        
+        template RP_UserData cr_RP_UserData_DELIVER_REPORT :=
+        {
+          spare := '0'B,
+          iei := tsc_IEI_RP_UserData,
+          iel := ?,
+          tP_PDU := {SMS_DELIVER_REPORT := cr_SMS_DELIVER_REPORT}
+        };
+        
+        /* End SM-RP Type Constraints */
+        
+        /* SM-RP PDU Constraints */
+        
+        template (value) RP_DATA_dl_Type cs_RP_DATA_dl_DELIVER (octetstring p_Digits) :=
+        {
+          spare5 := '00000'B,
+          rP_MessageTypeIndicator := tsc_MT_RP_DATA_dl,
+          rP_MessageReference := '00'O,
+          rP_OriginatorAddress := cs_RP_OriginatorAddress_dl,
+          rP_DestinationAddress := cs_RP_DestinationAddress_dl,
+          rP_UserData := cs_RP_UserData_DELIVER(p_Digits)
+        };
+        
+        template (value) RP_DATA_dl_Type cs_RP_DATA_dl_STATUS_REPORT (
+                                   TP_MessageReference_Type p_MessageRef,
+                                   TP_Address_Type p_RecipientAddress,
+                                    TP_ServiceCentreTimeStamp_Type p_SCTP  
+                                   ) :=
+        {
+          spare5 := '00000'B,
+          rP_MessageTypeIndicator := tsc_MT_RP_DATA_dl,
+          rP_MessageReference := '00'O,
+          rP_OriginatorAddress := cs_RP_OriginatorAddress_dl,
+          rP_DestinationAddress := cs_RP_DestinationAddress_dl,
+          rP_UserData := cs_RP_UserData_STATUS_REPORT (p_MessageRef, p_RecipientAddress, p_SCTP)
+        };
+        
+        
+        template (present) RP_DATA_ul_Type  cr_RP_DATA_ul_SUBMIT :=
+        {
+          spare5 := '00000'B,
+          rP_MessageTypeIndicator := tsc_MT_RP_DATA_ul,
+          rP_MessageReference := ?,
+          rP_OriginatorAddress := cr_RP_OriginatorAddress_ul,
+          rP_DestinationAddress := cr_RP_DestinationAddress_ul,
+          rP_UserData := cr_RP_UserData_SUBMIT
+        };
+        
+        template (value) RP_ACK_Type cs_RP_ACK_SUBMIT_REPORT (Oct1 p_msgReference := '00'O):=
+        {
+          spare5 := '00000'B,
+          rP_MessageTypeIndicator := tsc_MT_RP_ACK_dl,
+          rP_MessageReference := p_msgReference,
+          rP_UserData := cs_RP_UserData_SUBMIT_REPORT
+        };
+        
+        template (present) RP_ACK_Type  cr_RP_ACK_DELIVER_REPORT :=
+        {
+          spare5 := '00000'B,
+          rP_MessageTypeIndicator := tsc_MT_RP_ACK_ul,
+          rP_MessageReference := ?,
+          rP_UserData := cr_RP_UserData_DELIVER_REPORT
+        };
+        
+        /* End SM-RP PDU Constraints */
+        
+        /* SM-TP Type Constraints */
+        template (value) TP_ProtocolIdentifier_Type cr_TP_ProtocolIdentifier :=
+        {
+          pidType := '01'B,
+          interworking := '0'B,
+          pidValue := '00000'B
+        };
+        
+        template (value) TP_ProtocolIdentifier_Type cs_TP_ProtocolIdentifier :=
+        {
+          pidType := '01'B,
+          interworking := '0'B,
+          pidValue := '00000'B
+        };
+        
+        template (value) TP_DataCodingScheme_Type cs_TP_DataCodingScheme :=
+        {
+          codingGroup := '0000'B,
+          codeValue := '0000'B
+        };
+        
+        template TP_Address_Type cr_TP_AddressAny :=
+        {
+          iel := ?,
+          typeOfNumberingPlan := cr_TypeOfNumberingPlanAny,
+          digits := *
+        };
+        
+        template (value) TP_Address_Type cs_TP_Address (octetstring p_Digits) :=
+        {
+          iel := int2oct(2 * lengthof(p_Digits), 1),
+          // length is number of useful semi-octets
+          // as p_digits is declared as octetstring the number must be even
+          typeOfNumberingPlan := cs_TypeOfNumberingPlan,
+          digits := p_Digits
+        };
+        
+        template (value) TP_ParameterIndicator_Type cs_TP_ParameterIndicator :=
+        {
+          extBit1 := '0'B,
+          spare4 := '0000'B,
+          tP_UDL := '0'B,
+          tP_DCS := '0'B,
+          tP_PID := '1'B
+        };
+        
+        /* End SM-TP Type Constraints */
+        
+        /* SM-TP PDU Constraints */
+        
+        template (value) SMS_DELIVER_Type cs_SMS_DELIVER (octetstring p_Digits) :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportIndication := '1'B,
+          spare2 := '00'B,
+          tP_MoreMessagesToSend := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_DELIVER,
+          tP_OriginatingAddress := cs_TP_Address (p_Digits),
+          tP_ProtocolIdentifier := cs_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := cs_TP_DataCodingScheme,
+          tP_ServiceCentreTimeStamp := fx_GetSC_TimeStamp(0), // Time Zone 0 assumed
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := f_IA5_2oct(tsc_Fox)
+        };
+        
+        template SMS_DELIVER_REPORT_Type cr_SMS_DELIVER_REPORT :=
+        {
+          spare1 := '0'B,
+          tP_UserDataHeaderIndicator  := '0'B,
+          spare4 := '0000'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_DELIVER_REPORT,
+          tP_FailureCause := omit,
+          tP_ParameterIndicator := ?,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := *,
+          tP_UserDataLength := *,
+          tP_UserData := *
+        };
+        
+        template SMS_SUBMIT_Type cr_SMS_SUBMIT :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportRequest := '1'B,
+          tP_ValidityPeriodFormat := '??'B,
+          tP_RejectDuplicates := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT,
+          tP_MessageReference := ?,
+          tP_DestinationAddress := cr_TP_AddressAny,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := ?,
+          tP_ValidityPeriod  := *,
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := ? // any data will do: 140 octets
+        };
+        
+        template SMS_SUBMIT_Type cr_SMS_SUBMIT_VPF_NP :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportRequest := '1'B,
+          tP_ValidityPeriodFormat := '00'B,
+          tP_RejectDuplicates := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT,
+          tP_MessageReference := ?,
+          tP_DestinationAddress := cr_TP_AddressAny,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := ?,
+          tP_ValidityPeriod  := omit,
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := ? // any data will do: 140 octets
+        };
+        
+        template SMS_SUBMIT_Type cr_SMS_SUBMIT_VPF_REF :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportRequest := '1'B,
+          tP_ValidityPeriodFormat := '10'B,
+          tP_RejectDuplicates := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT,
+          tP_MessageReference := ?,
+          tP_DestinationAddress := cr_TP_AddressAny,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := ?,
+          tP_ValidityPeriod  := ?,
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := ? // any data will do: 140 octets
+        };
+        
+        template SMS_SUBMIT_Type cr_SMS_SUBMIT_VPF_ENH :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportRequest := '1'B,
+          tP_ValidityPeriodFormat := '01'B,
+          tP_RejectDuplicates := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT,
+          tP_MessageReference := ?,
+          tP_DestinationAddress := cr_TP_AddressAny,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := ?,
+          tP_ValidityPeriod  := ?,
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := ? // any data will do: 140 octets
+        };
+        
+        template SMS_SUBMIT_Type cr_SMS_SUBMIT_VPF_ABS :=
+        {
+          tP_ReplyPath := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportRequest := '1'B,
+          tP_ValidityPeriodFormat := '11'B,
+          tP_RejectDuplicates := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT,
+          tP_MessageReference := ?,
+          tP_DestinationAddress := cr_TP_AddressAny,
+          tP_ProtocolIdentifier := cr_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := ?,
+          tP_ValidityPeriod  := ?,
+          tP_UserDataLength := int2oct(160,1),
+          tP_UserData := ? // any data will do: 140 octets
+        };
+        
+        template (value) SMS_SUBMIT_REPORT_Type cs_SMS_SUBMIT_REPORT :=
+        {
+          spare1 := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          spare4 := '0000'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_SUBMIT_REPORT,
+          tP_FailureCause := omit,
+          tP_ParameterIndicator := cs_TP_ParameterIndicator,
+          tP_ServiceCentreTimeStamp := fx_GetSC_TimeStamp(0), // Time Zone 0 assumed
+          tP_ProtocolIdentifier := cs_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := omit,
+          tP_UserDataLength := omit,
+          tP_UserData := omit
+        };
+        
+        template (value) SMS_STATUS_REPORT_Type cs_SMS_STATUS_REPORT (
+                                  TP_MessageReference_Type p_MessageRef,
+                                   TP_Address_Type p_RA,
+                                   TP_ServiceCentreTimeStamp_Type p_SCTP  
+                                ):=
+        {
+          // TS 34.229-1 clause A.7.5
+          spare1 := '0'B,
+          tP_UserDataHeaderIndicator := '0'B,
+          tP_StatusReportQualifier := '0'B,
+          spare2 := '00'B,
+          tP_MoreMessagesToSend := '0'B,
+          tP_MessageTypeIndicator := tsc_MT_SMS_STATUS_REPORT,
+          tP_MessageReference := p_MessageRef,
+          tP_RecipientAddress := p_RA,
+          tP_ServiceCentreTimeStamp := p_SCTP,
+          tP_DischargeTime := '00000000000000'H,
+          tP_Status := {
+                  reserved := '0'B,
+                  status := '0000000'B
+          },
+          tP_ParameterIndicator := cs_TP_ParameterIndicator,
+          tP_ProtocolIdentifier := cs_TP_ProtocolIdentifier,
+          tP_DataCodingScheme_Type := omit,
+          tP_UserDataLength := omit,
+          tP_UserData := omit
+        };
+        
+        
+        /* End SM-TP PDU Constraints */
+        
+    } // group SMS_Templates_Group
+
+} // End of module LibSip_SMSTypesAndValues

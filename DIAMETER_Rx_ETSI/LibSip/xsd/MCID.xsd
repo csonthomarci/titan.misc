@@ -1,0 +1,37 @@
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+xmlns="http://uri.etsi.org/ngn/params/xml/simservs/mcid"
+targetNamespace="http://uri.etsi.org/ngn/params/xml/simservs/mcid" elementFormDefault="qualified">
+<xs:annotation>
+<xs:documentation>XML Schema Definition to the mcid request-response to the Malicious Communication
+Identification simulation service</xs:documentation>
+</xs:annotation>
+<!--Definition of simple types-->
+<xs:simpleType name="bitType">
+<xs:restriction base="xs:string">
+<xs:pattern value="[0-1]"/>
+</xs:restriction>
+</xs:simpleType>
+<!--Definition of complex types-->
+<xs:complexType name="requestType">
+<xs:sequence>
+<xs:element name="McidRequestIndicator" type="bitType"/>
+<xs:element name="HoldingIndicator" type="bitType"/>
+</xs:sequence>
+</xs:complexType>
+<xs:complexType name="responseType">
+<xs:sequence>
+<xs:element name="McidResponseIndicator" type="bitType"/>
+<xs:element name="HoldingProvidedIndicator" type="bitType"/>
+</xs:sequence>
+</xs:complexType>
+<!--Definition of document structure-->
+<xs:element name="mcid">
+<xs:complexType>
+<xs:choice>
+<xs:element name="request" type="requestType"/>
+<xs:element name="response" type="responseType"/>
+</xs:choice>
+</xs:complexType>
+</xs:element>
+</xs:schema>

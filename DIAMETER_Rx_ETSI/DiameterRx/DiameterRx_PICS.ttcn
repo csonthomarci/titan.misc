@@ -1,0 +1,55 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_PICS.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc		This module provides the PICS used for the SIP-IMS-DIAMETER tests.
+*/
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_PICS
+{
+	/* ****************************************************************************************************
+		PICS used for test case selection
+		*************************************************************************************************** */
+
+	/** @desc	Does AF support SPONSORED_DATA_CONNECTIVITY
+	 *  @remark	PICS ref: A.3/2
+	 *			True, if SPONSORED_DATA_CONNECTIVITY is supported
+	*/
+	modulepar boolean PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED;
+	
+    /** @desc	Does AF support MODIFICATION_OF_THE_SESSION_INFORMATION
+     *  @remark	PICS ref: A.3/3
+     *			True, if MODIFICATION_OF_THE_SESSION_INFORMATION is supported
+    */
+    modulepar boolean PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION;
+	
+    /** @desc	Does AF support GATE_RELATED_PROCEDURE
+     *  @remark	PICS ref: A.3/4
+     *			True, if GATE_RELATED_PROCEDURE is supported
+    */
+    modulepar boolean PC_AF_GATE_RELATED_PROCEDURE;
+
+    /** @desc	Does AF support SUBSCRIBE_TO_NOTIFICATION
+     *  @remark	PICS ref: A.3/6
+     *			True, if SUBSCRIBE_TO_NOTIFICATION is supported
+    */
+    modulepar boolean PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED;
+
+    /** @desc	Does AF support Procedures for the provision of information about AF Signalling IP flows
+     *  @remark	PICS ref: A.3/7
+     *			True, if PC_AF_SIGNALLING_IP_FLOWS_INFO is supported
+    */
+    modulepar boolean PC_AF_SIGNALLING_IP_FLOWS_INFO;
+
+    /** @desc	Does AF support Procedures for the handling of traffic plane events?
+     *  @remark	PICS ref: A.3/8
+     *			True, if PC_AF_HANDLING_TRAFFIC_PLANE_EVENT is supported
+    */
+    modulepar boolean PC_AF_HANDLING_TRAFFIC_PLANE_EVENT;
+
+    /** @desc	Does PCRF support SPONSORED_DATA_CONNECTIVITY
+     *  @remark	PICS ref: A.4/4
+ 	 *	        True, if SPONSORED_DATA_CONNECTIVITY is supported
+    */
+    modulepar boolean PC_PCRF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED;
+
+} // end module DiameterRx_PICS

@@ -1,0 +1,302 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_TestConfiguration.ttcn 661 2013-08-30 12:55:35Z schmitting $
+ *	@desc		This module provides test component configurations
+ *              for SIP-IMS-DIAMETER tests.
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_TestConfiguration
+{
+
+	import from DIAMETER_Mapping all;
+	import from SIPmsg_Types all;
+	import from SDP_Types all;
+	//LibCommon
+	import from LibCommon_Sync all ;
+	import from LibCommon_VerdictControl all;
+	//LibSip
+	//import from LibSip_Interface all;
+	import from LibSip_SIPTypesAndValues all;
+	//LibIms
+	import from LibIms_Interface all;
+	//LibDiameter
+    import from LibDiameter_Interface all;
+    import from LibDiameter_PIXITS  all;
+	//AtsIms
+	import from DiameterRx_TestSystem all;
+	import from DiameterRx_PIXITS all;
+
+group auxFunctions {
+
+	/*
+	** @desc f_IncCSeq returns an input parameter incremented by 1000
+	** reason is to run the next testcase with a higher CSeq value
+	*/
+	function f_IncCSeq(inout CSeq loc_CSeq)
+		runs on ServerSyncComp
+		{	loc_CSeq.seqNumber := loc_CSeq.seqNumber + 1000;
+			return
+		};
+	// end f_IncCSeq
+
+	/*
+	** @desc f_NrofComps returns the number of test components
+	** based on the PIXIT value PX_SIPsupport
+	*/
+	function f_NrofComps() return integer
+		{	if (PX_SIPsupport)
+			{ return 3 }
+			else
+			{ return 1 }
+		};
+	// end f_NrofComps
+
+}//end group auxFunctions
+
+	group cfUp {
+
+        /**
+         *
+         * @desc Creates test configuration of CF_1Rx - PCRF is SUT
+         * @param p_diameterComponent_ims	ims component
+         */
+        function f_cf_1RxUp(out DiameterComponent p_diameterComponent_ims,out DIAMETER_Mapping_CT p_diameterMappingComponent )
+        runs on ServerSyncComp
+        {
+            //Variables
+            var FncRetCode v_ret := e_success;
+
+            //Create
+            p_diameterComponent_ims := DiameterComponent.create ;
+            p_diameterMappingComponent:=    DIAMETER_Mapping_CT.create;
+
+
+            //Connect
+            connect(p_diameterComponent_ims:syncPort, self:syncPort) ;
+            connect(p_diameterMappingComponent:DIA_PCO, p_diameterComponent_ims:DIAMP) ;
+
+
+            //Map
+    /*        map(p_diameterComponent_ims:DIAMP, system:PCRF_Rx);// Diameter Init test Configuration
+            if (PX_DIAM_LLP_ENABLED){
+            	map(p_diameterComponent_ims:LLPP, system:LLIMS);// Lower Layer Primitive Init test Configuration
+            }
+*/        if(tsp_transport==TCP)
+             { map(p_diameterMappingComponent:TCP_PCO, system:TCP_PCO)}
+           else   
+             { map(p_diameterMappingComponent:SCTP_PCO, system:SCTP_PCO)}   
+
+
+
+            f_setVerdict(v_ret);
+        }//end f_cf_1RxUp
+
+		/**
+		 *
+		 * @desc Creates test configuration of CF_2Gm -Ref:TS 102 790-2 - IMS is SUT
+		 * @param p_imsComponent_ue1	first ue1 component
+		 * @param p_imsComponent_ue2	second ue2 component
+		 */
+		function f_cf_2GmUp(out ImsComponent p_imsComponent_ue1,
+							out ImsComponent p_imsComponent_ue2)
+		runs on ServerSyncComp
+		{
+			//Variables
+			var FncRetCode v_ret := e_success;
+
+			//Create
+			p_imsComponent_ue1 := ImsComponent.create ;
+			p_imsComponent_ue2 := ImsComponent.create ;
+
+			//Connect
+			connect(p_imsComponent_ue1:syncPort, self:syncPort) ;
+			connect(p_imsComponent_ue2:syncPort, self:syncPort) ;
+			//Map
+			map(p_imsComponent_ue1:SIPP, system:UE1);// Init test Configuration
+			map(p_imsComponent_ue2:SIPP, system:UE2);// Init test Configuration
+
+			f_setVerdict(v_ret);
+		}//end f_cf_2GmUp
+
+		/**
+		 *
+		 * @desc Creates test configuration of CF_1Rx2Gm - IMS is SUT
+		 * @param p_imsComponent_ue1 - ue1 component
+		 * @param p_imsComponent_ue2 - ue2 component
+		 * @param p_diameterComponent_pcrf - pcrf component
+		 */
+		function f_cf_1Rx2GmUp(out ImsComponent p_imsComponent_ue1,
+							   out ImsComponent p_imsComponent_ue2,
+							   out DiameterComponent p_diameterComponent_pcrf,out DIAMETER_Mapping_CT p_diameterMappingComponent)
+		runs on ServerSyncComp
+		{
+			//Variables
+			var FncRetCode v_ret := e_success;
+   			
+			//Create
+            if (PX_SIPsupport) {
+    			p_imsComponent_ue1 := ImsComponent.create ;
+    			p_imsComponent_ue2 := ImsComponent.create ;
+            }
+			p_diameterComponent_pcrf := DiameterComponent.create ;
+			p_diameterMappingComponent:=    DIAMETER_Mapping_CT.create;
+
+			//Connect
+            if (PX_SIPsupport) {
+    			connect(p_imsComponent_ue1:syncPort, self:syncPort) ;
+    			connect(p_imsComponent_ue2:syncPort, self:syncPort) ;
+            }
+			connect(p_diameterComponent_pcrf:syncPort, self:syncPort) ;
+                        connect(p_diameterMappingComponent:DIA_PCO, p_diameterComponent_pcrf:DIAMP) ;
+
+			//Map
+            if (PX_SIPsupport) {
+    			map(p_imsComponent_ue1:SIPP, system:UE1);// Init test Configuration
+    			map(p_imsComponent_ue2:SIPP, system:UE2);// Init test Configuration
+            }
+	/*		map(p_diameterComponent_pcrf:DIAMP, system:AF_Rx);// Diameter Init test Configuration
+            if (PX_DIAM_LLP_ENABLED){
+            	map(p_diameterComponent_pcrf:LLPP, system:LLPCRF);// Lower Layer Primitive Init test Configuration
+            }
+*/
+
+ 		if(tsp_transport==TCP)
+             { map(p_diameterMappingComponent:TCP_PCO, system:TCP_PCO)}
+           else   
+             { map(p_diameterMappingComponent:SCTP_PCO, system:SCTP_PCO)}   
+
+
+			f_setVerdict(v_ret);
+		}//end f_cf_1Rx2GmUp
+
+	}//end group cfUp
+
+	group cfDown {
+
+        /**
+        *
+        * @desc Deletes configuration of CF_1Rx - PCRF is SUT
+        * @param p_diameterComponent_ims diameter component
+        */
+        function f_cf_1RxDown(in DiameterComponent p_diameterComponent_ims,out DIAMETER_Mapping_CT p_diameterMappingComponent)
+        runs on ServerSyncComp
+        {
+            f_serverWaitForAllClientsToStop();
+
+            //Disconnect
+            disconnect(p_diameterComponent_ims:syncPort, self:syncPort);
+            disconnect(p_diameterMappingComponent:DIA_PCO, p_diameterComponent_ims:DIAMP) ;
+            //Unmap
+         /*   unmap(p_diameterComponent_ims:DIAMP, system:PCRF_Rx);
+            if (PX_DIAM_LLP_ENABLED){
+            	unmap(p_diameterComponent_ims:LLPP, system:LLIMS);
+            } */
+
+  	if(tsp_transport==TCP)
+             { unmap(p_diameterMappingComponent:TCP_PCO, system:TCP_PCO)}
+           else   
+             { unmap(p_diameterMappingComponent:SCTP_PCO, system:SCTP_PCO)}   
+
+        }//end f_cf_1RxDown
+
+		/**
+		*
+		* @desc Deletes configuration of CF_2Gm - IMS is SUT
+		* @param p_imsComponent_ue1	first ue1 component
+		* @param p_imsComponent_ue2	second ue2 component
+		*/
+		function f_cf_2GmDown(in ImsComponent p_imsComponent_ue1,
+							  in ImsComponent p_imsComponent_ue2)
+		runs on ServerSyncComp
+		{
+			f_serverWaitForAllClientsToStop();
+
+			//Disconnect
+			disconnect(p_imsComponent_ue1:syncPort, self:syncPort);
+			disconnect(p_imsComponent_ue2:syncPort, self:syncPort);
+			//Unmap
+			unmap(p_imsComponent_ue1:SIPP, system:UE1);
+			unmap(p_imsComponent_ue2:SIPP, system:UE2);
+		}//end f_cf_2GmDown
+
+
+
+		/**
+		*
+		* @desc Deletes configuration of CF_1Rx2Gm - IMS is SUT
+		* @param p_imsComponent_ue1	- ue1 component
+		* @param p_imsComponent_ue2	- ue2 component
+		* @param p_diameterComponent_pcrf1- pcrf1 component
+		*/
+		function f_cf_1Rx2GmDown(	in ImsComponent p_imsComponent_ue1,
+									in ImsComponent p_imsComponent_ue2,
+									in DiameterComponent p_diameterComponent_pcrf,out DIAMETER_Mapping_CT p_diameterMappingComponent)
+		runs on ServerSyncComp
+		{
+			f_serverWaitForAllClientsToStop();
+
+			//Disconnect
+            if (PX_SIPsupport) {
+    			disconnect(p_imsComponent_ue1:syncPort, self:syncPort);
+    			disconnect(p_imsComponent_ue2:syncPort, self:syncPort);
+            }
+			disconnect(p_diameterComponent_pcrf:syncPort, self:syncPort);
+   			disconnect(p_diameterMappingComponent:DIA_PCO, p_diameterComponent_pcrf:DIAMP) ;
+
+			//Unmap
+            if (PX_SIPsupport) {
+    			unmap(p_imsComponent_ue1:SIPP, system:UE1);
+    			unmap(p_imsComponent_ue2:SIPP, system:UE2);
+            }
+			unmap(p_diameterComponent_pcrf:DIAMP, system:PCRF_Rx);
+        /*    if (PX_DIAM_LLP_ENABLED){
+            	unmap(p_diameterComponent_pcrf:LLPP, system:LLPCRF);
+            }
+*/
+	if(tsp_transport==TCP)
+             { unmap(p_diameterMappingComponent:TCP_PCO, system:TCP_PCO)}
+           else   
+             { unmap(p_diameterMappingComponent:SCTP_PCO, system:SCTP_PCO)}   
+
+
+		}//end f_cf_1Isc2GmDown
+
+	} //end group cfDown
+
+	group syncNoStop // Same functions as in LibCommon but without call of f_serverWaitForAllClientsToStop()
+	{
+        /**
+         * @desc   Implements synchronization of N clients from server side
+         *         on one or more synchronization points.
+         *         If problem occurs, then server sends STOP to all clients.
+         *         Waits for PX_TSYNC_TIME_LIMIT to let clients
+         *         finish executing their behavior until this
+         *         synchronization point. After passing all synchronization
+         *         points successfuly the server waits for all clients
+         *         to stop.
+         *         See f_serverSyncClientsTimed for overwriting this
+         *         the timing constraint!
+         *         This function sets the server component verdict.
+         * @remark The use of this function requires prior connection  of
+         *         the server sync ports!
+         * @see    LibCommon_Sync.f_connect4SelfOrClientSync
+         * @see    LibCommon_Sync.PX_TSYNC_TIME_LIMIT
+         * @see    LibCommon_Sync.f_serverSyncClientsTimed
+         * @see    LibCommon_Sync.f_serverWaitForAllClientsToStop
+         * @param  p_numClients number of synchronization clients
+         * @param  p_syncPointIds list of synchronization point name/ids
+         */
+        function f_serverSyncNClients (
+          in integer p_numClients,
+          in SyncPointList p_syncPointIds )
+        runs on ServerSyncComp {
+          var integer i, v_noOfSyncIds := lengthof(p_syncPointIds);
+          for ( i := 0; i < v_noOfSyncIds; i := i+1 ) {
+            f_serverSyncClientsTimed (
+              p_numClients,
+              p_syncPointIds[i],
+              PX_TSYNC_TIME_LIMIT );
+          }
+        }
+	} //end group syncNoStop
+} // end module DiameterRx_TestConfiguration

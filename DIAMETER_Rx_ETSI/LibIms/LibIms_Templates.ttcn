@@ -1,0 +1,3464 @@
+/*
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibIms_Templates.ttcn 500 2012-01-20 12:21:24Z schmitting $
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-IMS tests. Module become from STF306 and STF334-336
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibIms_Templates
+{	
+//    import from XSDAUX all;
+ import from XSD all;
+ 
+     import from SIPmsg_Types all;
+     import from SDP_Types all;
+    //LibCommon
+    import from LibCommon_DataStrings all;
+	
+    //LibSip
+    import from LibSip_SIPTypesAndValues all;
+    import from LibSip_SDPTypes all;
+    import from LibSip_Templates all;
+    import from LibSip_Steps all;
+    import from LibSip_PIXITS all;
+    import from LibSip_XMLTypes all;
+	
+    //LibIms
+    import from LibIms_SIPTypesAndValues all;
+	
+    import from LibIms_PIXITS all;
+	
+    //LibXMLTypes
+    import from urn_ietf_params_xml_ns_resource_lists language "XSD" all
+    with {
+        extension "File:../xsd/ResourceList.xsd"
+    }
+
+    import from urn_ietf_params_xml_ns_reginfo language "XSD" all except{type Contact}
+    with {
+        extension "File:../xsd/regInfo.xsd"
+    }
+	
+    import from http_uri_etsi_org_ngn_params_xml_simservs_xcap language "XSD" all
+    with {
+        extension "File:../xsd/SupplementaryServices.xsd"
+    }
+	
+    import from http_uri_etsi_org_ngn_params_xml_simservs_mcid language "XSD" all
+    with {
+        extension "File:../xsd/MCID.xsd"
+    }
+	
+    import from NoTargetNamespace language "XSD" all
+    with {
+        extension "File:../xsd/Ims3gpp.xsd"
+    }
+    
+    import from urn_ietf_params_xml_ns_conference_info language "XSD" all
+    with {
+        extension "File:../xsd/CONF.xsd"
+    }
+    
+    import from http_uri_etsi_org_ngn_params_xml_simservs_pstn language "XSD" all
+    with {
+        extension "File:../xsd/PSTN.xsd"
+    }
+    
+    import from urn_ietf_params_xml_ns_common_policy language "XSD" all
+    with {
+        extension "File:../xsd/common-policy.xsd"
+    }
+    
+    import from http_uri_etsi_org_ngn_params_xml_comm_div_info language "XSD" all
+    with {
+        extension "File:../xsd/CDIVN.xsd"
+    }
+    
+    import from urn_3gpp_ns_cw_1_0 language "XSD" all
+    with {
+        extension "File:../xsd/cw.xsd"
+    }   
+    
+    template charstring m_international_number_format := pattern  "\\+\d+";//pattern  "\+\d+";
+
+    template NameAddr mw_SipUrl_SUTinterface(charstring p_host, integer p_port) := 
+        {
+            displayName := *,
+            addrSpec := {
+                scheme := "sip:",
+                userInfo := *,
+                hostPort := {p_host, p_port},
+                urlParameters := *,
+                headers := *
+            }
+        }
+		
+    template Addr_Union mw_UE1_Addr_display := {nameAddr:={displayName:=PX_IMS_SUT_UE1_DISPLAY,addrSpec:=?}};
+	
+group Subfields{
+
+
+    template SipUrl m_SipUrl_currIpaddr_CSCF(in SipUserProfile p_userprofile) :=  	//*  SIP-URL of the test system on SIP side
+    {
+            scheme := c_sipScheme,  		//*  contains "sip"
+            userInfo := omit,		//*  optional
+            hostPort :=
+            {
+        host := p_userprofile.currIpaddr,	//*  hostname, IPv4 or IPv6 as a charstring
+        portField := p_userprofile.currPort	//* optional integer
+            },
+            urlParameters := omit,
+            headers := omit
+    } 
+	
+    template SemicolonParam_List mw_semicolonParams_realm (template charstring p_realm)	:=
+    /*?;*/ 
+    superset({"realm",p_realm},{"nonce",?},{"algorithm","AKAv1-MD5"},{"ik",?},{"ck",?}) ;//Working with TTWorkbench// ERROR HERE! Superset operation must contain value list - no templates!
+    template SemicolonParam_List m_semicolonParams_language (template charstring p_language):=
+        {{"language",p_language}}
+	
+    template SemicolonParam_List mw_semicolonParams_language (template charstring p_language):=
+        {{"language",p_language}}
+		
+    template SemicolonParam_List m_semicolonParams_isub (template charstring p_address):=
+        {{"isub",p_address}}	
+}
+
+group HeaderFieldTemplates{
+	
+    template Min_SE m_minSE(DeltaSec p_ds):=
+    {
+            fieldName := MIN_SE_E,
+            deltaSec:=p_ds,
+            params:=omit
+    }
+	
+    template RouteBody mw_pathvalue (template SipUrl p_sipUrl):=
+    {
+    nameAddr := {displayName := *, 	 			// optional charstring
+                 addrSpec := p_sipUrl		// SipUrl
+                },
+    rrParam := *
+    }
+
+    template Path m_path (template SipUrl p_sipUrl):=
+    {
+        fieldName := PATH_E,
+        routeBody := {
+                    {nameAddr := {
+                    displayName := omit, 	 			// optional charstring
+                    addrSpec := p_sipUrl		// SipUrl
+                    },
+                    rrParam := omit}
+            }
+    }
+	
+    template Path m_path_TS := {
+        fieldName := PATH_E,
+        routeBody := {
+            {
+                nameAddr := {
+                    displayName := omit,  //     optional charstring
+                    addrSpec := {
+                        scheme := c_sipScheme,
+                        userInfo := {
+                            userOrTelephoneSubscriber := "registrar",
+                            password := omit
+                        },
+                        hostPort := {
+                            PX_IMS_TS_PCSCF_HOME_DOMAIN, PX_IMS_TS_PCSCF_PORT
+                        },
+                        urlParameters := { { id := "lr", paramValue := omit}},
+                        headers := omit
+                    }
+                },
+                rrParam := omit
+            }
+        }
+    }
+/*
+ * @desc Path header field expectation with at least one path value
+ * @param p_sipUrl value of the last element in the list of path values
+ */	
+    template Path mw_path (template SipUrl p_sipUrl):=
+    {
+        fieldName := PATH_E,
+        routeBody := {mw_pathvalue(p_sipUrl)}		// any number of SipUrl may occur before p_sipUrl
+    }
+	
+    template P_Access_Network_Info m_pAccessNetworkInfo_IEEE_11a :=
+    {
+        fieldName := P_ACCESS_NETWORK_INFO,
+        access_net_specs := {
+        {
+        access_type :="IEEE-802.11a",
+        access_info:={{
+        id:="extension-access-info",
+        paramValue:= "192.1.1.20"
+      }}}}
+    };
+		
+
+    template P_Asserted_Service m_pAssertedService (Service_ID_List  p_pAssertedServiceValue):=
+    {
+        fieldName := P_ASSERTED_SERVICE_E,
+        p_as  := p_pAssertedServiceValue
+    };
+		
+    template P_Charging_Function_Address m_pChargingFunctionAddresses_fixedValue :=
+    {
+        fieldName := P_CHARGING_FUNCTION_ADDRESS,
+        charge_addr_params := {{id:="ccf",paramValue :="192.1.1.1;"}, // value is fixed because it is deleted on proxy 
+                             {id:="ecf",paramValue :="192.1.1.2"}} // value is fixed because it is deleted on proxy
+    };
+
+	
+    template P_Charging_Vector m_pChargingVector(template SemicolonParam_List p_chargeParams) :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := p_chargeParams
+    };
+	
+    template P_Charging_Vector m_pChargingVector_icid_TS :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := {{id:=c_icid,		paramValue :=c_icid_value}}
+    };
+	
+    template P_Charging_Vector m_pChargingVector_origIoi_fixedValue(charstring p_homeDomain) :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := {{id:=c_icid,			paramValue :=c_icid_value &";"},
+                         {id:=c_icid_generated_at,	paramValue :="192.1.1.10;"},
+                         {id:=c_orig_ioi,			paramValue := p_homeDomain}}
+    };
+	
+    template P_Charging_Vector m_pChargingVector_termIoi_fixedValue(charstring p_homeDomain) :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := {{id:=c_icid,			paramValue :=c_icid_value&";"},
+                            {id:=c_icid_generated_at,	paramValue :="192.1.1.10;"},
+                            {id:=c_term_ioi,			paramValue := p_homeDomain}}
+    };
+	
+    template P_Charging_Vector m_pChargingVector_origIoi_fixedValue1(charstring p_homeDomain) :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := {
+                         {id:=c_icid_generated_at,	paramValue :="192.1.1.10;"},
+                         {id:=c_orig_ioi,			paramValue := p_homeDomain}}
+    };
+	
+    template P_Charging_Vector mw_pChargingVector(template charstring p_id, template charstring p_paramValue) :=
+    {
+        fieldName := P_CHARGING_VECTOR,
+        charge_params := superset({id := p_id, paramValue := p_paramValue})
+    };
+
+    template P_Media_Auth m_pMediaAuthorization_fixedValue :=
+    {
+        fieldName := P_MEDIA_AUTH_E,
+        token_list := {'A'H} // example
+    };
+
+
+    template P_Early_Media m_pEarlyMedia_sup := 
+        {fieldName := P_EARLY_MEDIA_E, em_param_list := {"supported"}};
+		
+	
+    template ProxyRequire m_proxyRequire_secAgree :=
+    {
+        fieldName := PROXY_REQUIRE_E,
+        optionsTags := {"sec-agree"}
+    };
+	
+    template P_Visited_Network_ID m_pVisitedNetworkID_TS := 
+    {
+      fieldName := P_VISITED_NETWORK_ID,
+      vnetworks := {{network_id := "Visited ETSI 1",
+         network_par := omit}}
+    }
+	
+    template P_Visited_Network_ID mw_pVisitedNetworkID := 
+    {
+      fieldName := P_VISITED_NETWORK_ID,
+      vnetworks := {{network_id := PX_IMS_SUT_PCSCF_VisitedNetworkID,
+                        network_par := *}}
+                                           
+    }
+
+    template RecordRoute m_recordRoute_notmatching:=
+    {   
+        fieldName := RECORD_ROUTE_E,
+        routeBody :=
+        {{
+            nameAddr :=
+            {
+                displayName := omit,
+                addrSpec :=
+                {
+                    scheme := c_sipScheme,  			// contains "sip"
+                    userInfo := {userOrTelephoneSubscriber := "unknown", password := omit},
+                    hostPort :=
+                    {
+                        host := "unknown.domain.name",	// hostname, IPv4 or IPv6 as a charstring
+                        portField := omit
+                    },
+                    urlParameters := omit,
+                    headers := omit
+                }
+            },
+            rrParam := omit
+        } }
+    };
+	
+    template Require m_require_secAgree :=
+    {
+        fieldName := REQUIRE_E,
+        optionsTags := {"sec-agree"}
+    };
+	
+    template Require mw_require_path :=
+    {
+        fieldName := REQUIRE_E,
+        optionsTags := superset("path")
+    };
+
+    template Route m_route_interface (in ImsInterfaceProfile p_interfaceprofile):=
+    {   
+        fieldName := ROUTE_E,
+        routeBody := {{nameAddr := {displayName := omit, 
+                                   addrSpec := 	{scheme := c_sipScheme,  			// contains "sip"
+                                                userInfo := omit,
+                                                hostPort := {host:=p_interfaceprofile.SUTHomeDomain, portField:= omit},
+                                                urlParameters := omit,
+                                                headers := omit}
+                                   },
+                      rrParam := omit}
+    }};
+
+    template Route m_route_notmatching:=
+    {   
+        fieldName := ROUTE_E,
+        routeBody :=
+        {{
+            nameAddr :=
+            {
+                displayName := omit,
+                addrSpec :=
+                {
+                    scheme := c_sipScheme,  			// contains "sip"
+                    userInfo := {userOrTelephoneSubscriber := "unknown", password := omit},
+                    hostPort :=
+                    {
+                        host := "unknown.domain.name",	// hostname, IPv4 or IPv6 as a charstring
+                        portField := omit
+                    },
+                    urlParameters := omit,
+                    headers := omit
+                }
+            },
+            rrParam := omit
+        } }
+    };
+
+    template Session_expires m_se(DeltaSec p_ds):=
+    {
+            fieldName := SESSION_EXPIRES_E,
+            deltaSec:=p_ds,
+            se_params:=omit
+    }
+	
+    template Session_expires mw_se:=
+    {
+            fieldName := SESSION_EXPIRES_E,
+            deltaSec:=?,
+            se_params:=omit
+    }
+	
+    template Supported m_supported_timer:=
+    {
+            fieldName := SUPPORTED_E,
+            optionsTags := {"timer"}
+    }
+	
+    template Supported m_supported_histinfo:=
+    {
+            fieldName := SUPPORTED_E,
+            optionsTags := {"histinfo"}
+    }
+	
+	
+    template Supported m_supported_fromChange:=
+    {
+            fieldName := SUPPORTED_E,
+            optionsTags := {"from-change"}
+    }
+	
+    template To m_To_targetRefreshRequest(template To p_To) :=
+    {
+      fieldName := TO_E,
+      addressField :=
+      {nameAddr := {
+          displayName := p_To.addressField.nameAddr.displayName,
+          addrSpec :=	p_To.addressField.nameAddr.addrSpec
+        }},//end addressField
+      toParams := {{id := c_tagId, paramValue := f_getRndTag()}}
+    };
+	
+    template ViaBody m_ViaBody_virtualUEinPCSCF(charstring branch_val,in SipUserProfile p_userprofile) :=
+    {
+      sentProtocol := m_SentProtocol(PX_SIP_TRANSPORT),
+      sentBy:={host:=p_userprofile.contactIpaddr, portField:= p_userprofile.contactPort},
+      viaParams:={{id :=c_branchId,paramValue :=branch_val}}
+    }
+	
+    template ViaBody m_ViaBody_virtual_XCSCF(charstring branch_val,in SipUserProfile p_userprofile) :=
+    {
+            sentProtocol := m_SentProtocol(PX_SIP_TRANSPORT),
+            sentBy:={host:=p_userprofile.currIpaddr, portField:= p_userprofile.currPort},
+            viaParams:={{id :=c_branchId,paramValue :=branch_val}}
+    }
+
+    template Via m_via_notmatching:=
+    {   
+        fieldName := VIA_E,
+        viaBody :=
+        {{
+            sentProtocol := valueof(m_SentProtocol("UDP")),
+                      sentBy:={host:="unknown.domain.name", portField:= 10000},
+                      viaParams:={{id :=c_branchId,paramValue :="abcd0000"}}
+        } }
+    };
+	
+    /*
+     * @desc WWW-Authenticate header field 
+         * @param p_challenge value 
+         */	
+        template WwwAuthenticate m_wwwAuthenticate (Challenge p_challenge):=
+        {
+            fieldName := WWW_AUTHENTICATE_E,
+            challenge := {p_challenge}
+        }
+
+        /*
+         * @desc WWW-Authenticate header field 
+         * @param p_challenge value 
+         */	
+        template WwwAuthenticate mw_wwwAuthenticate (template /*SemicolonParam_List FIXME */ CommaParam_List p_semicolonParam_List):=
+        {
+            fieldName := WWW_AUTHENTICATE_E,
+            challenge := 
+                {{digestCln := p_semicolonParam_List         // set of GenericParam
+                }}
+        }
+		
+		
+		
+    /*
+        * @desc AcceptContact header field 
+        * @param p_acValues value 
+        */	
+        template Accept_contact m_acceptContact (template SemicolonParam_List p_semicolonParam_List):=
+        {
+            fieldName := ACCEPT_CONTACT_E,
+            ac_values := {//{wildcard:=c_WILDCARD, acRcParams := p_semicolonParam_List} // set of GenericParam
+            
+            p_semicolonParam_List
+                        }
+        }
+
+    /*
+        * @desc Authenticate header field 
+        * @param p_challenge value 
+        */	
+        template Accept_contact mw_acceptContact (template SemicolonParam_List p_semicolonParam_List):=
+        {
+            fieldName := ACCEPT_CONTACT_E,
+            ac_values := 
+                {//{wildcard:=c_WILDCARD, acRcParams := p_semicolonParam_List} // set of GenericParam
+
+                p_semicolonParam_List
+                }
+        }
+		
+        template Subscription_state mw_subscriptionState(template charstring p_state) := {
+            fieldName := SUBSCRIPTION_STATE_E,
+            substate_value := p_state,
+            subexp_params := omit
+        }
+		
+        //[3455/5.1]
+        template P_Associated_Uri m_pAssociatedURI (template NameAddr p_nameAddr) := {
+            fieldName := P_ASSOCIATED_URI,
+            p_assoc_uris := {{p_asso_uri:=p_nameAddr, ai_params:=omit}}
+        }	  	
+		
+} // end group HeaderFieldTemplates
+
+group MessageBodyTemplates {
+	
+group XMLTemplates {
+	
+    template XmlBody m_XmlBody_ConfInfo(template Conference_type p_confInfo) :=
+    {
+        conference := p_confInfo
+    };
+	
+    template XmlBody m_XmlBody_CW(template Ims_cw p_cw) :=
+    {
+        cw := p_cw
+    };
+	
+    template XmlBody m_XmlBody_CUG(template Cug p_cug) :=
+    {
+        cug := p_cug
+    };
+	
+    template XmlBody m_XmlBody_MCID(template Mcid p_mcid) :=
+    {
+        mcid := p_mcid
+    };
+	
+    template XmlBody m_XmlBody_PSTNTransit(template PSTN_transit p_pstn) :=
+    {
+        pstnTransit := p_pstn
+    };
+	
+    template XmlBody m_XmlBody_simservs(template Simservs p_simservs) :=
+    {
+        simservs := p_simservs
+    };
+	
+    template XmlBody m_XmlBody_ACR_ICB(template /*Incoming_communication_barring*/ Simservs.extensions.elem_list  p_icb) := {
+        simservs := {
+            attr := {},  
+            //absServiceGroup_list := {},
+            absService_list := {},
+            extensions := {
+							elem_list := valueof(p_icb) //.attr)
+						  }
+        }
+    };
+	   
+    template XmlBody m_XmlBody_ACR_OCB(template /*Outgoing_communication_barring*/ Simservs.extensions.elem_list  p_ocb) := {
+        simservs := {
+            attr := {},  
+            //absServiceGroup_list := {},
+            absService_list := {},
+            extensions := {
+							elem_list := valueof(p_ocb)//.attr)
+						  }
+        }
+    };
+	
+    template XmlBody m_XmlBody_CDIVN(template Comm_div_info_type p_cdivn) :=
+    {
+        cdivn := p_cdivn
+    };
+	
+    template XmlBody m_XmlBody_Reginfo(template Reginfo p_regInfo) :=
+    {
+        regInfo := p_regInfo
+    };
+    
+ /*   template MessageBody m_messageBodyXML(template XmlBody p_xmlBody) :=
+    {
+        xmlBody := p_xmlBody
+    };
+   */ 
+    template Reginfo m_reginfo (template XSD.AnyURI p_user):= {
+	  full,
+      0,
+      {m_registration(p_user)},
+	  {}
+    };
+    
+    template Registration m_registration (template XSD.AnyURI p_user):= {
+	  p_user, // XSDAUX.anyURI aor
+      "a7", // XSDAUX.string id
+      init, //enumerated {active,init,terminated} state,
+      {}, // record of SIPmsg_Types.Contact contact_list optional,
+	  {} // record of anytype elem_list optional
+    };
+		
+    template XmlBody mw_XmlBody_ConfInfo(template Conference_type p_confInfo) :=
+    {
+        conference := p_confInfo
+    };
+	
+    template XmlBody mw_XmlBody_CUG(template Cug p_cug) :=
+    {
+        cug := p_cug
+    };
+	
+    template XmlBody mw_XmlBody_MCID(template Mcid p_mcid) :=
+    {
+        mcid := p_mcid
+    };
+	
+    template XmlBody mw_XmlBody_PSTNTransit(template PSTN_transit p_pstn) :=
+    {
+        pstnTransit := p_pstn
+    };
+	
+    template XmlBody mw_XmlBody_CDIVN(template Comm_div_info_type p_cdivn) :=
+    {
+        cdivn := p_cdivn
+    };
+	
+    template XmlBody mw_XmlBody_simservs(template Simservs p_simservs) :=
+    {
+        simservs := p_simservs
+    };
+	
+    template XmlBody mw_XmlBody_ResourceLists(template Resource_lists p_resourceLists) :=
+    {
+        resourceLists := p_resourceLists
+    };
+	
+    template XmlBody mw_XmlBody_Reginfo(template Reginfo p_regInfo) :=
+    {
+        regInfo := p_regInfo
+    };
+		
+}// end group XMLTemplates
+
+group ACR_CBTemplates {
+	
+    template Incoming_communication_barring	m_ICB(template RuleType p_ruleType) :=
+    {
+        active := omit,
+        attr := {},
+        ruleset := {
+            {p_ruleType}
+        }
+    }
+	
+    template Outgoing_communication_barring	m_OCB(template(present) RuleType p_ruleType) :=
+    {
+        active := omit,
+        attr := {},
+        ruleset := {
+            {p_ruleType}
+        }
+    }
+	
+    template RuleType m_ruleType_actionFalse(template ConditionsType p_condition) :=
+    {
+        id := "rule66",
+        conditions := p_condition,
+        actions := {elem_list:={"<false/>"}},
+        transformations := omit
+    }
+
+    template ConditionsType m_conditionsType_identity(template(present) charstring p_id, template charstring p_scheme) := {
+        {
+            {identity_list := {{{{one := {id := p_id, elem := omit}}}}}} 
+        }
+    }
+	
+} //end group ACR_CBTemplates
+
+group CUGTemplates {
+	
+    template Cug m_CUG (
+        template CugRequestType p_crt,
+        template NetworkIdentityType p_nit,
+        template SixteenbitType p_cibc,
+        template TwoBitType p_cci
+    ):= {
+        active := omit,
+        attr := {},
+        cugCallOperation := p_crt,
+        networkIndicator := p_nit,
+        cugInterlockBinaryCode := p_cibc,
+        cugCommunicationIndicator :=p_cci
+    }
+	
+    template Cug mw_CUG (
+        template CugRequestType p_crt,
+        template NetworkIdentityType p_nit,
+        template SixteenbitType p_cibc,
+        template TwoBitType p_cci
+    ):= {
+        active := omit,
+        attr := ?,
+        cugCallOperation := p_crt,
+        networkIndicator := p_nit,
+        cugInterlockBinaryCode := p_cibc,
+        cugCommunicationIndicator := p_cci
+    }
+	
+    template CugRequestType m_cugReqType(boolean p_outAccessRequest, integer p_cugIndex) :=
+    {
+        outgoingAccessRequest := p_outAccessRequest,
+        cugIndex := p_cugIndex
+    }
+
+    template CugRequestType mw_cugReqType(template boolean p_outAccessRequest, template integer p_cugIndex) :=
+    {
+        outgoingAccessRequest := p_outAccessRequest,
+        cugIndex := p_cugIndex
+    }
+}//end group CUGTemplates
+
+group CWTemplates {
+
+    template Ims_cw m_CW(template TEmptyType p_cwi) := {
+        attr := {},
+        communication_waiting_indication := p_cwi,
+        elem_list := {}	    
+    }
+	
+    template Ims_cw mw_ims_cw(template TEmptyType p_cwi) := {
+        attr := ?,
+        communication_waiting_indication := p_cwi,
+        elem_list := ?
+    }
+	
+    template Cug m_CW2 (
+		template CugRequestType p_crt,
+        template NetworkIdentityType p_nit,
+        template SixteenbitType p_cibc,
+        template TwoBitType p_cci
+    ):= {
+        active := omit,
+        attr := {},
+        cugCallOperation := p_crt,
+        networkIndicator := p_nit,
+        cugInterlockBinaryCode := p_cibc,
+        cugCommunicationIndicator :=p_cci
+    }
+	
+    template Cug mw_CW (
+        template CugRequestType p_crt,
+        template NetworkIdentityType p_nit,
+        template SixteenbitType p_cibc,
+        template TwoBitType p_cci
+    ):= {
+        active := omit,
+        attr := ?,
+        cugCallOperation := p_crt,
+        networkIndicator := p_nit,
+        cugInterlockBinaryCode := p_cibc,
+        cugCommunicationIndicator := p_cci
+    }
+	
+}//end group CWTemplates
+
+group MCIDTemplates {
+	
+ template Mcid m_mcid_request_mcidIndicatorTrue :=
+ {
+  choice := {
+   request := {mcidRequestIndicator := bit2str('1'B),
+                holdingIndicator := bit2str('0'B)}
+  }
+ }
+	
+ template Mcid m_mcid_request_mcidIndicatorTrue_holdIndTrue :=
+ {
+  choice := {
+   request := {mcidRequestIndicator := bit2str('1'B),
+               holdingIndicator := bit2str('1'B)}
+  }
+ }
+	
+ template Mcid m_mcid_response_mcidIndicatorTrue :=
+ {
+  choice := {
+   response := {mcidResponseIndicator := bit2str('1'B),
+                holdingProvidedIndicator := bit2str('0'B)}
+  }
+ }
+	
+ template Mcid mw_mcid_request_mcidIndicatorTrue :=
+ {
+  choice := {
+   request := {mcidRequestIndicator := bit2str('1'B),
+                holdingIndicator := ?}
+  }
+ }
+	
+ template Mcid mw_mcid_response_mcidIndicatorTrue :=
+ {
+  choice := {
+   response := {mcidResponseIndicator := bit2str('1'B),
+                holdingProvidedIndicator := ?}
+  }
+ }
+	
+ template Mcid mw_mcid_response_mcidIndicatorTrue_holdProvIndFalse :=
+ {
+  choice := {
+   response := {mcidResponseIndicator := bit2str('1'B),
+                holdingProvidedIndicator := bit2str('0'B)}
+  }
+ }
+	
+ template Mcid mw_mcid_response_mcidIndicatorTrue_holdProvIndTrue :=
+ {
+  choice := {
+   response := {mcidResponseIndicator := bit2str('1'B),
+                holdingProvidedIndicator := bit2str('1'B)}
+  }
+ }
+
+} //end group MCIDTemplates
+
+group PSTNTemplates {
+	
+    template PSTN_transit m_PSTN_transit_BC1(template BearerCapabilityType p_bct) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {},
+            display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC2(template BearerCapabilityType p_bct,
+                                             template BearerCapabilityType p_bct2) :=
+    {
+        bearerInfomationElement_list := {p_bct, p_bct2},
+        highLayerCompatibility_list := {},
+            lowLayerCompatibility := omit,
+        progressIndicator_list := {},
+        display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_HLC1(template BearerCapabilityType p_bct, 
+                                                  template HighLayerCompatibilityType p_hlc) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {p_hlc},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {},
+        display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_LLC(template BearerCapabilityType p_bct,
+                                                 template LowLayerCompatibilityType p_llc) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {},
+            lowLayerCompatibility := p_llc,
+            progressIndicator_list := {},
+        display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_PI1(template BearerCapabilityType p_bct,
+                                                 template ProgressIndicatorType p_pi1) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {p_pi1},
+        display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_PI2(template BearerCapabilityType p_bct,
+                                                 template ProgressIndicatorType p_pi1,
+                                                 template ProgressIndicatorType p_pi2) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {p_pi1, p_pi2},
+            display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_PI3(template BearerCapabilityType p_bct,
+                                                 template ProgressIndicatorType p_pi1,
+                                                 template ProgressIndicatorType p_pi2,
+                                                 template ProgressIndicatorType p_pi3) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {p_pi1, p_pi2, p_pi3},
+            display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_HLC2(template BearerCapabilityType p_bct,
+                                                  template HighLayerCompatibilityType p_hlc1,
+                                                  template HighLayerCompatibilityType p_hlc2) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {p_hlc1, p_hlc2},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {},
+            display_list := {}
+    }
+
+    template PSTN_transit m_PSTN_transit_BC1_HLC1_PI1(template BearerCapabilityType p_bct,
+                                                 template HighLayerCompatibilityType p_hlc1,
+                                                 template ProgressIndicatorType p_pi1) :=
+    {
+            bearerInfomationElement_list := {p_bct},
+            highLayerCompatibility_list := {p_hlc1},
+            lowLayerCompatibility := omit,
+            progressIndicator_list := {p_pi1},
+            display_list := {}
+    }
+	
+    template PSTN_transit mw_PSTN_transit_bc(template BearerCapabilityType p_bct,
+                                             template BearerCapabilityType p_bct2) :=
+    {
+            bearerInfomationElement_list := {p_bct, p_bct2},
+            highLayerCompatibility_list := {*, *},
+            lowLayerCompatibility := *,
+            progressIndicator_list := {*},
+            display_list := {*}
+    }											 
+											 
+	
+    template BearerCapabilityType m_BearerCapabilityType (Bit5 p_InfoTrfCap):= {
+            bCoctet3 	:= {codingStandard := bit2str('00'B),						//Coding standard = CCITT standardized coding
+                            informationTransferCabability := bit2str(p_InfoTrfCap)},//Information transfer capability
+            bCoctet4 	:= {transferMode := bit2str('00'B),							//Coding standard = CCITT standardized coding
+                            informationTransferRate := bit2str('10000'B)},			//Information transfer rate = 64 kbit/s
+            bCoctet4_1 	:= omit,
+            bCoctet5  	:= omit,
+            bCoctet5a  	:= omit,
+            bCoctet5bV110  := omit,
+            bCoctet5bV120  := omit,
+            bCoctet5c 	:= omit,
+            bCoctet5d 	:= omit,
+            bCoctet6  	:= omit,
+            bCoctet7  	:= omit,
+            bCoctet7a  	:= omit,
+            bCoctet7b  	:= omit 
+    }	
+	
+    template ProgressIndicatorType m_ProgressIndicatorType (Bit7 p_progDesc) := {
+            progressOctet3 := {codingStandard := bit2str('00'B),
+                               location := bit2str('0000'B)
+                              },
+            progressOctet4 := {progressDescription := bit2str(p_progDesc)}
+    }
+	
+    template LowLayerCompatibilityType m_LowLayerCompatibilityType (Bit5 p_InfoTrfCap) := {
+            lLOctet3 := {codingStandard := bit2str('00'B),						 //Coding standard = CCITT standardized coding
+                         informationTransferCapability := bit2str(p_InfoTrfCap)},//Information transfer capability
+            lLOctet3a := omit,
+            lLOctet4 := {transferMode := bit2str('00'B),						//Coding standard = CCITT standardized coding
+                         informationTransferRate := bit2str('10000'B)},			//Information transfer rate = 64 kbit/s
+            lLOctet4_1 := omit,
+            lLOctet5 := omit,
+            lLOctet5a := omit,
+            lLOctet5bV110 := omit,
+            lLOctet5bV120 := omit,
+            lLOctet5c := omit,
+            lLOctet5d := omit,
+            lLOctet6 := omit,
+            lLOctet6aHDLC := omit,
+            lLOctet6aUserSpecific := omit,
+            lLOctet6b := omit,
+            lLOctet7 := {layer3Identification := bit2str('10'B),		//TODO check valueand if parameter is mandatory
+                        userInfoLayer3Protocol := bit2str('10000'B)},	//TODO check value and if parameter is mandatory
+            lLOctet7aUserSpecific := omit,
+            lLOctet7aX25 := omit,
+            lLOctet7bX25 := omit,
+            lLOctet7c := omit,
+            lLOctet7aTR9577 := omit,
+            lLOctet7bTR9577 := omit 
+    }
+	
+    template HighLayerCompatibilityType m_HighLayerCompatibilityType 
+        (Bit7 p_HLOctet4):= {
+            hLOctet3 := {
+                codingStandard :=bit2str('00'B),
+                interpretation :=bit2str('100'B),
+                presentationMethod := bit2str('01'B)
+            },
+            hLOctet4 := {
+                highLayerCharacteristics := bit2str(p_HLOctet4)
+            },
+            hLOctet4aMaintenance := omit,
+            hLOctet4Audio := omit
+    }
+
+    template BearerCapabilityType mw_BearerCapabilityType (template BCOctet3Type p_BCOctet3Type, template BCOctet4Type p_BCOctet4Type):= {
+            bCoctet3 	:= p_BCOctet3Type,
+            bCoctet4 	:= p_BCOctet4Type,
+            bCoctet4_1 	:= * ,
+            bCoctet5  	:= * ,
+            bCoctet5a  	:= * ,
+            bCoctet5bV110  := * ,
+            bCoctet5bV120  := * ,
+            bCoctet5c 	:= * ,
+            bCoctet5d 	:= * ,
+            bCoctet6  	:= * ,
+            bCoctet7  	:= * ,
+            bCoctet7a  	:= * ,
+            bCoctet7b  	:= * 
+    }	
+
+    template BearerCapabilityType mw_BearerCapabilityType_TrfCap  (Bit5 p_InfoTrfCap):= {
+            bCoctet3 	:= {codingStandard := bit2str('00'B),						//Coding standard = CCITT standardized coding
+                            informationTransferCabability := bit2str(p_InfoTrfCap)},//Information transfer capability
+            bCoctet4 	:= {transferMode := bit2str('00'B),							//Coding standard = CCITT standardized coding
+                            informationTransferRate := bit2str('10000'B)},			//Information transfer rate = 64 kbit/s
+            bCoctet4_1 	:= * ,
+            bCoctet5  	:= * ,
+            bCoctet5a  	:= * ,
+            bCoctet5bV110  := * ,
+            bCoctet5bV120  := * ,
+            bCoctet5c 	:= * ,
+            bCoctet5d 	:= * ,
+            bCoctet6  	:= * ,
+            bCoctet7  	:= * ,
+            bCoctet7a  	:= * ,
+            bCoctet7b  	:= * 
+    }	
+
+    template ProgressIndicatorType mw_ProgressIndicatorType (template ProgressOctet3Type p_ProgressOctet3Type, template ProgressOctet4Type p_ProgressOctet4Type) := {
+            progressOctet3 := p_ProgressOctet3Type,
+            progressOctet4 := p_ProgressOctet4Type
+    }
+	
+    template LowLayerCompatibilityType mw_LowLayerCompatibilityType 
+        (template LLOctet3Type p_LLOctet3, template LLOctet4Type p_LLOctet4, template LLOctet7Type p_LLOctet7) := {
+            lLOctet3 := p_LLOctet3,
+            lLOctet3a := * ,
+            lLOctet4 := p_LLOctet4,
+            lLOctet4_1 := * ,
+            lLOctet5 := * ,
+            lLOctet5a := * ,
+            lLOctet5bV110 := * ,
+            lLOctet5bV120 := * ,
+            lLOctet5c := * ,
+            lLOctet5d := * ,
+            lLOctet6 := * ,
+            lLOctet6aHDLC := * ,
+            lLOctet6aUserSpecific := * ,
+            lLOctet6b := * ,
+            lLOctet7 := p_LLOctet7,
+            lLOctet7aUserSpecific := * ,
+            lLOctet7aX25 := * ,
+            lLOctet7bX25 := * ,
+            lLOctet7c := * ,
+            lLOctet7aTR9577 := * ,
+            lLOctet7bTR9577 := * 
+    }
+	
+    template HighLayerCompatibilityType mw_HighLayerCompatibilityType 
+        (template HLOctet3Type p_HLOctet3, template HLOctet4Type p_HLOctet4):= {
+            hLOctet3 := p_HLOctet3,
+            hLOctet4 := p_HLOctet4,
+            hLOctet4aMaintenance := *,
+            hLOctet4Audio := *
+    }
+
+} //end group PSTNTemplates		
+
+group CDIVNTemplates {
+	
+    /* general CDIVN subscription */
+    template Comm_div_info_type m_CDIVN_sub := {
+        entity := "comm-div-info",
+        comm_div_subs_info := {
+            attr := {},
+            comm_div_selection_criteria := {
+                attr := {},
+                originating_user_selection_criteria := omit,
+                diverting_user_selection_criteria := omit,
+                diverted_to_user_selection_criteria := omit,
+                diversion_time_selection_criteria := omit,
+                diversion_reason_selection_criteria := omit,
+                elem_list := {}
+            },
+            comm_div_ntfy_trigger_criteria := omit,
+            comm_div_info_selection_criteria := omit,
+            elem_list := {}
+        },
+        comm_div_ntfy_info := omit,
+        elem_list := {}
+    }
+
+
+} // end grouup CDIVNTemplates
+
+group ResourceListsTemplates {
+	
+
+    template Resource_lists m_ResourceList_2Users(
+        template EntryType p_user1, 
+        template EntryType p_user2
+    ) :=
+    {
+        sequence_list := {
+            {
+                list := {
+                    name := omit,
+                    attr := {},
+                    display_name := omit,
+                    sequence_list := {
+                        {
+                            choice := {
+                                entry := p_user1
+                            }
+                        },
+                        {
+                            choice := {
+                                entry := p_user2
+                            }
+                        }
+                    },
+                    elem_list := {}
+                }
+            }
+        }
+    }
+	
+    template EntryType m_EntryUser(SipUrl p_user) := {
+		
+        uri :=
+            p_user.userInfo.userOrTelephoneSubscriber & "@" &
+            p_user.hostPort.host,
+        attr := {},
+        display_name := omit,
+        elem_list := {}
+    }
+}// end grouup ResourceListsTemplates
+
+group Ims3gppTemplates {
+    
+    //TODO:check commented and below templates when test will be validated
+    template TIMS3GPP mw_Ims_3gpp_CW := {
+        version := 1.0,
+        attr := ?,
+        choice := {
+            alternative_service := {
+                attr := ?,
+                type_ := ?, 
+                reason := ?, 
+                elem_list := ?
+            }
+        },
+        elem_list := ?
+    }
+//  template TIMS3GPP mw_Ims_3gpp_CW := {
+//      version := 1.0,
+//      anyAttributes := ?,
+//      choice_1 := {
+//          alternative_service := {
+//              anyAttributes := ?,
+//              type_ := ?,
+//              reason := ?,
+//              action_ := {
+//                  anyAttributes := ?,
+//                  emergency_registration := *,
+//                  call_waiting_indication := {},
+//                  any_1 := *
+//              },
+//              any_1 := *
+//          }
+//      },
+//      any_1 := *
+//  }
+} // end group Ims3gpp
+
+group CONFTemplates {
+    template /*booleanXSD*/ Boolean boolXSD_true:=true;//{bool:=true}
+    template /*booleanXSD*/ Boolean boolXSD_false:=false;//{bool:=false}
+	
+    // FIXME template anyAttributes m_emptyAnyAttributes:={}
+	
+    template urn_ietf_params_xml_ns_conference_info.Media_type m_mediatype_status(template Media_status_type p_status):= {
+        id:="1",
+        attr := {},
+        display_text :=omit,
+        type_ :=omit,
+        label_ :=omit,
+        src_id:=omit,
+        status:= p_status,
+        elem_list:={}
+    }
+	
+    template Endpoint_type m_endpoint(template charstring p_Uri,template Endpoint_status_type p_epStatus,template Joining_type p_joinMethod, template Disconnection_type p_discMethod, template urn_ietf_params_xml_ns_conference_info.Media_type p_mediastatus):= {
+        entity:=p_Uri,
+        state:=full,
+        attr := {},
+        display_text:=omit,
+        referred:=omit,
+        status:=p_epStatus,
+        joining_method:=p_joinMethod,
+        joining_info:=omit,
+        disconnection_method:=omit,
+        disconnection_info:=omit,
+        media_list:={p_mediastatus},// optional, 
+        call_info:=omit,
+        elem_list:={}
+    }
+	
+    template User_type m_1user (template charstring p_Uri,template Endpoint_type p_endpoint) := {
+        entity:=p_Uri,
+        state:=full,
+        attr := {},
+        display_text:=omit,
+        associated_aors:=omit,
+        roles:=omit,
+        languages :=omit,
+        cascaded_focus :=omit,
+        endpoint_list:={p_endpoint},// optional,
+        elem_list:={}
+    }
+	
+    template Users_type m_users_1user_full(template User_type p_user):={
+            state:=full,
+        	attr := {},
+            user_list:={p_user},
+            elem_list:={}
+    }
+	
+    template Users_type m_users_2user_full(template User_type p_user1,template User_type p_user2):={
+            state:=full,
+        	attr := {},
+            user_list:={p_user1,p_user2},
+            elem_list:={}
+    }
+	
+    template Conference_state_type m_conference_state(template /*unsignedInt*/ integer p_nUsers, boolean p_active, boolean p_locked) := {
+        attr := {},
+        user_count:=p_nUsers,
+        active:=p_active,
+        locked:=p_locked,
+        elem_list:= {}
+    }
+
+    template Conference_type m_ci_cUri_cState_userEntity(template charstring p_cUri, template Conference_state_type p_cState, template Users_type p_users ) := {
+        entity := p_cUri,
+        state := full,
+        version := 1,
+        attr := {},
+        conference_description := omit,
+        host_info := omit,
+        conference_state := p_cState,
+        users := p_users,
+        sidebars_by_ref := omit,
+        sidebars_by_val := omit,
+        elem_list := {}
+    }
+	
+ template Conference_type mw_conferenceInfo_active := {
+     entity := ?,
+     state := *,
+     version := *,
+     attr := ?,
+     conference_description := *,
+     host_info := *,
+     conference_state := ?,
+     users := {
+         state := ?,
+         attr := ?,
+         user_list := {
+             {
+                 entity := *,
+                 state := *,
+                 attr := ?,
+                 display_text := *,
+                 associated_aors := *,
+                 roles := *,
+                 languages := *,
+                 cascaded_focus := *,
+                 endpoint_list := {
+                     {
+                         entity := *,
+                         state := *,
+                         attr := ?,
+                         display_text := *,
+                         referred := *,
+                         status := connected,
+                         joining_method := dialed_in,
+                         joining_info := *,
+                         disconnection_method := *,
+                         disconnection_info := *,
+                         media_list := *,
+                         call_info := *,
+                         elem_list := ?
+                     }
+                 },
+                 elem_list := ?
+             }
+         },
+         elem_list := {}
+     },
+     sidebars_by_ref := *,
+     sidebars_by_val := *,
+     elem_list := ?
+ }
+}
+	
+} // end group MessageBodyTemplates
+		
+group MessageTemplates {
+
+group modified_templates {
+
+group request_send {
+		
+		
+    template ACK_Request m_ACK_Request_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, template Route p_route) modifies m_ACK_Request_Base :=
+    {
+        msgHeader :=
+        {
+            route := p_route
+        }
+    }
+	
+    template BYE_Request m_BYE_Request_IMS
+        ( SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+        Via p_via, template Route p_route)
+        modifies m_BYE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            route := p_route 
+          }
+        }
+	
+    template BYE_Request m_BYE_Request_Reason_IMS
+        ( SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+        Via p_via, template Route p_route, charstring p_cause)
+        modifies m_BYE_Request_Base
+        :=
+        {
+            msgHeader :=
+            {
+                reason := mw_Reason(p_cause),
+                route := p_route
+            }
+        }
+	
+  /*  template BYE_Request m_BYE_Request_UserToUser_IMS
+        ( SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+        Via p_via, template Route p_route, template charstring p_U2UData)
+        modifies m_BYE_Request_Base
+        :=
+        {
+            msgHeader :=
+            {
+                route := p_route,
+                userToUser := m_UserToUserData(p_U2UData)
+            }
+        }
+	*/
+    template BYE_Request m_BYE_Request_UE
+        ( SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+        Via p_via, template Route p_route)
+        modifies m_BYE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation
+            route := p_route 
+          }
+        }
+	
+    template CANCEL_Request m_CANCEL_Request_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to, 
+        Via p_via, template Route p_route) modifies m_CANCEL_Request_Base :=
+    {
+        msgHeader :=
+        {
+            route := p_route
+        }
+    }
+	
+    template CANCEL_Request m_CANCEL_Request_Reason_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to, 
+        Via p_via, template Route p_route, integer p_cause) modifies m_CANCEL_Request_Base :=
+    {
+        msgHeader :=
+        {
+            reason := m_Reason(p_cause),
+            route := p_route
+        }
+    }
+	
+    template CANCEL_Request m_CANCEL_Request_UE (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to, 
+        Via p_via, template Route p_route) modifies m_CANCEL_Request_Base :=
+    {
+        msgHeader :=
+        {
+            route := p_route
+        }
+    }
+	
+    /*
+        * 
+        * @desc INFO message
+    *
+    */	
+    template INFO_Request m_INFO_Request_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, template MessageBody p_mb )
+    modifies m_INFO_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication}
+        },
+        messageBody := p_mb
+    }			
+	
+    /*
+    * 
+    * @desc INFO message
+    *
+    */	
+    template INFO_Request m_INFO_Request_Mime_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, template MessageBody p_mb )
+    modifies m_INFO_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_mimeMultipart}
+        },
+        messageBody := p_mb
+    }			
+	
+    template INFO_Request m_INFO_Request_Xml_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, template MessageBody p_mb )
+    modifies m_INFO_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_xmlAplication}
+        },
+        messageBody := p_mb
+    }	
+	
+    template INVITE_Request m_INVITE_Request_UE
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route,  template Supported p_supported, template MessageBody p_mb )
+    modifies m_INVITE_Request_Base
+    :=
+    {
+      msgHeader :=
+      {
+        contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+        contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+        p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+        require := p_require,
+        route := p_route,
+        //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+        supported := p_supported
+      },
+      messageBody := p_mb
+    }
+	
+    template INVITE_Request m_INVITE_Request_noBody_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported )
+        modifies m_INVITE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            require := p_require,
+            route := p_route,
+            //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+            supported := p_supported
+          }
+        }
+	
+        template INVITE_Request m_INVITE_Request_Allow_UE
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route,  template Supported p_supported, template MessageBody p_mb, template SIPmsg_Types.Allow p_allow)
+    modifies m_INVITE_Request_UE
+    :=
+    {
+      msgHeader :=
+      {
+        allow := p_allow
+      }
+    }
+	
+    template INVITE_Request m_INVITE_Request_noBody_Allow_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template SIPmsg_Types.Allow p_allow)
+        modifies m_INVITE_Request_noBody_UE
+        :=
+        {
+          msgHeader :=
+          {
+            allow := p_allow
+          }
+        }
+		
+	
+    /*
+     * 
+     * @desc INVITE message exchanged at Mw
+     *
+     */	
+    template INVITE_Request m_INVITE_Request_IMS (
+        SipUrl p_requestUri, 
+        CallId p_callId, 
+        CSeq p_cSeq, 
+        From p_from, 
+        To p_to,
+        Via p_via, 
+        SIPmsg_Types.Contact p_contact, 
+        template Require p_require,
+        template Route p_route, 
+        template RecordRoute p_recordRoute,  
+        template Supported p_supported, 
+        template P_Charging_Vector p_pChargingVector, 
+        template MessageBody p_mb 
+    ) modifies m_INVITE_Request_Base := {
+      msgHeader := {
+        contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+        contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+        require := p_require,
+        p_charging_vector := p_pChargingVector,
+        recordRoute := p_recordRoute,
+        route := p_route,
+        supported := p_supported
+      },
+      messageBody := p_mb
+    }	
+	
+    /*
+    * 
+    * @desc INVITE message exchanged at Mw
+    *
+    */	
+    template INVITE_Request m_INVITE_Request_HistoryInfo_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+            template Route p_route, template RecordRoute p_recordRoute,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb,
+            template HistoryInfo p_historyInfo)
+    modifies m_INVITE_Request_IMS
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            historyInfo := p_historyInfo
+        }
+    }
+	
+    /*
+    * 
+    * @desc INVITE message exchanged at Mw
+    *
+    */	
+    template INVITE_Request m_INVITE_Request_Mime_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb )
+    modifies m_INVITE_Request_IMS
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_mimeMultipart}
+        }
+    }
+		
+    /*
+     * 
+     * @desc INVITE message exchanged at Mw
+     *
+     */	
+    template INVITE_Request m_INVITE_Request_IMS_noBody
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute,  template Supported p_supported, template P_Charging_Vector p_pChargingVector)
+    modifies m_INVITE_Request_Base
+    :=
+    {
+      msgHeader :=
+      {
+        require := p_require,
+        p_charging_vector := p_pChargingVector,
+        recordRoute := p_recordRoute,
+        route := p_route,
+        supported := p_supported
+      }
+    }			
+	
+    /*
+    * 
+    * @desc INVITE message exchanged at Mw
+    *
+    */	
+    template INVITE_Request m_INVITE_Request_Mime_PAsserted_Privacy_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+            template Route p_route, template RecordRoute p_recordRoute,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb,
+            template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy )
+    modifies m_INVITE_Request_IMS
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_mimeMultipart},
+            passertedID := p_pAssertedID,
+            privacy := p_privacy
+        }
+    }
+	
+    /*
+    * 
+    * @desc INVITE message exchanged at Mw
+    *
+    */	
+    template INVITE_Request m_INVITE_Request_PAsserted_AcceptContact_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute, template Accept_contact p_acceptContact, template P_Asserted_Identity p_pAssertedID, template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb )
+    modifies m_INVITE_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            accept_contact := p_acceptContact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            require := p_require,
+            passertedID := p_pAssertedID,
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            supported := p_supported
+        },
+        messageBody := p_mb
+    }	
+	
+    /*
+    * 
+    * @desc INVITE message exchanged at Mw
+    *
+    */	
+    template INVITE_Request m_INVITE_Request_PAsserted_Privacy_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy, template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb )
+    modifies m_INVITE_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            require := p_require,
+            passertedID := p_pAssertedID,
+            p_charging_vector := p_pChargingVector,
+            privacy := p_privacy,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            supported := p_supported
+        },
+        messageBody := p_mb
+    }	
+
+    /*
+     * 
+     * @desc INVITE message exchanged at Mw
+     *
+     */	
+    template INVITE_Request m_INVITE_Request_PAssertedService_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb, template P_Asserted_Service p_pAssertedService)
+    modifies m_INVITE_Request_Base
+    :=
+    {
+      msgHeader :=
+      {
+        contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+        contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+        require := p_require,
+        p_charging_vector := p_pChargingVector,
+        route := p_route,
+        supported := p_supported,
+        p_asserted_service := p_pAssertedService
+      },
+      messageBody := p_mb
+    }		
+	
+    /*
+     * 
+     * @desc INVITE message exchanged at Mw
+     *
+     */	
+    template INVITE_Request m_INVITE_Request_PEarlyMedia_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb )
+    modifies m_INVITE_Request_Base
+    :=
+    {
+      msgHeader :=
+      {
+        contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+        contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+        require := p_require,
+        p_charging_vector := p_pChargingVector,
+        p_Early_Media := m_pEarlyMedia_sup, 
+        recordRoute := p_recordRoute,
+        route := p_route,
+        supported := p_supported
+      },
+      messageBody := p_mb
+    }	
+
+    template INVITE_Request m_INVITE_Request_PPreferred_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template MessageBody p_mb,template P_Preferred_Identity p_pPreferredID )
+        modifies m_INVITE_Request_UE
+        :=
+        {
+          msgHeader :=
+          {
+            ppreferredID := p_pPreferredID
+          }
+        }	
+
+    template INVITE_Request m_INVITE_Request_PPreferred_Privacy_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+                Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template MessageBody p_mb,template P_Preferred_Identity p_pPreferredID, template Privacy p_privacy)
+        modifies m_INVITE_Request_UE
+        :=
+        {
+                msgHeader :=
+                {
+            ppreferredID := p_pPreferredID,
+            privacy := p_privacy
+                }
+        }
+
+    template INVITE_Request m_INVITE_Request_SessionExpires_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template MessageBody p_mb, template Session_expires p_se)
+        modifies m_INVITE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            require := p_require,
+            route := p_route,
+            //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+            supported := p_supported,
+            session_expires := p_se
+          },
+          messageBody := p_mb
+        }
+	
+    template INVITE_Request m_INVITE_Request_minSE_UE
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template MessageBody p_mb, template Min_SE p_minSE)
+        modifies m_INVITE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            require := p_require,
+            route := p_route,
+            //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+            supported := p_supported,
+            min_SE := p_minSE
+          },
+          messageBody := p_mb
+        }
+	
+    /*
+     * 
+     * @desc INVITE message exchanged at Mw
+     *
+     */	
+    template INVITE_Request m_INVITE_Request_minSE_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+      Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route,  template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb, template Min_SE p_minSE)
+    modifies m_INVITE_Request_Base
+    :=
+    {
+      msgHeader :=
+      {
+        contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+        contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+        require := p_require,
+        p_charging_vector := p_pChargingVector,
+        route := p_route,
+        supported := p_supported,
+            min_SE := p_minSE
+      },
+      messageBody := p_mb
+    }
+		
+  /*  template INVITE_Request m_INVITE_Request_User2UserData_IMS
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template Require p_require,
+    template Route p_route, template RecordRoute p_recordRoute, template Supported p_supported, template P_Charging_Vector p_pChargingVector, template MessageBody p_mb, template charstring p_U2UData)
+    modifies m_INVITE_Request_IMS
+    :=
+    {
+        msgHeader :=
+        {
+            userToUser := m_UserToUserData(valueof(p_U2UData))
+        }
+    }
+	*/
+    template MESSAGE_Request m_MESSAGE_Request_MBody_UE
+           (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+             Via p_via, template Require p_require,
+           template Route p_route,  template Supported p_supported, template MessageBody p_messageBody)
+           modifies m_MESSAGE_Request_Base
+           :=
+           {
+             msgHeader :=
+             {
+                contentLength	:= {fieldName := CONTENT_LENGTH_E, len:= lengthof(m_MBody_longPlainText)},//f_MessageBodyLength(valueof(m_MBody_longPlainText))},
+                contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_plainText},
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                require := p_require,
+                route := p_route,
+                //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+                supported := p_supported
+             },
+             messageBody := p_messageBody
+    }
+    
+    template MESSAGE_Request m_MESSAGE_Request_NoBody_UE
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                require := p_require,
+                route := p_route,
+                supported := p_supported
+              },
+              messageBody := omit
+            }
+	
+    template MESSAGE_Request m_MESSAGE_Request_PCharging_UE
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+                p_charging_vector := m_pChargingVector_origIoi_fixedValue(PX_IMS_SUT_UE1_HOME_DOMAIN),
+                require := p_require,
+                route := p_route,
+                supported := p_supported
+              },
+              messageBody := omit
+            }
+	
+    template MESSAGE_Request m_MESSAGE_Request_PCharging_IMS
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported, 
+            template P_Charging_Vector p_pChargingVector)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+                p_charging_vector := p_pChargingVector,
+                require := p_require,
+                route := p_route,
+                supported := p_supported
+              },
+              messageBody := omit
+            }
+
+    template MESSAGE_Request m_MESSAGE_Request_PMediaAuth_UE
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                p_media_auth := m_pMediaAuthorization_fixedValue,
+                require := p_require,
+                route := p_route,
+                supported := p_supported
+              },
+              messageBody := omit
+            }
+
+    template MESSAGE_Request m_MESSAGE_Request_PPreferred_UE
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported, template P_Preferred_Identity p_pPreferredID)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                ppreferredID := p_pPreferredID,
+                require := p_require,
+                route := p_route,
+                supported := p_supported
+              },
+              messageBody := omit
+            }
+	
+    template MESSAGE_Request m_MESSAGE_Request_1300Bytes_UE
+            (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+              Via p_via, template Require p_require,
+            template Route p_route,  template Supported p_supported)
+            modifies m_MESSAGE_Request_Base
+            :=
+            {
+              msgHeader :=
+              {
+                contentLength	:= {fieldName := CONTENT_LENGTH_E, len:= lengthof(m_MBody_longPlainText)},//f_MessageBodyLength(valueof(m_MBody_longPlainText))},
+                contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_plainText},
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+                require := p_require,
+                route := p_route,
+                //securityVerify := p_securityVerify,//TODO check when information will be known regarding security assosiation 
+                supported := p_supported
+              },
+              messageBody := m_MBody_longPlainText
+    }
+	
+    template NOTIFY_Request m_NOTIFY_Request_Xml_IMS_Conference
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, template MessageBody p_mb )
+    modifies m_NOTIFY_Request_Base
+    :=
+    {
+        msgHeader :=
+        {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_xmlAplication},
+            event := {
+            fieldName:=EVENT_E, 
+            event_type:={
+        event_package:="conference",
+        event_templates:=omit
+      },
+      event_params:=omit
+      },
+            subscription_state:={fieldName:=SUBSCRIPTION_STATE_E, substate_value:="active",subexp_params:=omit},
+            expires:={fieldName:=EXPIRES_E, deltaSec:="3600"}
+			
+        },
+        messageBody := p_mb
+    }
+	
+	
+    template NOTIFY_Request m_NOTIFY_Request_Xml_IMS_RegInfo
+    (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+            Via p_via, SIPmsg_Types.Contact p_contact, template MessageBody p_mb )
+    modifies m_NOTIFY_Request_Base
+    :=
+    {
+        msgHeader :=
+        {	
+            contact := p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_xmlreginfoAplication},
+            event := m_Event_reg,
+            subscription_state:=m_SubscriptionState_active,
+            expires:={fieldName:=EXPIRES_E, deltaSec:="3600"}
+			
+        },
+        messageBody := p_mb
+    }
+    	
+        template PRACK_Request m_PRACK_Request_sdp (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, RAck p_RAck, template MessageBody p_mb) 
+          modifies m_PRACK_Request_Base :=
+        {
+            requestLine	:=
+            {
+                requestUri := p_requestUri
+            },
+            msgHeader :=
+            {
+                callId := p_callId,
+                contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+                contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+                cSeq := {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "PRACK"},
+                fromField := p_from,
+                rack := p_RAck,
+                toField := p_to,
+                via := p_via
+            },
+            messageBody := p_mb
+        }
+		
+    template PUBLISH_Request m_PUBLISH_Request_UE (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, template Event p_event, template RAck p_RAck, template MessageBody p_mb,template Route p_route) 
+            modifies m_PUBLISH_Request_Base :=
+    {
+        requestLine	:=
+        {
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            callId := p_callId,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_plainText/*c_sdpAplication*/},
+            cSeq := {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "PUBLISH"},
+            event := p_event, 
+            fromField := p_from,
+            route := p_route,
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            toField := p_to,
+            via := p_via
+        },
+        messageBody := p_mb
+    }
+	
+    template PUBLISH_Request m_PUBLISH_Request_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, template Event p_event, template RAck p_RAck, template MessageBody p_mb,
+            template Route p_route,template RecordRoute p_recordRoute,template P_Charging_Vector p_pChargingVector) 
+            modifies m_PUBLISH_Request_Base :=
+    {
+        requestLine	:=
+        {
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            callId := p_callId,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_plainText/*c_sdpAplication*/},
+            cSeq := {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "PUBLISH"},
+            event := p_event, 
+            fromField := p_from,
+            route := p_route,
+            recordRoute:= p_recordRoute,
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,
+            p_charging_vector := p_pChargingVector,
+            toField := p_to,
+            via := p_via
+        },
+        messageBody := p_mb
+    }
+	
+    /*
+        * 
+        * @desc REFER message exchanged at Mw
+        *
+        */	
+    template REFER_Request m_REFER_Request_IMS(
+        SipUrl p_requestUri, 
+        CallId p_callId, 
+        CSeq p_cSeq, 
+        SIPmsg_Types.Contact p_contact, 
+        From p_from, 
+        template To p_to,
+        Via p_via,  
+        template Refer_to p_referTo, 
+        template Referred_by p_referredBy, 
+        template Require p_require,
+        template Route p_route, 
+        template RecordRoute p_recordRoute,  
+        template Supported p_supported, 
+        template P_Charging_Vector p_pChargingVector, 
+        template MessageBody p_mb 
+    ) modifies m_REFER_Request_Base := {
+        msgHeader := {
+            contentLength	:= {
+                fieldName := CONTENT_LENGTH_E, 
+                len:= lengthof(p_mb)//f_MessageBodyLength(valueof(p_mb))
+            },
+            contentType := {
+                fieldName := CONTENT_TYPE_E, 
+                mediaType :=  c_sdpAplication
+            },
+            referred_by := p_referredBy,	
+            refer_to := p_referTo,
+            require := p_require,
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            supported := p_supported
+        },
+        messageBody := p_mb
+    }
+		
+    template REGISTER_Request m_REGISTER_Request_UE (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Authorization p_authorization,
+        template ProxyRequire p_proxyRequire, template Require p_require,
+        template Security_client p_securityClient, template Security_verify p_securityVerify, template Supported p_supported)
+        modifies m_REGISTER_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := REGISTER_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            authorization := p_authorization,
+            callId := p_callId,
+            contact	:= p_contact,
+            cSeq		:= p_cSeq,
+            fromField	:= p_from,
+            proxyRequire := p_proxyRequire,
+            require := p_require,
+            security_client := p_securityClient,
+            security_verify := p_securityVerify,
+            supported := p_supported,
+            toField		:= p_to,
+            via		:= p_via
+
+        }
+    }
+	
+		
+    template REGISTER_Request m_REGISTER_Request_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Authorization p_authorization)
+        modifies m_REGISTER_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := REGISTER_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            authorization := p_authorization,
+            callId := p_callId,
+            contact	:= p_contact,
+            cSeq		:= p_cSeq,
+            fromField	:= p_from,
+            path := m_path_TS,
+            p_charging_vector := m_pChargingVector_icid_TS,
+            p_visited_network_id := m_pVisitedNetworkID_TS,
+            require := {fieldName := REQUIRE_E,optionsTags := {"path"}},
+            toField		:= p_to,
+            via		:= p_via
+
+        }
+    }
+	
+    template REGISTER_Request m_REGISTER_Request_IMS_3party (
+        SipUrl p_requestUri, 
+        CallId p_callId, 
+        CSeq p_cSeq,
+        From p_from, 
+        To p_to, 
+        Via p_via, 
+        SIPmsg_Types.Contact p_contact, 
+        template Authorization p_authorization,
+        template Path p_path
+        ) modifies m_REGISTER_Request_IMS :=
+    {
+        msgHeader :=
+        {
+            path := p_path
+
+        }
+    }
+	
+    template REGISTER_Request m_REGISTER_Request_expires_IMS (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Authorization p_authorization, template DeltaSec p_deltaSec)
+        modifies m_REGISTER_Request_IMS :=
+    {
+        msgHeader :=
+        {
+            expires := {fieldName := EXPIRES_E, deltaSec := p_deltaSec}
+        }
+    }
+	
+    template SUBSCRIBE_Request m_SUBSCRIBE_Request_UE (SipUrl p_requestUri, CallId p_callId, 
+        CSeq p_cSeq, From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Route p_route)  modifies m_SUBSCRIBE_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := SUBSCRIBE_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,	
+            contact	:= p_contact,
+            cSeq	:= {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "SUBSCRIBE"},
+            event	:= m_Event_reg,
+            expires	:= m_Expires_600000,
+            route   := p_route
+        }
+    }
+	
+    template SUBSCRIBE_Request m_SUBSCRIBE_Request_mb_UE (SipUrl p_requestUri, CallId p_callId, 
+        CSeq p_cSeq, From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template MessageBody p_mb)  modifies m_SUBSCRIBE_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := SUBSCRIBE_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,	
+            contact	:= p_contact,
+            contentLength := {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            cSeq	:= {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "SUBSCRIBE"},
+            event	:= m_Event_reg,
+            expires	:= m_Expires_600000
+        },
+        messageBody := p_mb
+    }
+	
+    template SUBSCRIBE_Request m_SUBSCRIBE_Request_mb_event_UE (SipUrl p_requestUri, CallId p_callId, 
+            CSeq p_cSeq, From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template MessageBody p_mb, Event p_event, charstring p_contentType)  modifies m_SUBSCRIBE_Request_mb_UE :=
+        {
+            requestLine	:=
+            {
+                method := SUBSCRIBE_E,
+                requestUri := p_requestUri
+            },
+            msgHeader :=
+            {
+                contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  p_contentType},
+                p_access_network_info := m_pAccessNetworkInfo_IEEE_11a,	
+                contact	:= p_contact,
+                cSeq	:= {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "SUBSCRIBE"},
+                event	:= p_event,
+                expires	:= m_Expires_600000
+            },
+            messageBody := p_mb
+        }	
+	
+    template SUBSCRIBE_Request m_SUBSCRIBE_Request_IMS (SipUrl p_requestUri, CallId p_callId, 
+        CSeq p_cSeq, From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact)  modifies m_SUBSCRIBE_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := SUBSCRIBE_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {	
+            contact	:= p_contact,
+            cSeq	:= {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "SUBSCRIBE"},
+            event	:= m_Event_reg,
+            expires	:= m_Expires_600000
+        }
+    }
+	
+    template SUBSCRIBE_Request m_SUBSCRIBE_Request_Event (SipUrl p_requestUri, CallId p_callId, 
+        CSeq p_cSeq, From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Event p_event)  modifies m_SUBSCRIBE_Request_Base :=
+    {
+        requestLine	:=
+        {
+            method := SUBSCRIBE_E,
+            requestUri := p_requestUri
+        },
+        msgHeader :=
+        {	
+            contact	:= p_contact,
+            cSeq	:= {fieldName:=CSEQ_E, seqNumber:= p_cSeq.seqNumber, method:= "SUBSCRIBE"},
+            event	:= p_event,
+            expires	:= m_Expires_600000
+        }
+    }
+    template UPDATE_Request m_UPDATE_Request_fromChange (template CallId p_callId, template From p_from) modifies mw_UPDATE_Request_Base :=
+    {
+        msgHeader :=
+        {	
+            fromField := p_from
+        }
+    }
+	
+}//end group request_send
+ 
+group request_receive {
+	
+    template ACK_Request mw_ACK_Request_noPaccessNetworkInfo (template CallId p_callId)
+        modifies mw_ACK_Request_Base
+        :=
+        {
+          msgHeader := {  p_access_network_info := omit}
+        }
+
+    template ACK_Request mw_ACK_Request_PchargingVector	(template CallId p_callId, template P_Charging_Vector p_pChargingVector)
+        modifies mw_ACK_Request_Base
+        :=
+        {
+          msgHeader := {  p_charging_vector := p_pChargingVector}
+        }
+		
+    template BYE_Request mw_BYE_Request_noPChargingFunction_UE(template CallId p_callId) modifies  mw_BYE_Request_Base
+      :=
+      {
+        msgHeader := {p_charging_function_address := omit,
+                      p_charging_vector := omit}
+      }
+		
+    template BYE_Request mw_BYE_Request_via_PChargingVector_UE(template CallId p_callId, template P_Charging_Vector p_pChargingVector, template Via p_via) modifies  mw_BYE_Request_Base
+      :=
+      {
+        msgHeader := {p_charging_vector := p_pChargingVector,
+                      via := p_via}
+      }
+		  
+    template INVITE_Request mw_INVITE_Request_noPChargingFunction modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {p_charging_function_address := omit}
+      }
+    template INVITE_Request mw_INVITE_Request_PChargingFunction modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {p_charging_function_address := ?}
+      }	 
+	   
+    template INVITE_Request mw_INVITE_Request_PAsserted_noPPreferred (template P_Asserted_Identity p_pAssertedID)modifies mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {passertedID := p_pAssertedID,
+                      ppreferredID := omit
+                     }
+      }
+	  
+     template INVITE_Request mw_INVITE_Request_PAsserted_AcceptContact (template P_Asserted_Identity p_pAssertedID, template Accept_contact p_acceptContact) modifies mw_INVITE_Request_Base
+       :=
+       {
+      msgHeader := {passertedID := p_pAssertedID,
+                    accept_contact := p_acceptContact
+          }
+       }
+   
+    template INVITE_Request mw_INVITE_Request_RecordRoute_Via (template RecordRoute p_recordRoute, template Via p_via) modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {recordRoute := p_recordRoute,
+                      via := p_via}
+      }
+
+    template INVITE_Request mw_INVITE_Request_route (template Route p_route) modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {route := p_route}
+      }
+	  
+    template INVITE_Request mw_INVITE_Request_require (
+        template Require p_require
+    ) modifies  mw_INVITE_Request_Base := {
+        msgHeader := { require := p_require }
+    }
+	  
+    template INVITE_Request mw_INVITE_Request_supported (
+        template Supported p_supported
+    ) modifies  mw_INVITE_Request_Base := {
+        msgHeader := { supported := p_supported }
+    }
+	  
+    template INVITE_Request mw_INVITE_Request_Session_expires (template Session_expires p_sessionExpires) modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {session_expires := p_sessionExpires}
+      }
+	  
+  /*  template INVITE_Request mw_INVITE_Request_User2UserData (template charstring p_U2UData) modifies  mw_INVITE_Request_Base
+    :=
+    {
+        msgHeader := {userToUser := mw_UserToUserData(p_U2UData)}
+    }
+	*/  
+    template INVITE_Request mw_INVITE_Request_IMS (template P_Charging_Vector p_pChargingVector, template RecordRoute p_recordRoute, template Route p_route, template Via p_via) modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        }
+      }
+    template INVITE_Request mw_INVITE_Request_IMS_requestLine(template P_Charging_Vector p_pChargingVector,
+                          template RecordRoute p_recordRoute,
+                          template Route p_route, template Via p_via, template SipUrl p_requestUri)
+    modifies mw_INVITE_Request_Base := {
+        requestLine	:=
+        {
+            requestUri := p_requestUri
+        },
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        }
+    }
+	
+    template INVITE_Request mw_INVITE_Request_IMS_PAsserted_noPPreferred(template P_Charging_Vector p_pChargingVector,
+                                template RecordRoute p_recordRoute,
+                                template Route p_route, template Via p_via, template SipUrl p_requestUri, template P_Asserted_Identity p_pAssertedID)
+    modifies mw_INVITE_Request_Base := {
+        msgHeader := {passertedID := p_pAssertedID, ppreferredID := omit}
+    }
+	 
+    template INVITE_Request mw_INVITE_Request_IMS_mb (template P_Charging_Vector p_pChargingVector, template RecordRoute p_recordRoute, template Route p_route, template Via p_via) modifies  mw_INVITE_Request_Base
+    :=
+    {
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        },
+        messageBody := ?
+    }
+	  
+    template INVITE_Request mw_INVITE_Request_IMS_cug (template P_Charging_Vector p_pChargingVector, template RecordRoute p_recordRoute, template Route p_route, template Via p_via, template Cug p_cug , template charstring p_mb) modifies  mw_INVITE_Request_Base
+    :=
+    {
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        },
+        messageBody := p_mb//(mw_MBody_XML(mw_XmlBody_CUG(p_cug)),                        mw_MBody_MIMESdpXml(?, mw_XmlBody_CUG(p_cug)))
+    }
+	  
+    template INVITE_Request mw_INVITE_Request_IMS_noCug (template P_Charging_Vector p_pChargingVector, template RecordRoute p_recordRoute, template Route p_route, template Via p_via ,template charstring p_mb) modifies  mw_INVITE_Request_Base
+    :=
+    {
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        },
+        messageBody := p_mb//(mw_MBody_XML(complement(mw_XmlBody_CUG(?))),                        mw_MBody_MIMESdpXml(?, complement(mw_XmlBody_CUG(?)) ))
+    }
+	  
+    template INVITE_Request mw_INVITE_Request_IMS_pstn (template P_Charging_Vector p_pChargingVector, template RecordRoute p_recordRoute, template Route p_route, template Via p_via, template PSTN_transit p_pstn,template charstring p_mb ) modifies  mw_INVITE_Request_Base
+    :=
+    {
+        msgHeader := {
+            p_charging_vector := p_pChargingVector,
+            recordRoute := p_recordRoute,
+            route := p_route,
+            via := p_via
+        },
+        messageBody := p_mb//(mw_MBody_XML(mw_XmlBody_PSTNTransit(p_pstn)),
+                       // mw_MBody_MIMESdpXml(?, mw_XmlBody_PSTNTransit(p_pstn)))//m_MBody_PSTN(p_pstn)//PSTN_transit
+    }
+
+    /*
+     * 
+     * @desc Await INVITE using topology hiding
+     */
+    template INVITE_Request mw_INVITE_Request_TH modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {	p_charging_function_address := omit,
+                        p_charging_vector := omit}
+      }
+
+    /*
+     * 
+     * @desc Await INVITE without PAsserted and Privacy
+     */
+    template INVITE_Request mw_INVITE_Request_noPasserted_noPrivacy (template From p_from)
+      modifies  mw_INVITE_Request_Base
+      :=
+      {
+        msgHeader := {  fromField := p_from,
+                        passertedID := omit,
+                        ppreferredID := omit}
+      }
+
+
+    /*
+     * 
+     * @desc Await INVITE with PAsserted and Privacy
+     */
+    template INVITE_Request mw_INVITE_Request_PassertedPrivacy (template From p_from, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy)
+            modifies  mw_INVITE_Request_Base
+            :=
+            {
+        msgHeader := {
+            fromField := p_from,
+            passertedID := p_pAssertedID,
+            privacy := p_privacy}
+        }
+			
+     /*
+      * 
+      * @desc Await INVITE with PAsserted and Privacy
+      */
+     template INVITE_Request mw_INVITE_Request_Passerted_ifPrivacy (template From p_from, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy)
+       modifies  mw_INVITE_Request_Base
+       :=
+       {
+      msgHeader := {
+          fromField := p_from,
+          passertedID := p_pAssertedID,
+          privacy := p_privacy ifpresent}
+       }
+
+     /*
+      * 
+      * @desc Await INVITE with PAsserted and Privacy
+      */
+     template INVITE_Request mw_INVITE_Request_HistoryInfo (template HistoryInfo p_historyInfo)
+       modifies  mw_INVITE_Request_Base
+       :=
+       {
+      msgHeader := {
+          historyInfo := p_historyInfo}
+       }
+   
+    template MESSAGE_Request mw_MESSAGE_Request_noPchargingFunction_UE	
+        modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {  p_charging_function_address := omit,
+                          p_charging_vector := omit}
+        }
+	  
+    template MESSAGE_Request mw_MESSAGE_Request_noPchargingFunction_IMS	
+        modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {  p_charging_function_address := omit,
+                          p_charging_vector := omit}
+        }	
+		  
+    template MESSAGE_Request mw_MESSAGE_Request_PAsserted_noPPreferred (template CallId p_callId, template P_Asserted_Identity p_pAssertedID)modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {passertedID := p_pAssertedID,
+                        ppreferredID := omit
+                       }
+        }
+
+    template NOTIFY_Request mw_NOTIFY_Request(
+        template CallId p_callId, 
+        template charstring p_state,
+        template charstring p_contentType,
+        template Event p_event,
+        template MessageBody p_mb
+    ) modifies mw_NOTIFY_Request_Base := {
+        msgHeader :=
+        {
+            subscription_state := mw_subscriptionState(p_state),
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  p_contentType},
+            event := p_event
+        },
+        messageBody := p_mb
+    }
+        template PRACK_Request mw_PRACK_Request_sdp(template CallId p_callId, template MessageBody p_mb) modifies mw_PRACK_Request_Base :=
+        {
+            msgHeader :=
+            {
+                callId := p_callId
+            },
+            messageBody := p_mb
+        }
+    template MESSAGE_Request mw_MESSAGE_Request_PchargingVector	(template charstring p_id, template charstring p_paramValue)
+        modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {  p_charging_vector := mw_pChargingVector(p_id,p_paramValue)}
+        }
+	  
+    template MESSAGE_Request mw_MESSAGE_Request_noPaccessNetworkInfo	
+        modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {  p_access_network_info := omit}
+        }
+
+    template MESSAGE_Request mw_MESSAGE_Request_noPMediaAuthorization	
+        modifies mw_MESSAGE_Request_Base
+        :=
+        {
+          msgHeader := {  p_media_auth := omit}
+        }
+		
+    template PUBLISH_Request mw_PUBLISH_Request_PchargingVector(template CallId p_callId, template P_Charging_Vector p_pChargingVector) modifies mw_PUBLISH_Request_Base :=
+    {
+        msgHeader := {  p_charging_vector := p_pChargingVector}
+    }
+
+    template REGISTER_Request mw_REGISTER_Request_IMS	(template Path p_Path, template P_Charging_Vector p_pChargingVector, template P_Visited_Network_ID p_pVisitedNetworkID)
+        modifies mw_REGISTER_Request_Base
+        :=
+        {
+          msgHeader := {  authorization := ?,
+                          path := p_Path,
+                          p_charging_vector := p_pChargingVector, //mw_pChargingVector(p_id,p_paramValue)
+                          p_visited_network_id := p_pVisitedNetworkID,
+                          require := mw_require_path,
+                          security_client := omit,
+                          security_verify := omit
+                          }
+        }
+	  
+
+
+    template REGISTER_Request mw_REGISTER_authorizedRequest_IMS	(template Authorization p_authorization)
+        modifies mw_REGISTER_Request_Base
+        :=
+        {
+          msgHeader := {  authorization := p_authorization
+                          }
+        }
+		
+    template REGISTER_Request mw_REGISTER_authorizedRequest_wo_securityclient_IMS	(template Authorization p_authorization)
+        modifies mw_REGISTER_Request_Base
+        :=
+        {
+          msgHeader := {  authorization := p_authorization,
+                          security_client := omit
+                          }
+        }
+    template REGISTER_Request mw_REGISTER_authorizedRequest_wo_securityheaders_IMS
+        modifies mw_REGISTER_Request_Base
+        :=
+        {
+          msgHeader := {  security_verify := omit,
+                          security_client := omit
+                          }
+        }
+		
+    template REGISTER_Request mw_REGISTER_unauthorizedRequest_IMS	
+        modifies mw_REGISTER_Request_Base
+        :=
+        {
+          msgHeader := {  authorization := *
+                          }
+        }
+
+    template SUBSCRIBE_Request mw_SUBSCRIBE_Request_IMS (
+        template From p_from, 
+        template To p_to, 
+        template P_Asserted_Identity p_pAssertedID, 
+        template P_Charging_Vector p_pChargingVector
+    )  modifies mw_SUBSCRIBE_Request_Base := {
+        requestLine	:=
+        {
+            method := SUBSCRIBE_E
+        },
+        msgHeader :=
+        {	fromField := p_from,
+            toField := p_to,
+            event	:= m_Event_reg,
+            p_access_network_info := *,
+            p_charging_vector := p_pChargingVector
+        }
+    }
+	
+    template UPDATE_Request mw_UPDATE_Request_fromChange (template CallId p_callId, template From p_from) modifies mw_UPDATE_Request_Base :=
+    {
+        msgHeader :=
+        {	
+            fromField := p_from
+        }
+    }
+	
+}//end group request_receive
+group response_send
+{
+    template Response m_Response_2xxonBYE_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+              From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+        {
+            msgHeader :=
+            {
+                contact		:= p_contact,
+                maxForwards := omit
+            }
+        }
+
+    template Response m_Response_onCANCEL (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute) 
+        modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            //contact		:= p_contact,
+            maxForwards := omit//,
+            //recordRoute := p_recordRoute
+        }
+    }	
+	
+    template Response m_Response_18XonINVITE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact //mandatory field due to 24 229 rel 7.9
+            //maxForwards := omit,
+            //rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+	
+    template Response m_Response_18XonINVITE_AlertInfo (
+        StatusLine p_statusLine, 
+        CallId p_callId, 
+        CSeq p_cSeq,
+        From p_from, 
+        To p_to, 
+        Via p_via, 
+        AlertInfo p_alertInfo
+    ) modifies m_Response_Base:= {
+        msgHeader :=
+        {
+            alertInfo	:= p_alertInfo
+        }
+    }
+	
+    template Response m_Response_18XonINVITE_sdp_require (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact,template MessageBody p_mb,template Require p_require ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            require		:= p_require,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        },
+        messageBody := p_mb
+    }
+	
+    template Response m_Response_18XonINVITE_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+
+	
+     template Response m_Response_18XonINVITE_HistoryInfo_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template HistoryInfo p_historyInfo) modifies m_Response_Base:=
+     {
+      msgHeader :=
+      {
+       contact		:= p_contact,
+       historyInfo	:= p_historyInfo,
+       rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+      }
+     }
+ 
+    template Response m_Response_18XonINVITE_PchargingVector (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, template P_Charging_Vector p_pChargingVector ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+            p_charging_vector := p_pChargingVector
+
+        }
+    }
+
+     template Response m_Response_18XonINVITE_pEearlyMedia (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, template P_Early_Media p_pEarlyMedia ) modifies m_Response_Base:=
+     {
+      msgHeader :=
+      {
+        p_Early_Media := p_pEarlyMedia
+      }
+     }
+
+
+    template Response m_Response_18XonINVITE_pPreferred_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Preferred_Identity p_pPreferredID ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            ppreferredID := p_pPreferredID,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }	
+
+
+    template Response m_Response_18XonINVITE_pAsserted_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Asserted_Identity p_pAssertedID ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            passertedID := p_pAssertedID,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+
+    template Response m_Response_18XonINVITE_pAsserted_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            passertedID := p_pAssertedID,
+            privacy := p_privacy,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+	
+    template Response m_Response_18XonINVITE_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Privacy p_privacy) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            privacy := p_privacy,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+
+	
+    template Response m_Response_18XonINVITE_supported_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Supported p_supported, template Privacy p_privacy) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            supported := p_supported,
+            privacy := p_privacy,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        }
+    }
+			
+    template Response m_Response_18XonINVITE_recordRoute_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999},//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+            recordRoute := p_recordRoute//for INVITE response
+        }
+    }
+	
+    template Response m_Response_18XonINVITE_Require (
+        StatusLine p_statusLine, 
+        CallId p_callId, 
+        CSeq p_cSeq,
+        From p_from, 
+        To p_to, 
+        Via p_via, 
+        SIPmsg_Types.Contact p_contact,
+        Require p_require
+    ) modifies m_Response_Base:= {
+        msgHeader :=
+        {
+            require := p_require
+        }
+    }
+	
+    template Response m_Response_18XonINVITE_Require_ifpresent (
+        StatusLine p_statusLine, 
+        CallId p_callId, 
+        CSeq p_cSeq,
+        From p_from, 
+        To p_to, 
+        Via p_via, 
+        SIPmsg_Types.Contact p_contact,
+        Require p_require
+    ) modifies m_Response_Base:= {
+        msgHeader :=
+        {
+            require := p_require
+        }
+    }	
+	
+ /*   template Response m_Response_18XonINVITE_UserToUser (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, template charstring p_U2UData) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            userToUser := m_UserToUserData(valueof(p_U2UData))
+        }
+    }
+	*/
+    template Response m_Response_18XonINVITE_Xml (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact,template MessageBody p_mb ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_xmlAplication},
+            maxForwards := omit,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        },
+        messageBody := p_mb
+    }	
+	
+    template Response m_Response_18XonINVITE_sdp_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact,template MessageBody p_mb ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999}//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+        },
+        messageBody := p_mb
+    }
+	
+    template Response m_Response_18XonINVITE_require_sdp_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, Require p_require, template MessageBody p_mb, template SIPmsg_Types.Allow p_allow ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            require 	:= p_require,
+            rseq		:= {fieldName:=RSEQ_E, response_num:= 9999},//Ref: ES 283 003 V2.5.1 ch:A.2.1.4.7
+            allow 		:= p_allow
+        },
+        messageBody := p_mb
+    }		
+	
+    template Response m_Response_2xxonINVITE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template MessageBody p_mb) 
+        modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }
+	
+    template Response m_Response_2xxonINVITE_HistoryInfo (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template HistoryInfo p_historyInfo, template MessageBody p_mb) 
+                modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            historyInfo := p_historyInfo,
+            maxForwards := omit,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }
+	
+    template Response m_Response_2xxonINVITE_Mime (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template MessageBody p_mb) 
+                modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_mimeMultipart},
+            maxForwards := omit,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }
+	
+    template Response m_Response_2xxonINVITE_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template MessageBody p_mb) 
+          modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }
+
+    template Response m_Response_2xxonINVITE_PchargingVector (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, template Route p_route, template RecordRoute p_recordroute, template MessageBody p_mb, template SIPmsg_Types.Contact p_contact, template P_Charging_Vector p_pChargingVector ) modifies m_Response_mbody :=
+    {
+        msgHeader :=
+        {
+            contact := p_contact,
+            p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+            p_charging_vector := p_pChargingVector
+
+        }
+    }
+	
+    template Response m_Response_2XXonINVITE_pPreferred_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Preferred_Identity p_pPreferredID, template RecordRoute p_recordRoute, template MessageBody p_mb) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            ppreferredID := p_pPreferredID,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }	
+
+	
+    template Response m_Response_2XXonINVITE_pAsserted_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Asserted_Identity p_pAssertedID, template RecordRoute p_recordRoute, template MessageBody p_mb) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            passertedID := p_pAssertedID,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }	
+
+    template Response m_Response_2XXonINVITE_pAsserted_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy, template RecordRoute p_recordRoute, template MessageBody p_mb) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            passertedID := p_pAssertedID,
+            privacy := p_privacy,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }	
+
+    template Response m_Response_2XXonINVITE_supported_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Supported p_supported, template Privacy p_privacy, template RecordRoute p_recordRoute, template MessageBody p_mb) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            supported := p_supported,
+            privacy := p_privacy,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }	
+		
+    template Response m_Response_2XXonINVITE_privacy_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template Privacy p_privacy, template RecordRoute p_recordRoute, template MessageBody p_mb) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            privacy := p_privacy,
+            recordRoute := p_recordRoute//for INVITE response
+        },
+        messageBody := p_mb
+    }			
+	
+   /* template Response m_Response_2xxonINVITE_UserToUser (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+        From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template MessageBody p_mb, template charstring p_U2UData) 
+        modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            recordRoute := p_recordRoute,//for INVITE response
+            userToUser := m_UserToUserData(valueof(p_U2UData))
+        },
+        messageBody := p_mb
+    }
+*/
+    template Response m_Response_2xxonREGISTER_IMS (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, SipUrl p_serviceroute_sip_url, SipUrl p_passociated_uri) 
+          modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            service_route := {fieldName:=SERVICE_ROUTE_E,
+            routeBody:={{ nameAddr:= {displayName:=omit,addrSpec:=p_serviceroute_sip_url},rrParam:=omit}}},
+            p_associated_uri := m_pAssociatedURI({displayName:=omit,addrSpec:=p_passociated_uri})		// PAssociatedURI RFC3455
+			
+        }
+    }
+	
+
+    template Response m_Response_2xxonSUBSCRIBE_IMS (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact) 
+          modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact
+        }
+    }
+	
+
+    template Response m_Response_2xxonSUBSCRIBE_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+          From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact) 
+          modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact
+        }
+    }
+
+    template Response m_Response_onMESSAGE_IMS(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact
+        }
+    }
+
+    template Response m_Response_2xxonMESSAGE_PAccessNetwInfo_UE(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            p_access_network_info := m_pAccessNetworkInfo_IEEE_11a
+        }
+    }
+
+    template Response m_Response_2xxonMESSAGE_PCharging_UE(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, template P_Charging_Vector p_pChargingVector) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+            p_charging_vector := p_pChargingVector
+        }
+    }
+
+
+    template Response m_Response_2xxonMESSAGE_PCharging_IMS(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, template P_Charging_Vector p_pChargingVector) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            p_charging_function_address := m_pChargingFunctionAddresses_fixedValue,
+            p_charging_vector := p_pChargingVector
+        }
+    }
+	
+    template Response m_Response_2xxonMESSAGE_PMediaAuth_UE(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            p_media_auth := m_pMediaAuthorization_fixedValue
+        }
+    }
+	
+    template Response m_Response_2xxonMESSAGE_pPreferredID_UE(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, template P_Preferred_Identity p_pPreferredID) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            ppreferredID := p_pPreferredID
+        }
+    }
+	
+    template Response m_Response_2xxonUPDATE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, template MessageBody p_mb) 
+    modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:=lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            maxForwards := omit,
+            recordRoute := p_recordRoute
+        },
+        messageBody := p_mb
+    }
+
+	
+    template Response m_Response_3XXonINVITE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit
+        }
+    }
+		
+	
+    template Response m_Response_4XXonINVITE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+            From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit
+        }
+    }
+		
+    template Response m_Response_4XXonINVITE_UE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+              From p_from, To p_to, Via p_via, template SIPmsg_Types.Contact p_contact ) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit
+        }
+    }
+	
+    template Response m_Response_onINVITE (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit
+        }
+    }
+	
+    template Response m_Response_onINVITE_Reason (StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+                From p_from, To p_to, Via p_via, SIPmsg_Types.Contact p_contact, template RecordRoute p_recordRoute, charstring p_cause) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            contact		:= p_contact,
+            maxForwards := omit,
+            reason := mw_Reason(p_cause)
+        }
+    }
+			
+    template Response m_Response_WWWauthenticate_IMS(StatusLine p_statusLine, CallId p_callId, CSeq p_cSeq,
+    From p_from, To p_to, Via p_via, template WwwAuthenticate p_wwwAuthenticate) modifies m_Response_Base:=
+    {
+        msgHeader :=
+        {
+            wwwAuthenticate := p_wwwAuthenticate
+        }
+    }	
+	
+}//end group response_send
+
+group response_receive
+{
+
+    template Response mw_Response_200onINVITE_noPChargingVector_UE(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_charging_vector := omit
+      }
+    }
+	
+    template Response mw_Response_200onINVITE_SDP_UE(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        messageBody :=?/* {
+            sdpMessageBody := ?
+        }*/
+    }
+
+    template Response mw_Response_2xxonMESSAGE_noPCharging_UE(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_charging_function_address := omit,
+            p_charging_vector := omit
+      }
+    }
+
+    template Response mw_Response_2xxonMESSAGE_noPCharging_IMS(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_charging_function_address := omit,
+            p_charging_vector := omit
+      }
+    }
+
+
+    template Response mw_Response_2xxonMESSAGE_noPAccessNetworkInfo_IMS(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_access_network_info := omit
+      }
+    }
+
+    template Response mw_Response_2xxonMESSAGE_noPMediaAuthorization_IMS(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_media_auth := omit
+      }
+    }
+
+    template Response mw_Response_401onREGISTER_securityServer_UE(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            security_server := ?,
+            wwwAuthenticate := ?
+      }
+    }
+
+    template Response mw_Response_401onREGISTER_WWWauthenticate_IMS(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq, template WwwAuthenticate p_wwwAuthenticate) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            wwwAuthenticate := p_wwwAuthenticate
+      }
+    }
+
+    template Response mw_Response_200onREGISTER_IMS(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq, template SipUrl p_ue_uri, template SIPmsg_Types.Contact p_contact, template SipUrl p_sut_scscf_uri) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            p_associated_uri := {
+            fieldName := P_ASSOCIATED_URI, 
+            p_assoc_uris:={{
+        p_asso_uri:={
+        displayName:=*,
+        addrSpec:=p_ue_uri
+      },
+        ai_params:=*
+      }}//*,{nameAddr:={displayName:=*,addrSpec:=p_ue_uri},genericParams:=*},*
+            },
+            path := ?,
+            service_route := {fieldName := SERVICE_ROUTE_E, routeBody := {{nameAddr:={displayName:=*,addrSpec:=p_sut_scscf_uri},rrParam:=*}}},
+            p_charging_function_address := ?,
+            p_charging_vector := ?,
+            contact := p_contact
+      }
+    }
+	
+    template Response mw_Response_PpreferredID_PassertedID(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq, template P_Preferred_Identity p_pPreferredID, template P_Asserted_Identity p_pAssertedID) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+          passertedID := p_pAssertedID,
+          ppreferredID := p_pPreferredID
+      }
+    }
+
+    template Response mw_Response_PAsserted_Privacy_History (template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq, template P_Asserted_Identity p_pAssertedID, template Privacy p_privacy, template HistoryInfo p_historyInfo) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+            passertedID := p_pAssertedID,
+            privacy := p_privacy,
+            historyInfo := p_historyInfo
+        }
+    }
+
+    template Response mw_Response_PchargingVector(template StatusLine p_statusLine, template CallId p_callId,
+        template CSeq p_cSeq, template P_Charging_Vector p_chargingVector) modifies mw_Response_Base:=
+    {
+        statusLine := {sipVersion := c_sipNameVersion, statusCode := p_statusLine.statusCode, reasonPhrase := ?},
+        msgHeader :=
+        {
+          p_charging_vector := p_chargingVector // mw_pChargingVector(p_id,p_paramValue)
+      }
+    }
+
+} // end response_receive
+
+}//end modified_templates
+
+}//end Message_templates
+
+} // end module LibIms_Templates

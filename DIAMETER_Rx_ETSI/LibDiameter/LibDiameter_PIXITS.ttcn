@@ -1,0 +1,38 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: LibDiameter_PIXITS.ttcn 646 2013-06-07 10:28:26Z schmitting $
+ *	@desc		This module provides PIXITS used by the test component
+ *              for DIAMETER tests.
+ */
+
+module LibDiameter_PIXITS
+{
+	//  LibCommon
+    import from LibCommon_BasicTypesAndValues all;
+    import from LibCommon_DataStrings all;
+
+    group Diameter_PIXITparameters{
+
+      /** @desc	boolean for Lower Layer Primitives
+      *			if true than LLP are enabled and LLP port is enabled
+      *			if false than LLP are disabled and LLP port is disabled
+      */
+      modulepar boolean	PX_DIAM_LLP_ENABLED := false;
+
+      /** @desc	boolean (This is an operator option, not a protocol option),
+                  True, if IPv6 addresses are used
+      */
+      modulepar boolean PX_IPv6 	:= true;
+
+	} //group Diameter_PIXITparameters
+
+
+    group DiameterTimers {
+
+        /** @desc	float for TWait default value for waiting an operator action
+        */
+        modulepar float        PX_DIAMETER_TWAIT := 30.0;
+
+    }
+
+} // end module LibDiameter_PIXITS

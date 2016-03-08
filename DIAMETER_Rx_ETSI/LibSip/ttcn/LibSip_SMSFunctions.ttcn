@@ -1,0 +1,58 @@
+/*
+ *	@author 	STF 435
+ *  @version    $Id$
+ *	@desc		This module provides the functions used by the test component 
+ *              for SIP-SMS over IMS as specified in 3GPP 24.341 tests.
+ */
+ 
+ //compiled with Titan 02.03.2106 Elemer Lelik
+module LibSip_SMSFunctions {
+    import from LibSip_SMSTypesAndValues all;
+    
+    function f_IA5_2oct(charstring p_ASCII_String)
+    return octetstring
+    {
+        var integer i;
+        var integer k;
+        var integer v_Length := lengthof(p_ASCII_String);
+    	var integer v_Temp;
+        var octetstring v_Noctets :=''O; 
+        var bitstring   v_TempBitSrc := ''B;
+        var bitstring   v_TempBitDes := ''B;
+    
+        if ((v_Length<=0) or (v_Length>160) or (((v_Length *7) mod 8) != 0))	
+        {
+           log("Invalid value of input string length.");
+        }
+    
+        for(i:=0; i<v_Length; i:=i+1)
+        {
+            v_Temp := char2int(p_ASCII_String[i]);
+    		v_TempBitSrc := int2bit(v_Temp, 8);
+    
+    		for(k:=1; k<=7; k:=k+1)
+            {
+    
+                v_TempBitDes := v_TempBitSrc[8-k] & v_TempBitDes;
+    
+                if(((7*i+k) mod 8) == 0)
+                {
+    
+                    v_Noctets := v_Noctets & bit2oct(v_TempBitDes);
+                    v_TempBitDes := ''B;
+                }
+            }
+        }
+        
+        return v_Noctets;
+    
+    } // f_IA5_2oct
+    
+   /* external */function fx_GetSC_TimeStamp(integer p_TimeZone) return TP_ServiceCentreTimeStamp_Type
+   {
+   
+   return '0123456789ABCD'H; //FIXME
+   
+   };
+    
+} // End of module LibSip_SMSFunctions

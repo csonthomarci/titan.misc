@@ -1,0 +1,57 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_TestExecutions.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc		This module provides automatic test execution 
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_TestExecutions
+{
+    import from DiameterRx_TestCases all;
+    import from DiameterRx_PICS all;
+    	import from SIPmsg_Types all;
+    import from LibSip_SIPTypesAndValues all;
+    
+    control {
+        //Variables
+        var CSeq v_cSeq := {
+            fieldName := CSEQ_E,
+            seqNumber := 0,
+            method := "INVITE"
+        }
+
+        // AF
+        execute(TC_AF_IPS_01(v_cSeq));
+        execute(TC_AF_IPS_02(v_cSeq));
+        if (PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED) {execute(TC_AF_IPS_03(v_cSeq))};
+        if (PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {execute(TC_AF_MSI_01(v_cSeq))};
+        if (PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {execute(TC_AF_MSI_02(v_cSeq))};
+        if (PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED and PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {execute(TC_AF_MSI_03(v_cSeq))};
+        if (PC_AF_GATE_RELATED_PROCEDURE) {execute(TC_AF_GRP_01(v_cSeq))};
+        execute(TC_AF_ST_01(v_cSeq));
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED) {execute(TC_AF_SN_01(v_cSeq))};
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and not PC_AF_SIGNALLING_IP_FLOWS_INFO) {execute(TC_AF_SN_02(v_cSeq))};
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED) {execute(TC_AF_SN_03(v_cSeq))};
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and not PC_AF_SIGNALLING_IP_FLOWS_INFO) {execute(TC_AF_SN_04(v_cSeq))};
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED) {execute(TC_AF_SN_05(v_cSeq))};
+        if (PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and PC_AF_SIGNALLING_IP_FLOWS_INFO) {execute(TC_AF_SN_06(v_cSeq))};
+        if (PC_AF_HANDLING_TRAFFIC_PLANE_EVENT) {execute(TC_AF_TPE_01(v_cSeq))} ;
+
+        // PCRF
+        execute(TC_PCRF_IPS_01());
+        execute(TC_PCRF_IPS_02());
+        if (not PC_PCRF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED){execute(TC_PCRF_IPS_03())};
+        execute(TC_PCRF_MSI_01());
+        execute(TC_PCRF_MSI_02());
+        execute(TC_PCRF_GRP_01());
+        execute(TC_PCRF_ST_01());
+        if (PC_PCRF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED){execute(TC_PCRF_ST_02())};
+        execute(TC_PCRF_SN_01());
+        execute(TC_PCRF_SN_02());
+        execute(TC_PCRF_SN_03());
+        execute(TC_PCRF_SN_04());
+        execute(TC_PCRF_SN_05());
+        execute(TC_PCRF_TPE_01());
+        execute(TC_PCRF_TPE_01());
+    }
+
+} // end module DiameterRx_TestCases

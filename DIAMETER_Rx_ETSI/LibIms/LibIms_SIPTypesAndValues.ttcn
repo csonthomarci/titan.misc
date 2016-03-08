@@ -1,0 +1,92 @@
+/*
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibIms_SIPTypesAndValues.ttcn 486 2011-02-17 14:24:19Z poglitsch $
+ *	@desc		This module provides the types and constants used by the test component 
+ *              for SIP tests. 
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibIms_SIPTypesAndValues
+{
+	//	SipAts
+	import from LibSip_SDPTypes all;
+	import from LibSip_XMLTypes all;
+   
+
+group Constants 
+{	
+
+const integer c_ISUP_HOP_COUNT:=31; //TODO replace this value with appropriate PIXIT parameter
+
+group UserProfileConstants
+	{
+	  // number of user profile (RESERVED: from 1-10 for SIP profile)
+	  const integer c_userProfile_UE1atSUThome := 11; 				// location is SUT domain
+	  const integer c_userProfile_UE2atSUThome := 12;				// location is SUT domain
+	  const integer c_userProfile_UE3atSUThome := 13;				// location is SUT domain
+	  const integer c_userProfile_UE4atSUThome := 14;				// location is SUT domain
+	  const integer c_userProfile_UE1atSUTvisiting := 21; 			// location is SUT domain
+	  //const integer c_userProfile_UE2atSUTvisiting := 22;			// location is SUT domain
+	  const integer c_userProfile_IBCFwithUnknownUE := 28; 			// location is IMS1 domain
+	  const integer c_userProfile_IBCFwithHomeUE := 29; 			// location is IMS1 domain
+	  const integer c_userProfile_IBCFwithVisitingUE := 31; 		// location is IMS1 domain
+	  const integer c_userProfile_PCSCFwithHomeUE := 41;	    	// location is IMS1 domain
+	  const integer c_userProfile_PCSCFwithVisitingUE := 42;	    // location is IMS1 domain
+	  const integer c_userProfile_PCSCFwithVisitingUE2 := 43;		// location is IMS1 domain
+	  const integer c_userProfile_PCSCFwithUnknownVisitingUE := 44;	// location is IMS1 domain
+	  const integer c_userProfile_ICSCFwithHomeUE := 45; 			// location is IMS1 domain
+	  const integer c_userProfile_SCSCFwithHomeUE := 46; 			// location is IMS1 domain
+      const integer c_userProfile_SCSCFwithHomeUE_domain :=55;
+	  const integer c_userProfile_ECSCFwithHomeUE := 47; 			// location is IMS1 domain
+	  const integer c_userProfile_ISUP := 49;						// 
+ 	  const integer c_userProfile_AS1 := 51;       					// Isc userProfile at AS1
+      const integer c_userProfile_AS2 := 52;						// Isc userProfile at AS2
+		
+		
+	  
+	  // number of interface profile 
+	  const integer c_interfaceProfile_IMS_SUT_IBCF1 := 100;		// Ic interface at IBCF1 located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_IBCF2 := 101;		// Ic interface at IBCF2 located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_PCSCF1 := 110; 		// Gm interface towards UE1 located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_PCSCF2 := 111; 		// Gm interface towards UE2 located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_PCSCF := 112; 		// Mw interface at P-CSCF located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_SCSCF := 113; 		// Mw interface at S-CSCF located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_ICSCF := 114; 		// Mw interface at I-CSCF located in SUT
+	  const integer c_interfaceProfile_IMS_SUT_MGCF := 115; 		// Mw interface at MGCF located in SUT
+  	  const integer c_interfaceProfile_IMS_SUT_AS := 116; 			// Isc interface at AS located in SUT
+  	  const integer c_interfaceProfile_IMS_SUT_ECSCF := 117; 		// Mw interface at E-CSCF located in SUT
+	  
+	  
+	  // number of conference profile
+	  const integer c_conferenceProfile_factoryURI := 800;			// confernece factory URI
+      
+      // number of service profile
+      const integer c_serviceProfile_EMERGENCY := 911;
+	  const integer c_serviceProfile_EMERGENCY_INVALID := 912;
+
+	  // number of SIPURL identifiers
+	  const integer c_interfaceSIPURL_IMS_SUT_PCSCF1_domain := 1101; // c_interfaceProfile_IMS_SUT_PCSCF1
+	  const integer c_interfaceSIPURL_IMS_SUT_PCSCF1_ip := 1102;	 // c_interfaceProfile_IMS_SUT_PCSCF1
+
+} //end group UserProfileConstants
+
+
+} //end group Constants
+
+
+	group otherTypes{
+		type record ImsInterfaceProfile
+		{		/** @desc	integer for Port number to exchange SIP messages
+			*/
+			integer     SUTPort,
+
+			/** @desc	charstring for IP address to exchange SIP messages
+			*/
+			charstring  SUTIpaddr,
+			
+			/** @desc	charstring for home domain to exchange SIP messages
+			*/
+			charstring  SUTHomeDomain
+		}
+	}
+
+} // end module LibIms_SIPTypesAndValues

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="urn:3gpp:ns:cw:1.0" 
+            xmlns:cw10="urn:3gpp:ns:cw:1.0" 
+            xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+            elementFormDefault="qualified" attributeFormDefault="unqualified">
+    <xs:complexType name="tEmptyType"/>
+    <xs:complexType name="tCWtype">
+        <xs:sequence>
+            <xs:element name="communication-waiting-indication" minOccurs="0" maxOccurs="1"
+                   type="cw10:tEmptyType"/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+    <xs:element name="ims-cw" type="cw10:tCWtype"/>
+</xs:schema>

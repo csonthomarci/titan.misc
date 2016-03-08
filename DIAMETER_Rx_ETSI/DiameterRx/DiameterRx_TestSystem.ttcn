@@ -1,0 +1,65 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_TestSystem.ttcn 639 2013-05-16 14:21:21Z schmitting $
+ *	@desc		This module provides the types and ports used by the test component 
+ *              for SIP-IMS-DIAMETER tests.
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_TestSystem
+{	
+
+
+	import from SIPmsg_Types all;
+		import from SDP_Types all;
+	//LibCommon
+	import from LibCommon_Sync all;
+	import from LibCommon_AbstractData all;
+	import from LibCommon_BasicTypesAndValues all;
+	import from LibCommon_DataStrings all;
+	//LibSip
+	import from LibSip_SIPTypesAndValues all;
+	import from LibSip_SDPTypes all;
+	import from LibSip_Templates all;
+	import from LibSip_PIXITS all;
+	import from LibSip_Interface all;
+	//LibDiameter
+    import from LibDiameter_Interface all;
+	//AtsIms
+	import from DiameterRx_PIXITS all;
+	
+	group CMTypes {
+		type charstring CM_Message;
+	} // end group CMTypes
+
+	group Signatures {
+		signature s_SIP_conversation (in charstring text, out boolean answer);
+		signature s_SIP_ringing (in charstring text, out boolean answer);
+	} // end group Signatures
+
+	group SystemConfiguration {
+	  group Ports {
+
+		type port operatorPort_SIP procedure {
+			inout s_SIP_conversation; 
+			inout s_SIP_ringing} with {extension "internal"}; 
+
+		type port Coordination message { 
+			inout CM_Message} with {extension "internal"};
+	  } // End Group Ports
+
+	  group TestComponents {
+		group TestSystemInterfaces {
+    		/*
+    		** @desc  The test system interface
+    		*/
+    		type component TestAdapter {
+    			port SipPort UE1, UE2;
+    			port LowerLayerPPort LLPCRF, LLIMS; 
+                port DiameterPort PCRF_Rx, AF_Rx; 
+    			port operatorPort_SIP opPortS;
+    		}
+		} // end Group TestSystemInterfaces
+	  }// end group TestComponents
+	} //end group SystemConfiguration
+
+} // end module DiameterRx_TestSystem

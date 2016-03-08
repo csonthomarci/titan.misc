@@ -1,0 +1,389 @@
+/*******************************************************************************
+* Copyright (c) 2000-2016 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R4D                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          http_uri_etsi_org_ngn_params_xml_comm_div_info.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Fri Mar  4 09:23:30 2016
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- CDIVN.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/comm-div-info" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module http_uri_etsi_org_ngn_params_xml_comm_div_info {
+
+
+import from XSD all;
+
+
+import from http_www_w3_org_XML_1998_namespace all;
+
+
+/* This import brings in the XML language definition */
+
+
+/* Communication Diversion Information. This is the top-level XML element */
+
+
+type Comm_div_info_type Comm_div_info
+with {
+  variant "name as 'comm-div-info'";
+  variant "element";
+};
+
+
+/* Communication Diversion Information Type. This is the top-level XML element */
+
+
+type record Comm_div_info_type
+{
+	XSD.AnyURI entity,
+	Comm_div_subs_info_type comm_div_subs_info optional,
+	Comm_div_ntfy_info_type comm_div_ntfy_info optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-info-type'";
+  variant (entity) "attribute";
+  variant (comm_div_subs_info) "name as 'comm-div-subs-info'";
+  variant (comm_div_ntfy_info) "name as 'comm-div-ntfy-info'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* -
+  Communication Diversion Subscription Type.
+  Used at Subscription time to
+        select Communication Diversions for notification,
+        when to notify them and
+        what to notify. */
+
+
+type record Comm_div_subs_info_type
+{
+	record of XSD.String attr optional,
+	Comm_div_selection_criteria_type comm_div_selection_criteria optional,
+	Comm_div_ntfy_trigger_criteria_type comm_div_ntfy_trigger_criteria optional,
+	Comm_div_info_selection_criteria_type comm_div_info_selection_criteria optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-subs-info-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (comm_div_selection_criteria) "name as 'comm-div-selection-criteria'";
+  variant (comm_div_ntfy_trigger_criteria) "name as 'comm-div-ntfy-trigger-criteria'";
+  variant (comm_div_info_selection_criteria) "name as 'comm-div-info-selection-criteria'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* -
+  Communication Diversion Notification Information Type
+  Used while notifying the User about the Communication Diversion */
+
+
+type record Comm_div_ntfy_info_type
+{
+	record of XSD.String attr optional,
+	User_info_type originating_user_info optional,
+	XSD.AnyURI diverting_user_info optional,
+	XSD.AnyURI diverted_to_user_info optional,
+	XSD.DateTime diversion_time_info optional,
+	Diversion_reason_info_type diversion_reason_info optional,
+	Diversion_rule_info_type diversion_rule_info optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-ntfy-info-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (originating_user_info) "name as 'originating-user-info'";
+  variant (diverting_user_info) "name as 'diverting-user-info'";
+  variant (diverted_to_user_info) "name as 'diverted-to-user-info'";
+  variant (diversion_time_info) "name as 'diversion-time-info'";
+  variant (diversion_reason_info) "name as 'diversion-reason-info'";
+  variant (diversion_rule_info) "name as 'diversion-rule-info'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* COMMUNICATION DIVERSION SELECTION CRITERIA */
+
+
+type record Comm_div_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	User_selection_criteria_type originating_user_selection_criteria optional,
+	XSD.AnyURI diverting_user_selection_criteria optional,
+	XSD.AnyURI diverted_to_user_selection_criteria optional,
+	Time_range_selection_criteria_type diversion_time_selection_criteria optional,
+	Diversion_reason_selection_criteria_type diversion_reason_selection_criteria optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (originating_user_selection_criteria) "name as 'originating-user-selection-criteria'";
+  variant (diverting_user_selection_criteria) "name as 'diverting-user-selection-criteria'";
+  variant (diverted_to_user_selection_criteria) "name as 'diverted-to-user-selection-criteria'";
+  variant (diversion_time_selection_criteria) "name as 'diversion-time-selection-criteria'";
+  variant (diversion_reason_selection_criteria) "name as 'diversion-reason-selection-criteria'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* COMMUNICATION DIVERSION NOTIFICATION TRIGGER CRITERIA */
+
+
+type record Comm_div_ntfy_trigger_criteria_type
+{
+	record of XSD.String attr optional,
+	Time_range_selection_criteria_type notification_time_selection_criteria optional,
+	Presence_status_selection_criteria_type presence_status_selection_criteria optional,
+	XSD.Integer notification_buffer_interval (-infinity .. 86400) optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-ntfy-trigger-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (notification_time_selection_criteria) "name as 'notification-time-selection-criteria'";
+  variant (presence_status_selection_criteria) "name as 'presence-status-selection-criteria'";
+  variant (notification_buffer_interval) "name as 'notification-buffer-interval'";
+  variant (notification_buffer_interval) "defaultForEmpty as '86400'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* COMMUNICATION DIVERSION INFORMATION SELECTION CRITERIA */
+
+
+type record Comm_div_info_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	XSD.Boolean disable_originating_user_info optional,
+	XSD.Boolean disable_diverting_user_info optional,
+	XSD.Boolean disable_diverted_to_user_info optional,
+	XSD.Boolean disable_diversion_time_info optional,
+	XSD.Boolean disable_diversion_reason_info optional,
+	XSD.Boolean disable_diversion_rule_info optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'comm-div-info-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (disable_originating_user_info) "name as 'disable-originating-user-info'";
+  variant (disable_originating_user_info) "defaultForEmpty as 'false'";
+  //variant (disable_originating_user_info) "text 'true' as '1'";
+  //variant (disable_originating_user_info) "text 'false' as '0'";
+  variant (disable_diverting_user_info) "name as 'disable-diverting-user-info'";
+  variant (disable_diverting_user_info) "defaultForEmpty as 'false'";
+  //variant (disable_diverting_user_info) "text 'true' as '1'";
+  //variant (disable_diverting_user_info) "text 'false' as '0'";
+  variant (disable_diverted_to_user_info) "name as 'disable-diverted-to-user-info'";
+  variant (disable_diverted_to_user_info) "defaultForEmpty as 'false'";
+  //variant (disable_diverted_to_user_info) "text 'true' as '1'";
+  //variant (disable_diverted_to_user_info) "text 'false' as '0'";
+  variant (disable_diversion_time_info) "name as 'disable-diversion-time-info'";
+  variant (disable_diversion_time_info) "defaultForEmpty as 'false'";
+  //variant (disable_diversion_time_info) "text 'true' as '1'";
+  //variant (disable_diversion_time_info) "text 'false' as '0'";
+  variant (disable_diversion_reason_info) "name as 'disable-diversion-reason-info'";
+  variant (disable_diversion_reason_info) "defaultForEmpty as 'false'";
+  //variant (disable_diversion_reason_info) "text 'true' as '1'";
+  //variant (disable_diversion_reason_info) "text 'false' as '0'";
+  variant (disable_diversion_rule_info) "name as 'disable-diversion-rule-info'";
+  variant (disable_diversion_rule_info) "defaultForEmpty as 'false'";
+  //variant (disable_diversion_rule_info) "text 'true' as '1'";
+  //variant (disable_diversion_rule_info) "text 'false' as '0'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+};
+
+
+/* User Info Type */
+
+
+type record User_info_type
+{
+	record of XSD.String attr optional,
+	XSD.String user_name optional,
+	XSD.AnyURI user_URI
+}
+with {
+  variant "name as 'user-info-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (user_name) "name as 'user-name'";
+  variant (user_URI) "name as 'user-URI'";
+};
+
+
+/* DIVERSION REASON INFO */
+
+
+type record of Diversion_reason_info_type Diversion_reason_info_types
+with {
+  variant "name as 'diversion-reason-info-types'";
+  variant "list";
+};
+
+
+type enumerated Diversion_reason_info_type
+{
+	int302(302),
+	int404(404),
+	int408(408),
+	int480(480),
+	int486(486),
+	int487(487),
+	int503(503)
+}
+with {
+  variant "useNumber";
+  variant "name as 'diversion-reason-info-type'";
+};
+
+
+/* DIVERSION RULE INFO */
+
+
+type record Diversion_rule_info_type
+{
+	record of XSD.String attr optional,
+	XSD.String diversion_rule
+}
+with {
+  variant "name as 'diversion-rule-info-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (diversion_rule) "name as 'diversion-rule'";
+};
+
+
+/* ORIGINATING USER SELECTION CRITERIA */
+
+
+type record User_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	record of User_info_type user_info_list
+}
+with {
+  variant "name as 'user-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (user_info_list) "untagged";
+  variant (user_info_list[-]) "name as 'user-info'";
+};
+
+
+/* DIVERSION REASON SELECTION CRITERIA */
+
+
+type record Diversion_reason_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	Diversion_reason_info_types diversion_reason_info
+}
+with {
+  variant "name as 'diversion-reason-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (diversion_reason_info) "name as 'diversion-reason-info'";
+};
+
+
+/* TIME RANGE SELECTION CRITERIA */
+
+
+type record Time_range_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	record of Time_range_type time_range_list
+}
+with {
+  variant "name as 'time-range-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (time_range_list) "untagged";
+  variant (time_range_list[-]) "name as 'time-range'";
+};
+
+
+/* TIME RANGE INFO */
+
+
+type record Time_range_type
+{
+	record of XSD.String attr optional,
+	XSD.DateTime start_time,
+	XSD.DateTime end_time
+}
+with {
+  variant "name as 'time-range-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (start_time) "name as 'start-time'";
+  variant (end_time) "name as 'end-time'";
+};
+
+
+/* PRESENCE STATUS SELECTION CRITERIA */
+
+
+type record Presence_status_selection_criteria_type
+{
+	record of XSD.String attr optional,
+	record of Presence_status_info_type presence_status_info_list
+}
+with {
+  variant "name as 'presence-status-selection-criteria-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (presence_status_info_list) "untagged";
+  variant (presence_status_info_list[-]) "name as 'presence-status-info'";
+};
+
+
+/* PRESENCE STATUS INFo */
+
+
+type record Presence_status_info_type
+{
+	record of XSD.String attr optional,
+	XSD.String presence_status
+}
+with {
+  variant "name as 'presence-status-info-type'";
+  variant (attr) "anyAttributes except unqualified, 'http://uri.etsi.org/ngn/params/xml/comm-div-info'";
+  variant (presence_status) "name as 'presence-status'";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'http://uri.etsi.org/ngn/params/xml/comm-div-info' prefix 'tns'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
+}

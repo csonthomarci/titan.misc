@@ -1,0 +1,339 @@
+/*
+*	@author 	STF 346, STF366, STF368, STF369
+*  @version    $Id: LibSip_PIXITS.ttcn 512 2011-10-24 14:27:33Z schmitting $
+*	@desc		This module provides the types used by the test component 
+*              for SIP-IMS tests. Module become from STF306 and STF334-336
+*  NOTE:		PIXITS in folowing groups can be ignored if this information
+*   			is provided in other modules of the ATS that uses this SIP library
+*				- Ports_and_addresses_of_the_SUT
+*				- PortsAndAddressesOfTheTS1
+*				- PortsAndAddressesOfTheTS2 
+*				- PortsAndAddressesOfTheTS3 
+*				- ParametersForHTTP_Authentication 
+*/
+//compiled with Titan 02.03.2106 Elemer Lelik
+
+module LibSip_PIXITS //MRO
+{
+//LibCommon
+import from LibCommon_BasicTypesAndValues all;
+import from LibCommon_DataStrings all;
+
+//	_____________________________ PIXIT-S_______________________________
+group SIP_PIXITparameters{
+  group SDPParameter {
+    
+    /** @desc	charstring for SDP dynamic port
+    */
+    modulepar charstring	PX_SIP_SDP_dyn := "0";
+    
+    /** @desc	charstring for SDP bandwidth modifier
+    */
+    modulepar charstring	PX_SIP_SDP_b_modifier := "AS";
+    
+    /** @desc	integer for SDP bandwidth value
+    */
+    modulepar integer		PX_SIP_SDP_b_bandwidth := 64;
+    
+    /** @desc	charstring for SDP media attribute encoding supported by the IUT 
+    */
+    modulepar charstring	PX_SIP_SDP_encoding := "PCMU/8000";
+    
+    /** @desc	charstring for SDP media attribute encoding unavailable by the IUT 
+    */
+    modulepar charstring	PX_SIP_SDP_encoding_unavail := "GSM/8000"; // f_Sip_TC2105_IS___xx__U18
+    
+    /** @desc	charstring for SDP media attribute encoding unsupported by the IUT 
+    */
+    modulepar charstring	PX_SIP_SDP_encoding_unsup := "GSM/8000"; // f_Sip_TC2105_IS___xx__U18
+    
+    /** @desc	charstring for SDP media T.38 transport (used in TC2101_IS___AU__09)
+    */
+    modulepar charstring	PX_SIP_SDP_transport := "udptl";
+  } //group SDP Parameter
+  
+  group ISUPinterworkingParameters{
+    /** @desc	charstring for Used CPC language
+    */
+    modulepar charstring  PX_SIP_ISUP_LANGUAGE := "English";
+    /** @desc	charstring for Used CPC language
+    */
+    modulepar charstring  PX_SIP_ISUP_CPC_VALUE := "prison";
+  } // goup PSTNParameters
+  
+  group SupportedOptions{
+    
+    /** @desc	boolean for  True if 100rel mechanism is supported in SIP
+    */
+    modulepar boolean		PX_SIP_100rel := false;
+    
+    /** @desc	boolean for True if precondition mechanism is supported in SIP
+    */
+    modulepar boolean		PX_SIP_precondition := false;
+    
+    /** @desc	boolean for True if UDP Transport is used by the IUT to run campaign
+    */
+    modulepar boolean		PX_SIP_UDP := true;
+    
+    /** @desc	charstring for Used Transport in upper case "UDP"/"TCP"
+    */
+    modulepar charstring  PX_SIP_TRANSPORT := "UDP";
+  }// group SupportedOptions{
+  
+  // PIXITS in group Ports_and_addresses_of_the_SUT can be ignored if this information is provided in other modules of the ATS that uses this SIP library
+  group Ports_and_addresses_of_the_SUT{
+    
+    /** @desc	integer for SUT port number to exchange SIP messages
+    */
+    modulepar integer	  PX_SIP_SUT_PORT := 5060;
+    
+    /** @desc	charstring for SUT IP address to exchange SIP messages
+    */
+    modulepar charstring  PX_SIP_SUT_IPADDR := "172.27.16.115";
+    
+    /** @desc	charstring for SUT domain
+    */
+    modulepar charstring  PX_SIP_SUT_HOME_DOMAIN := "172.27.16.115";
+    
+    /** @desc	charstring for unknown SUT domain
+    */
+    modulepar charstring  PX_SIP_SUT_HOME_DOMAIN_UNKNOWN := "172.88.88.88";
+    
+  }
+  
+  // PIXITS in group PortsAndAddressesOfTheTS1 can be ignored if this information is provided in other modules of the ATS that uses this SIP library
+  group	PortsAndAddressesOfTheTS1 {
+    //	 Ports and addresses of the TS1 (tester), first access
+    /** @desc	integer for port number used by the TS1 to exchange SIP messages
+    */
+    modulepar integer     PX_SIP_TS1_PORT := 5060;
+    
+    /** @desc	charstring for IP address used by the TS1 to exchange SIP messages
+    */
+    modulepar charstring  PX_SIP_TS1_IPADDR := "172.27.1.218";
+    
+    /** @desc	charstring for identity of the tester local domain
+    */
+    modulepar charstring  PX_SIP_TS1_LOCAL_DOMAIN := "172.27.1.218";
+    
+    /** @desc	charstring for identity of the tester local user
+    */
+    modulepar charstring  PX_SIP_TS1_LOCAL_USER := "2910";
+    
+    /** @desc	charstring for identity of the user with active call diversion service
+    */
+    modulepar charstring  PX_SIP_TS1_LOCAL_USER_DIV := "2907";
+    
+    /** @desc	charstring for identity of the tester local user (format "+"cc+ndc+sn)
+    */
+    modulepar charstring  PX_SIP_TS1_LOCAL_USER_FULL := "+ 33492941111";
+    
+    /** @desc	integer for port number used by the TS to exchange media streams
+    */
+    modulepar integer     PX_SIP_TS1_BEARER_PORT := 52000;
+    
+    /** @desc	charstring for port number used by the TS to exchange media streams
+    */
+    modulepar integer     PX_SIP_TS1_BEARER_PORT2 := 62000;
+    
+    /** @desc	charstring for IP address used by the TS to exchange media streams
+    */
+    modulepar charstring  PX_SIP_TS1_BEARER_IPADDR := "172.27.1.218";
+  }//	group	PortsAndAddressesOfTheTS
+  
+  // PIXITS in group PortsAndAddressesOfTheTS2 can be ignored if this information is provided in other modules of the ATS that uses this SIP library
+  group	PortsAndAddressesOfTheTS2 {
+    //	 Ports and addresses of the TS2 (tester), second access
+    
+    /** @desc	integer for port number used by the TS2 to exchange SIP messages
+    */
+    modulepar integer     PX_SIP_TS2_PORT := 5060;
+    
+    /** @desc	charstring for IP address used by the TS2 to exchange SIP messages
+    */
+    modulepar charstring  PX_SIP_TS2_IPADDR := "172.27.1.219";
+    
+    /** @desc	charstring for identity of the tester local domain
+    */
+    modulepar charstring  PX_SIP_TS2_LOCAL_DOMAIN := "172.27.1.219";
+    
+    /** @desc	charstring for identity of the tester local user
+    */
+    modulepar charstring  PX_SIP_TS2_LOCAL_USER := "2911";
+    
+    /** @desc	charstring for identity of the user with active call diversion service
+    */
+    modulepar charstring  PX_SIP_TS2_LOCAL_USER_DIV := "2011";
+    
+    /** @desc	charstring for identity of the tester local user (format "+"cc+ndc+sn)
+    */
+    modulepar charstring  PX_SIP_TS2_LOCAL_USER_FULL := "+ 33 4 92941111";
+    
+    /** @desc	integer for port number used by the TS to exchange media streams
+    */
+    modulepar integer     PX_SIP_TS2_BEARER_PORT := 53000;
+    
+    /** @desc	integer for port number used by the TS to exchange media streams
+    */
+    modulepar integer     PX_SIP_TS2_BEARER_PORT2 := 63000;
+    
+    /** @desc	charstring for IP address used by the TS to exchange media streams
+    */
+    modulepar charstring  PX_SIP_TS2_BEARER_IPADDR := "172.27.1.218";
+    
+  }//group	PortsAndAddressesOfTheTS2 
+  
+  // PIXITS in group PortsAndAddressesOfTheTS3 can be ignored if this information is provided in other modules of the ATS that uses this SIP library
+  group	PortsAndAddressesOfTheTS3 {
+    //	  Ports and addresses of the TS3 (tester), second access
+    /** @desc	integer for Port number used by the TS3 to exchange SIP messages
+    */
+    modulepar integer     PX_SIP_TS3_PORT := 5060;
+    
+    /** @desc	charstring for IP address used by the TS3 to exchange SIP messages
+    */
+    modulepar charstring  PX_SIP_TS3_IPADDR := "172.27.1.220";
+    
+    /** @desc	charstring for identity of the tester local domain
+    */
+    modulepar charstring  PX_SIP_TS3_LOCAL_DOMAIN := "172.27.1.220";
+    
+    /** @desc	charstring for identity of the tester local user
+    */
+    modulepar charstring  PX_SIP_TS3_LOCAL_USER := "2012";
+    
+  } //group	PortsAndAddressesOfTheTS3
+  
+  group RegistrationParameters {
+    
+    /** @desc	boolean for the SIP user if it have to register itself before executing a test case
+    */
+    modulepar boolean     PX_SIP_REGISTRATION := false;
+    
+    /** @desc	integer for the minimun SIP user registration expires-value
+    */
+    modulepar integer     PX_SIP_REGISTRATION_exp_min := 3600;
+    
+    /** @desc	charstring for REGISTRAR domain
+    */
+    modulepar charstring  PX_SIP_SUT_REGISTRAR_DOMAIN := "172.27.16.115";
+  }// group Registration parameters
+  
+  group ReleaseCause{
+    /** @desc	integer for Release cause to be used in BYE and in Failure messages
+    */
+    modulepar integer			PX_SIP_BYE_CAUSE := 16;
+  }//group ReleaseCause
+  
+  group RTPStreamControlAndCheck{
+    /** @desc	boolean for True, if conversation check is implemented.
+    */
+    modulepar boolean PX_SIP_CheckConversation := false; 
+    
+    /** @desc	boolean for True, if DTMF check is implemented.
+    */
+    modulepar boolean PX_SIP_CheckDTMF := false; 
+    
+    /** @desc	boolean for True, if Announcement sending is implemented.
+    */
+    modulepar boolean PX_SIP_SendAnnouncement := false; 
+    
+    /** @desc	boolean for True, if ringing check is implemented.
+    */
+    modulepar boolean PX_SIP_CheckRinging := false; 
+  }//group RTPStreamControlAndCheck
+  
+  group SwitchToEnableAuthentication {
+    /** @desc	boolean for option controlling if authentication is enabled/disabled for REGISTER messages 
+    */
+    modulepar boolean PX_SIP_REGISTER_AUTHENTICATION_ENABLED := true;
+    
+    /** @desc	boolean for option controlling if authentication is enabled/disabled for INVITE messages 
+    */
+    modulepar boolean PX_SIP_INVITE_AUTHENTICATION_ENABLED := false;
+  }//group SwitchToEnableAuthentication
+  
+  // PIXITS in group ParametersForHTTP_Authentication can be ignored if this information is provided in other modules of the ATS that uses this SIP library 
+  group ParametersForHTTP_Authentication {
+    
+    /** @desc	charstring for RFC 2617 clause 3-2-1 qop options:
+    * Quoted string of one or more tokens indicating the "quality of protection" values supported by the server. The
+    * value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+    */
+    modulepar charstring PX_SIP_SUT_UE1_QOP := "auth";
+    
+    /** @desc	charstring for RFC 2617 clause 3-2-2 username:
+    * The name of user in the specified realm
+    */
+    modulepar charstring PX_SIP_SUT_UE1_USERNAME := "abcd";
+    
+    /** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd: A known shared secret, the password of user of the specified username
+    */
+    modulepar charstring PX_SIP_SUT_UE1_PASSWD := "1234";
+    
+    /** @desc	charstring for RFC 2617  3-2-1 qop options:
+    * Quoted string of one or more tokens indicating the "quality of protection" values supported by the server. The
+    * value "auth" indicates authentication; the value "auth-int" indicates authentication with integrity protection.
+    */
+    modulepar charstring PX_SIP_SUT_UE2_QOP := "auth";
+    
+    /** @desc	charstring for RFC 2617 clause 3-2-2 username:
+    * The name of user in the specified realm
+    */
+    modulepar charstring PX_SIP_SUT_UE2_USERNAME := "abcd";
+    
+    /** @desc	charstring for RFC 2617 clause 3-2-2-2 passwd: A known shared secret, the password of user of the specified username
+    */
+    modulepar charstring PX_SIP_SUT_UE2_PASSWD := "1234";
+    
+  }//group ParametersForHTTP_Authentication
+  
+  group SIP_Timers {
+    /** @desc	float for T1 RTT estimate (500 ms)
+    */
+    modulepar float        PX_SIP_T1 := 0.5;
+    
+    /** @desc	float for T2 Maximum retransmit interval for non-INVITE requests and INVITE response (4000 ms)
+    */
+    modulepar float        PX_T2 := 4.0;
+    
+    /** @desc	float for T4 Maximum duration a message will remain in the network
+    */
+    modulepar float        PX_T4 := 1.0;
+    
+    /** @desc	float for TDELAY default value for timeout on outgoing SIP request (ie 64*T1)
+    */
+    modulepar float        PX_SIP_TF := 32.0;
+    
+    /** @desc	float for TWait default value for waiting an operator action
+    */
+    modulepar float        PX_SIP_TWAIT := 30.0;
+    
+    /** @desc	float for TAck  default value for waiting an acknowledgement
+    */
+    modulepar float        PX_SIP_TACK := 8.0;
+    
+    /** @desc	float for TResp default value for waiting for a response from the IUT
+    */
+    modulepar float        PX_SIP_TRESP := 15.0;
+    
+    /** @desc	float for TNoAct default value for waiting no message from the IUT
+    * Value given for PX_TNOACT should be less than value of 
+    * SHORT_REGISTRATION constant (which is currently "3" (seconds))
+    */
+    modulepar float        PX_SIP_TNOACT := 1.0;
+    
+    /** @desc	float for TSYNC default value to synchronise ptc
+    */
+    modulepar float        PX_SIP_TSYNC := 10.0;
+    
+    /** @desc	float for TGUARD default value for an extra long timer to limit test execution
+    */
+    modulepar float        PX_SIP_TGUARD := 120.0;
+    
+    /** @desc	float for TRespRetention minimum time that a Proxy will wait before sending a final response
+    */
+    modulepar float        PX_TRespRetention := 1.0;
+  }//group SIP_Timers
+} //group SIP_PIXITparameters
+} // end module LibSip_PIXITS

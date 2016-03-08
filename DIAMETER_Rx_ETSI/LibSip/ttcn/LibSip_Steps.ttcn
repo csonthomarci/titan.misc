@@ -1,0 +1,4415 @@
+/*
+*	@author 	STF 346, STF366, STF368, STF369
+*  @version    $Id: LibSip_Steps.ttcn 512 2011-10-24 14:27:33Z schmitting $
+*	@desc		This module provides the types used by the test component 
+*              for SIP-IMS tests.
+*/
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibSip_Steps //MRO
+{	
+//LibCommon 
+import from LibCommon_Sync all ;
+import from LibCommon_VerdictControl all ;
+//LibSip
+import from SIPmsg_Types all;
+import from LibSip_SIPTypesAndValues all;
+import from LibSip_SDPTypes all;
+import from SDP_Types all;
+import from LibSip_Templates all;
+import from LibSip_Interface all;
+import from LibSip_PIXITS all;
+import from LibSip_XMLTypes all;
+
+import from TCCConversion_Functions all;
+import from TCCInterface_Functions all;
+
+
+
+group externalfunctions {
+  
+  //Return random charstring
+  /*external*/ function fx_rndStr() return charstring{
+    
+    
+    return "abcdefgh"  ; //FIXME
+    
+  };
+  // Return the equivalent string in lower case
+  function fx_putInLowercase(charstring par_string) return charstring
+  {
+    return f_putInLowercase(par_string);
+    
+  }
+  
+  function fx_getIpAddr(charstring host_name) return charstring{
+    
+    return f_getIpAddr(host_name);
+    
+  };
+  
+  
+  // External function to generate a digest response.
+  // References:
+  //   * RFC 2617 HTTP Authentication: Basic and Digest Access
+  //     Authentication, and
+  //   * RFC 1321 The MD5 Message-Digest Algorithm
+  // See RFC 2617, chapter 5 Sample implementation, for example usage, as
+  // the signature of calculateDigestResponse is according to the example
+  // given in the RFC.
+  //
+  /*external*/ function fx_calculateDigestResponse(
+    charstring nonce,
+    charstring cnonce,
+    charstring user,
+    charstring realm,
+    charstring passwd,
+    charstring alg,
+    charstring nonceCount,
+    charstring method,
+    charstring qop,
+    charstring URI,
+    charstring HEntity) return charstring
+  {
+    return "abcdefg"; //FIXME
+  }
+  ;
+  
+}
+
+group ParameterOperations {
+  
+  /**
+  * 
+  * @desc function to generate a 32 bits random number as a charstring for tag field
+  * (used as e.g.: tag in from-header field, or branch parameter in via header)
+  * @return random value with at least 32 bits of randomness
+  * 
+  */
+  function f_getRndTag() return charstring
+  {
+    var charstring tag_value;
+    //tag_value is initialized with a random value with at least 32 bits of randomness
+    // 4294967296 is a 32 bits integer
+    tag_value := fx_rndStr()&fx_rndStr();
+    return(tag_value);
+  }
+  
+  /**
+  * 
+  * @desc  Function to prepare credentials for request that has an empty
+  * entity body such as a REGISTER message.
+  * @param p_userprofile to get important parameters
+  * @return Credentials field
+  */
+  function f_calculatecCredentials_empty(in SipUserProfile p_userprofile) return Credentials
+  {
+    var template Credentials v_result;
+    
+    var charstring v_nonce := "";
+    
+    // RFC 2617 3.2.2 username:
+    // The name of user in the specified realm.
+    var charstring v_username := p_userprofile.privUsername;
+    
+    var charstring v_realm := p_userprofile.registrarDomain;
+    
+    var charstring v_uri := c_sipScheme & ":" & p_userprofile.registrarDomain;
+    
+    var charstring v_response := "";
+    
+    // Construct credentials for an Authorization field of a request.
+    v_result :=
+    {
+      digestResponse :=
+      {
+        { id := "username", paramValue := v_username },
+        { id := "realm", paramValue := v_realm },
+        { id := "uri", paramValue := v_uri },
+        { id := "nonce=""""", paramValue := omit }, // already enclosed to " characters
+        { id := "response=""""", paramValue := omit } // already enclosed to " characters
+      }};
+    
+    return valueof(v_result);
+  }
+  
+  
+  /**
+  * 
+  * @desc  Function to calculate credentials for request that has an empty
+  * entity body such as a REGISTER message.
+  * @param p_userprofile to get important parameters
+  * @param p_method (can be "REGISTER", "INVITE",....)
+  * @param p_challenge parameter from 4xx response
+  * @return Credentials field
+  * @verdict 
+  */
+  function f_calculatecCredentials(in SipUserProfile p_userprofile, in charstring p_method, 
+    in CommaParam_List p_challenge) return Credentials
+  {
+    var template Credentials v_result;
+    
+    var charstring v_nonce := "";
+    
+    // Use a fixed client nonce.
+    var charstring v_cnonce := "1317265";
+    
+    // RFC 2617 3.2.2 username:
+    // The name of user in the specified realm.
+    var charstring v_username := p_userprofile.privUsername;
+    
+    var charstring v_realm;
+    
+    // RFC 2617 3.2.2.2 passwd:
+    // A known shared secret, the password of user of the specified
+    // username.
+    var charstring v_passwd := p_userprofile.passwd;
+    
+    var charstring v_algorithm;
+    
+    // Use a fixed nonce count.
+    const charstring c_nonceCount := "00000002";
+    
+    var charstring v_qop := p_userprofile.qop;
+    
+    var charstring v_uri := c_sipScheme & ":" & p_userprofile.registrarDomain;
+    
+    // MD5 hash of empty entity body.
+    const charstring c_hEntity := "d41d8cd98f00b204e9800998ecf8427e";
+    
+    var charstring v_response;
+    var charstring v_opaque;
+    
+    
+    // extract nonce, realm, algorithm, and opaque from challenge
+    
+    v_nonce := f_extractParamValueFromChallenge(p_challenge, "nonce"); 
+    v_realm := f_extractParamValueFromChallenge(p_challenge, "realm"); 
+    v_algorithm := f_extractParamValueFromChallenge(p_challenge, "algorithm");
+    v_opaque := f_extractParamValueFromChallenge(p_challenge, "opaque");
+    
+    // calculate a digest response for the Authorize header
+    v_response := fx_calculateDigestResponse(
+      v_nonce,
+      v_cnonce,
+      v_username,
+      v_realm,
+      v_passwd,
+      v_algorithm,
+      c_nonceCount,
+      p_method,
+      v_qop,
+      v_uri,
+      c_hEntity);
+    
+    // Construct credentials for an Authorization field of a request.
+    v_result :=
+    {
+      digestResponse :=
+      {
+        { id := "username", paramValue := v_username },
+        { id := "realm", paramValue := v_realm },
+        { id := "nonce", paramValue := v_nonce },
+        { id := "uri", paramValue := v_uri },
+        { id := "response", paramValue := v_response },
+        { id := "algorithm=md5", paramValue := omit }, // algorithm is not enclosed to " characters
+        { id := "cnonce", paramValue := v_cnonce },
+        { id := "opaque", paramValue := v_opaque }, // already enclosed to " characters
+        { id := "qop="&v_qop, paramValue := omit },//qop
+        { id := "nc="&c_nonceCount, paramValue := omit }//nonceCount
+      }
+    };
+    
+    return  valueof(v_result);
+  }
+  
+  /**
+  * 
+  * @desc  Function to calculate credentials for request that has an empty
+  * entity body such as a REGISTER message. NO RESPONSE value to cause an error!
+  * @param p_userprofile to get important parameters
+  * @param p_method (can be "REGISTER", "INVITE",....)
+  * @param p_challenge parameter from 4xx response
+  * @return Credentials field
+  * @verdict 
+  */
+  function f_calculatecCredentials_wo_response(in SipUserProfile p_userprofile, in charstring p_method, 
+    in CommaParam_List p_challenge) return Credentials
+  {
+    var Credentials v_result;
+    
+    var charstring v_nonce := "";
+    
+    // Use a fixed client nonce.
+    var charstring v_cnonce := "1317265";
+    
+    // RFC 2617 3.2.2 username:
+    // The name of user in the specified realm.
+    var charstring v_username := p_userprofile.privUsername;
+    
+    var charstring v_realm;
+    
+    // RFC 2617 3.2.2.2 passwd:
+    // A known shared secret, the password of user of the specified
+    // username.
+    var charstring v_passwd := p_userprofile.passwd;
+    
+    var charstring v_algorithm;
+    
+    // Use a fixed nonce count.
+    const charstring c_nonceCount := "00000002";
+    
+    var charstring v_qop := p_userprofile.qop;
+    
+    var charstring v_uri := c_sipScheme & ":" & p_userprofile.registrarDomain;
+    
+    // MD5 hash of empty entity body.
+    const charstring c_hEntity := "d41d8cd98f00b204e9800998ecf8427e";
+    
+    var charstring v_response;
+    var charstring v_opaque;
+    
+    
+    // extract nonce, realm, algorithm, and opaque from challenge
+    
+    v_nonce := f_extractParamValueFromChallenge(p_challenge, "nonce"); 
+    v_realm := f_extractParamValueFromChallenge(p_challenge, "realm"); 
+    v_algorithm := f_extractParamValueFromChallenge(p_challenge, "algorithm");
+    v_opaque := f_extractParamValueFromChallenge(p_challenge, "opaque");
+    
+    // calculate a digest response for the Authorize header
+    v_response := fx_calculateDigestResponse(
+      v_nonce,
+      v_cnonce,
+      v_username,
+      v_realm,
+      v_passwd,
+      v_algorithm,
+      c_nonceCount,
+      p_method,
+      v_qop,
+      v_uri,
+      c_hEntity);
+    
+    // Construct credentials for an Authorization field of a request.
+    v_result :=
+    {
+      digestResponse :=
+      {
+        { id := "username", paramValue := v_username },
+        { id := "realm", paramValue := v_realm },
+        { id := "nonce", paramValue := v_nonce },
+        { id := "uri", paramValue := v_uri },
+        //		  { id := "response", paramValue := v_response }, // not included to cause an error
+        { id := "algorithm=md5", paramValue := omit }, // algorithm is not enclosed to " characters
+        { id := "cnonce", paramValue := v_cnonce },
+        { id := "opaque=""""", paramValue := omit }, // already enclosed to " characters
+        { id := "qop="&v_qop, paramValue := omit },//qop
+        { id := "nc="&c_nonceCount, paramValue := omit }//nonceCount
+      }
+    };
+    
+    return v_result;
+  }
+  
+  /**
+  * 
+  * @desc  Function to calculate credentials for response 401 - WWW-Authorization
+  * @param p_qop of the peer UE (alternatively )
+  * @param p_authorization parameter from 1st REGISTER request
+  * @return Credentials field
+  * @verdict 
+  */
+  function f_calculatecChallenge_forWWWAuthorizationBody(in charstring p_qop, in Authorization p_authorization) return Challenge
+  { 
+    var CommaParam_List v_challenge;
+    
+    if (ischosen(p_authorization.body.digestResponse))
+    {v_challenge := p_authorization.body.digestResponse}
+    else {v_challenge := p_authorization.body.otherResponse.authParams};
+    
+    return (f_calculatecChallenge_forWWWAuthorization(p_qop,v_challenge));
+  }
+  
+  /**
+  * 
+  * @desc  Function to calculate credentials for response 401 - WWW-Authorization
+  * @param p_qop of the peer UE (alternatively )
+  * @param p_challenge parameter from 1st REGISTER request
+  * @return Credentials field
+  * @verdict 
+  */
+  function f_calculatecChallenge_forWWWAuthorization(in charstring p_qop, in CommaParam_List p_challenge) return Challenge
+  {
+    var Challenge v_result;
+    
+    var charstring v_realm;
+    
+    var charstring v_qop := p_qop;
+    
+    v_realm := f_extractParamValueFromChallenge(p_challenge, "realm");
+    
+    // Construct credentials for an Authorization field of a request.
+    v_result :=
+    {
+      digestCln :=
+      {
+        { id := "realm", paramValue := v_realm },
+        { id := "nonce", paramValue := "0edff6c521cc3f407f2d9e01cf6ed82b"},
+        { id := "algorithm", paramValue := c_algorithm }, // algorithm is not enclosed with " characters
+        { id := "ck", paramValue := "00112233445566778899aabbccddeeff" },
+        { id := "ik", paramValue := "ffeeddccbbaa99887766554433221100" }, // already enclosed to " characters
+        { id := "qop="""&v_qop&"""", paramValue := omit }//qop
+        
+      }
+    };
+    
+    return v_result;
+  }
+  
+  /**
+  * 
+  * @desc  Function to calculate credentials for request that has an empty
+  * entity body such as a REGISTER message and at the end put different private name
+  * @param p_userprofile to get important parameters
+  * @param p_method (can be "REGISTER", "INVITE",....)
+  * @param p_challenge parameter from 4xx response
+  * @return Credentials field
+  * @verdict 
+  */
+  function f_calculatecCredentialsAndChangeUserName(in SipUserProfile p_userprofile, in charstring p_method, 
+    in CommaParam_List p_challenge) return Credentials
+  {
+    var Credentials v_result;
+    
+    var charstring v_nonce := "";
+    
+    // Use a fixed client nonce.
+    var charstring v_cnonce := "1317265";
+    
+    // RFC 2617 3.2.2 username:
+    // The name of user in the specified realm.
+    var charstring v_username := p_userprofile.privUsername;
+    
+    var charstring v_realm;
+    
+    // RFC 2617 3.2.2.2 passwd:
+    // A known shared secret, the password of user of the specified
+    // username.
+    var charstring v_passwd := p_userprofile.passwd;
+    
+    var charstring v_algorithm;
+    
+    // Use a fixed nonce count.
+    const charstring c_nonceCount := "00000002";
+    
+    var charstring v_qop := p_userprofile.qop;
+    
+    var charstring v_uri := c_sipScheme & ":" & p_userprofile.registrarDomain;
+    
+    // MD5 hash of empty entity body.
+    const charstring c_hEntity := "d41d8cd98f00b204e9800998ecf8427e";
+    
+    var charstring v_response;
+    var charstring v_opaque;
+    
+    
+    // extract nonce, realm, algorithm, and opaque from challenge
+    
+    v_nonce := f_extractParamValueFromChallenge(p_challenge, "nonce"); 
+    v_realm := f_extractParamValueFromChallenge(p_challenge, "realm"); 
+    v_algorithm := f_extractParamValueFromChallenge(p_challenge, "algorithm");
+    v_opaque := f_extractParamValueFromChallenge(p_challenge, "opaque");
+    
+    // calculate a digest response for the Authorize header
+    v_response := fx_calculateDigestResponse(
+      v_nonce,
+      v_cnonce,
+      v_username,
+      v_realm,
+      v_passwd,
+      v_algorithm,
+      c_nonceCount,
+      p_method,
+      v_qop,
+      v_uri,
+      c_hEntity);
+    
+    // Construct credentials for an Authorization field of a request.
+    v_result :=
+    {
+      digestResponse :=
+      {
+        { id := "username", paramValue := "DifferentToPrivateUser"},
+        { id := "realm", paramValue := v_realm },
+        { id := "nonce", paramValue := v_nonce },
+        { id := "uri", paramValue := v_uri },
+        { id := "response", paramValue := v_response },
+        { id := "algorithm=md5", paramValue := omit }, // algorithm is not enclosed to " characters
+        { id := "cnonce", paramValue := v_cnonce },
+        { id := "opaque=""""", paramValue := omit }, // already enclosed to " characters
+        { id := "qop="&v_qop, paramValue := omit },//qop
+        { id := "nc="&c_nonceCount, paramValue := omit }//nonceCount
+      }
+    };
+    
+    return v_result;
+  }
+  
+  
+  /**
+  * 
+  * @desc Function to check if param related to id from CommanParam_List exist
+  * containing challenge.
+  * @param p_challenge parameter from 4xx response
+  * @param p_id name of parameter("nonce", "realm", "ck", "ik"...)
+  * @return  parameter p_id value 
+  */
+  function f_checkParamValueFromChallengeIfPresent(in CommaParam_List p_challenge, in charstring p_id) return boolean
+  {
+    var boolean v_result := false;
+    var integer v_len := sizeof(p_challenge);
+    var charstring v_id := fx_putInLowercase(p_id);
+    
+    for (var integer i := 0; i < v_len; i := i + 1)
+    {
+      if (fx_putInLowercase(p_challenge[i].id) == v_id)
+      {
+        v_result := true;
+      }
+    }
+    
+    return v_result;
+  }	
+  
+  /**
+  * 
+  * @desc Function to check if tag is present in SemicolonParam_List
+  * @param p_param_l SemicolonParam_List
+  * @return  boolean  true if tag is present 
+  */
+  function f_checkTagPresent(SemicolonParam_List p_param_l) runs on SipComponent return boolean {
+    var integer v_numberOfParams;
+    var integer i := 0;
+    
+    v_numberOfParams := sizeof (p_param_l);
+    while (i < v_numberOfParams) {
+      if (fx_putInLowercase(p_param_l[i].id) == c_tagId) {
+        return (true);
+      }
+      i := i + 1;
+    }
+    return (false);
+  }
+  
+  /**
+  * 
+  * @desc Function to extract paramValue related to id from CommanParam_List
+  * containing challenge.
+  * @param p_challenge parameter from 4xx response
+  * @param p_id name of parameter("nonce", "realm",...)
+  * @return  parameter p_id value 
+  */
+  function f_extractParamValueFromChallenge(in CommaParam_List p_challenge, in charstring p_id) return charstring
+  {
+    var charstring v_result := "";
+    var integer v_len := sizeof(p_challenge);
+    var charstring v_id := fx_putInLowercase(p_id);
+    
+    for (var integer i := 0; i < v_len; i := i + 1)
+    {
+      if (fx_putInLowercase(p_challenge[i].id) == v_id)
+      {
+        v_result := p_challenge[i].paramValue;
+      }
+    }
+    
+    if (v_result == "")
+    {
+      if(match(p_id,"algorithm")) 
+      {
+        v_result := "MD5"
+      }
+      else if(match(p_id,"opaque"))
+      {
+        v_result := ""
+      }
+      else
+      {
+        var charstring v_tmpchar := "Cannot acquire value from credentials.";
+        log ("Cannot acquire value from credentials.");
+        setverdict(inconc);
+        stop;
+      }
+    }
+    
+    return v_result;
+  }
+  
+}//end group ParameterOperations
+
+group FieldOperations {
+  
+  /**
+  * 
+  * @desc function adds "Tag"-parameter in "To"-headerfield
+  * @param p_to To header field that should get a Tag parameter
+  * 
+  */
+  function f_addTagInTo(inout To p_to) runs on SipComponent
+  {      
+    f_addParameterTagIfNotPresent(c_tagId, f_getRndTag(), p_to); 
+  }
+  
+  /**
+  * 
+  * @desc addition of a single parameter in the via header field
+  * @param p_parameter_name name of parameter to be added
+  * @param p_parameter_value value of parameter to be added
+  * @param p_viaBody the via parameter to be extended
+  * @verdict 
+  */
+  function f_addParameterIfNotPresent(
+    in charstring p_parameter_name,
+    in charstring p_parameter_value,
+    inout ViaBody p_viaBody) 
+  
+  {
+    if (ispresent (p_viaBody.viaParams)) {
+      return;
+    }
+    p_viaBody.viaParams := {
+      {
+        p_parameter_name,
+        p_parameter_value
+      }
+    };
+  }    
+  
+  /**
+  * 
+  * @desc function to addd a parameter to the "To" header field (if there is not any parameter)
+  * @param p_parameter_name name of the parameter to be added
+  * @param p_parameter_value value of the paramter to be added
+  * @param p_to "To" header field to be extended
+  * @verdict 
+  */
+  function f_addParameterTagIfNotPresent(
+    in charstring p_parameter_name,
+    in charstring p_parameter_value,
+    inout To p_to) 
+  
+  {
+    if (ispresent (p_to.toParams)) {
+      return;
+    }
+    p_to.toParams := {
+      {
+        p_parameter_name,
+        p_parameter_value
+      }
+    };
+  }
+  
+  /**
+  * 
+  * @desc function compares the IP address of two hosts
+  * @param p_host1 hostname
+  * @param p_host2 hostname
+  * @return boolean value that is true if the IP addresses are identical
+  * @verdict 
+  */	
+  function f_equivalentHostAddr(in charstring p_host1,  in charstring p_host2) return boolean
+  {
+    //A DNS server may be used
+    return(fx_getIpAddr(p_host1) == fx_getIpAddr(p_host2));
+  }
+  
+  
+  /**
+  * 
+  * @desc function checks if Require contains Precondition
+  * @param p_message (request or response) SIP message to be analysed
+  * @return true if p_id parameter exist
+  */
+  function f_checkRequirePrecondition(in Request p_message)
+  {
+    if (ispresent(p_message.msgHeader.require))
+    {
+      var boolean v_precondition_found:=false;
+      for (var integer v_i:=0; v_i<sizeof(p_message.msgHeader.require.optionsTags); v_i:=v_i+1){			
+        if (match(p_message.msgHeader.require.optionsTags[v_i],c_tagPrecond)) {
+          v_precondition_found:=true;
+        }
+      }
+      if (not(v_precondition_found)){
+        setverdict(fail);
+        log("FAIL: precondition not found in Require options list!");
+      }
+    } 
+    else
+    {
+      setverdict(fail);
+      log("FAIL: Require options is not present!");
+    }
+  }
+  
+  /**
+  * 
+  * @desc function checks if P-Charging-Vector contains a particular parameter
+  * @param p_message (request or response) SIP message to be analysed
+  * @param p_id name of parameter
+  * @return true if p_id parameter exist
+  */
+  function f_checkPChargingVectorHeaderParamId(in Request p_message, charstring p_id) return boolean
+  {
+    var integer v_chargeParamsLen;
+    
+    if (ispresent(p_message.msgHeader.p_charging_vector)) {		
+      for (var integer i:=0; i<sizeof(p_message.msgHeader.p_charging_vector.charge_params); i:=i+1)
+      {if(p_message.msgHeader.p_charging_vector.charge_params[i].id == p_id)
+        {return (true)}
+      };
+    }
+    return (false)
+  }
+  
+  /**
+  * 
+  * @desc function checks if P-Charging-Vector contains a particular parameter
+  * @param p_message (request or response) SIP message to be analysed
+  * @param p_id name of parameter
+  * @return true if p_id parameter exist
+  */
+  function f_checkPChargingVectorHeaderParamIdResponse(in Response p_message, charstring p_id) return boolean
+  {
+    var integer v_chargeParamsLen;
+    
+    if (ispresent(p_message.msgHeader.p_charging_vector)) {		
+      for (var integer i:=0; i<sizeof(p_message.msgHeader.p_charging_vector.charge_params); i:=i+1)
+      {if(p_message.msgHeader.p_charging_vector.charge_params[i].id == p_id)
+        {return (true)}
+      };
+    }
+    return (false)
+  }
+  
+  /**
+  * 
+  * @desc function returns the Host/Port of a given Contact header field
+  * @param p_contact contact header field to be analysed
+  * @return Host/Port record  from the contact header field
+  */
+  function f_getContactUri(in ContactAddress p_contact) runs on SipComponent return SipUrl
+  {
+    var SipUrl    v_SipUrl;
+    
+    if (ischosen(p_contact.addressField.nameAddr))
+    {
+      v_SipUrl := p_contact.addressField.nameAddr.addrSpec;
+    }
+    else
+    {
+      v_SipUrl := p_contact.addressField.addrSpecUnion;
+    }
+    
+    return(v_SipUrl);
+  } // end f_getContactUri
+  
+  /**
+  * 
+  * @desc function returns the Host/Port of a given Contact header field
+  * @param p_contact contact header field to be analysed
+  * @return Host/Port record  from the contact header field
+  */
+  function f_getContactAddr(in ContactAddress p_contact) runs on SipComponent return HostPort
+  {
+    var HostPort v_locAddr;
+    var SipUrl    v_SipUrl;
+    
+    if (ischosen(p_contact.addressField.nameAddr))
+    {
+      v_SipUrl := p_contact.addressField.nameAddr.addrSpec;
+    }
+    else
+    {
+      v_SipUrl := p_contact.addressField.addrSpecUnion;
+    }
+    
+    v_locAddr.host := v_SipUrl.hostPort.host;
+    
+    if (ispresent(v_SipUrl.hostPort.portField))
+    {
+      v_locAddr.portField := v_SipUrl.hostPort.portField;
+    }
+    else
+    {
+      v_locAddr.portField := c_defaultSipPort;
+    }
+    
+    return(v_locAddr);
+  } // end f_getContactAddr
+  
+  /**
+  * 
+  * @desc function checks if History-Info-Header of the p_message contains a particular URI
+  * @param p_message (request or response) SIP message to be analysed
+  * @param p_URI name of parameter
+  * @return true if p_URI parameter exist
+  */
+  function f_checkHeaderInfoURI(in Response p_message, SipUrl p_URI) return boolean
+  {
+    var integer v_chargeParamsLen;
+    
+    if (ispresent(p_message.msgHeader.historyInfo)) {		
+      for (var integer i:=0; i<sizeof(p_message.msgHeader.historyInfo.hi_entries); i:=i+1)
+      {if(p_message.msgHeader.historyInfo.hi_entries[i].nameAddr.addrSpec == p_URI)
+        {return (true)}
+      };
+    }
+    return (false)
+  }
+  
+  /**
+  * 
+  * @desc function returns the Userinfo from  a given To header field
+  * @param p_to To header field to be analysed
+  * @return Userinfo from the To header field as a charstring
+  */
+  function f_getUserfromTo(in To p_to) runs on SipComponent return charstring
+  {
+    var SipUrl    v_SipUrl;
+    
+    if (ischosen(p_to.addressField.nameAddr))
+    {
+      v_SipUrl := p_to.addressField.nameAddr.addrSpec;
+    }
+    else
+    {
+      v_SipUrl := p_to.addressField.addrSpecUnion;
+    }
+    
+    return(v_SipUrl.userInfo.userOrTelephoneSubscriber);
+  } // end f_getUserfromTo
+  
+  /**
+  * 
+  * @desc function to generate a 32 bits random number as a charstring for tag field
+  * @param p_cSeq_s CSeq parameter used to modify the tag field value
+  * @return tag value
+  */
+  function f_getRndCallId(inout CSeq p_cSeq_s) return charstring
+  {
+    var charstring v_tag_value;
+    v_tag_value := fx_rndStr()&fx_rndStr();
+    //v_tag_value is initialized with a random value with at least 32 bits of randomness
+    // 4294967296 is a 32 bits integer
+    //v_tag_value := int2str(float2int(4294967296.0*rnd()) + loc_CSeq_s.seqNumber );
+    return(v_tag_value);
+  }
+  
+  /**
+  * 
+  * @desc function give access to the top element of the Path header field.
+  * @param p_Request SIP message to be analysed
+  * @return NameAddr (e.g. <sip:p.home.com>) or omit
+  */
+  function f_getPathHeaderTop(inout Request p_Request) return template NameAddr
+  {
+    if (ispresent(p_Request.msgHeader.path)) {
+      if (sizeof(p_Request.msgHeader.path.routeBody)>0) {
+        return(p_Request.msgHeader.path.routeBody[0].nameAddr)}
+    };
+    return(omit)
+  }
+  
+  /**
+  * 
+  * @desc function updates first element of a Via headerfield list 
+  * @param p_viaBody_List address list of a Via header field
+  * @param p_source_address address to be inserted in the top element
+  */
+  function f_getViaReplyAddr(inout ViaBody_List p_viaBody_List, inout /*address4SIP*/  SIP_address_type p_source_address)
+  runs on SipComponent 
+  {	
+    var ViaBody  v_viaBody;
+    var HostPort v_locAddr;
+    // The address to send message shall be updated after getting information
+    // in the Via header fied and according to 18.2.2
+    v_viaBody := p_viaBody_List[0];
+    
+    // received parameter has to be addded to the via hader field
+    // Be careful it could be an Host name and not an IP Address
+    
+    // TODO produce an error because of unkown host exception
+    //if (not f_equivalentHostAddr(valueof (v_viaBody.sentBy.host),
+    //	   valueof (p_source_address.host))) {
+    f_addParameterIfNotPresent(
+      c_receivedId,
+      valueof (p_source_address.host),
+      v_viaBody);
+    //}
+    if (ispresent(v_viaBody.sentBy.portField))
+    {
+      p_source_address.portField := valueof(v_viaBody.sentBy.portField);
+    }
+    else
+    {
+      p_source_address.portField := c_defaultSipPort;
+    }
+  }
+  
+  /**
+  * 
+  * @desc functions give access to an element of the Route header field (record).
+  * @param p_message (request) SIP message to be analysed
+  * @param p_index index of Route record element to be retrieved
+  * @return HostPort value of the Route element or omit
+  */
+  function f_getRouteHeaderElementAddressFromRequest(in Request p_message, in integer p_index) return HostPort
+  {
+    if (ispresent(p_message.msgHeader.route)) {
+      if (sizeof(p_message.msgHeader.route.routeBody)>p_index) {
+        return(p_message.msgHeader.route.routeBody[p_index].nameAddr.addrSpec.hostPort)}
+    };
+    setverdict(fail);
+    return(c_hostport_dummy)
+  }
+  
+  /**
+  * 
+  * @desc functions give access to an element of the Record-Route header field (record).
+  * @param p_message (request) SIP message to be analysed
+  * @param p_index index of recordRoute record element to be retrieved
+  * @return HostPort value of the Record-Route element or omit
+  */
+  function f_getRecordRouteHeaderElementAddressFromRequest(in Request p_message, in integer p_index) return HostPort
+  {
+    if (ispresent(p_message.msgHeader.recordRoute)) {
+      if (sizeof(p_message.msgHeader.recordRoute.routeBody)>p_index) {
+        return(p_message.msgHeader.recordRoute.routeBody[p_index].nameAddr.addrSpec.hostPort)}
+    };
+    setverdict(fail);
+    return(c_hostport_dummy)
+  }
+  
+  /**
+  * 
+  * @desc functions give access to an element of the Record-Route header field (record).
+  * @param p_message (response) SIP message to be analysed
+  * @param p_index index of recordRoute record element to be retrieved
+  * @return HostPort value of the Record-Route element or omit
+  */
+  function f_getRecordRouteHeaderElementAddressFromResponse(in Response p_message, in integer p_index) return HostPort
+  {
+    if (ispresent(p_message.msgHeader.recordRoute)) {
+      if (sizeof(p_message.msgHeader.recordRoute.routeBody)>p_index) {
+        return(p_message.msgHeader.recordRoute.routeBody[p_index].nameAddr.addrSpec.hostPort)}
+    };
+    setverdict(fail);
+    return(c_hostport_dummy)
+  }
+  
+  /**
+  * 
+  * @desc functions give access to an element of the Via header field (record).
+  * @param p_message (request) SIP message to be analysed
+  * @param p_index index of via record element to be retrieved
+  * @return HostPort value of the Via element or omit
+  */
+  function f_getViaHeaderElementHostPort(in Request p_message, in integer p_index) return HostPort
+  {
+    
+    if (sizeof(p_message.msgHeader.via.viaBody)>p_index) {
+      return(p_message.msgHeader.via.viaBody[p_index].sentBy)}
+    setverdict(fail);
+    return(c_hostport_dummy)
+  }
+  
+  /**
+  * 
+  * @desc functions give access to an element of the Via header field (record).
+  * @param p_message (response) SIP message to be analysed
+  * @param p_index index of via record element to be retrieved
+  * @return HostPort value of the Via element or omit
+  */	function f_getViaHeaderElementHostPortResponse(in Response p_message, in integer p_index) return HostPort
+  {
+    
+    if (sizeof(p_message.msgHeader.via.viaBody)>p_index) {
+      return(p_message.msgHeader.via.viaBody[p_index].sentBy)}
+    setverdict(fail);
+    return(c_hostport_dummy)
+  }	
+  
+  /**
+  * 
+  * @desc function checks indicators if topology hiding (TH) has been applied:
+  *	- second element in via-header record has tokenized-by parameter
+  * @param p_Request SIP message to be analysed
+  * @return boolean value (true indicate TH, false otherwise)
+  */
+  function f_topologyHiding(inout Request p_request) runs on SipComponent return boolean
+  { 
+    var GenericParam v_viaParameter := p_request.msgHeader.via.viaBody[1].viaParams[0]; // second element
+    if (not v_viaParameter.id == "tokenized-by") 
+    {return(false)};
+    return(true)
+  }
+  
+  /**
+  * 
+  * @desc function checks indicators if topology hiding (TH) has been applied:
+  *	- any element in via-header record has tokenized-by parameter
+  * @param Response SIP message to be analysed
+  * @return boolean value (true indicate TH, false otherwise)
+  */
+  function f_topologyHidingResponse(inout Response p_response) runs on SipComponent return boolean
+  { 
+    var GenericParam v_viaParameter;
+    
+    for (var integer v_i := 0; v_i < sizeof(p_response.msgHeader.via.viaBody); v_i := v_i + 1) {
+      
+      v_viaParameter := p_response.msgHeader.via.viaBody[v_i].viaParams[0]; // first parameter
+      
+      if (not v_viaParameter.id == "tokenized-by") 
+      {return(false)}
+    }
+    return(true);
+    
+  }
+  
+  
+  
+  group SetHeaders {
+    
+    
+    /**
+    * 
+    * @desc function for setting of component variables related to message header fields 
+    *		(message type independent: CSeq, contact, via), function uses information from userprofile
+    *		
+    * @param p_cSeq_s CSeq parameter
+    * @param p_method method name for cSeq header field
+    */	
+    function f_setHeadersGeneral(inout CSeq p_cSeq_s, in charstring p_method) runs on SipComponent
+    {
+      p_cSeq_s.fieldName := CSEQ_E;
+      p_cSeq_s.seqNumber := p_cSeq_s.seqNumber + 1;
+      p_cSeq_s.method    := p_method ;
+      vc_cSeq := p_cSeq_s;
+      
+      vc_contact := valueof(m_Contact(m_SipUrl_contactIpaddr(vc_userprofile)));
+      vc_branch := c_branchCookie & f_getRndTag();
+      vc_via:={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };
+    }// end function f_setHeadersGeneral
+    
+    
+    
+    /**
+    * 
+    * @desc function for setting of component variables related to message header fields 
+    *		(message type independent: CSeq, contact, via), function uses information from userprofile
+    *		
+    * @param p_cSeq_s CSeq parameter
+    * @param p_method method name for cSeq header field
+    */	
+    function f_setHeadersACK() runs on SipComponent
+    {
+      // vc_requestUri.hostPort := vc_reqHostPort;
+      if(vc_response.statusLine.statusCode >= 200 and vc_response.statusLine.statusCode <= 299 ) //ref. RFC3261 8.1.1.7 Via
+      {
+        vc_branch := c_branchCookie & f_getRndTag();
+      }
+      vc_via:={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };
+    }// end function f_setHeadersGeneral
+    
+    /**
+    * 
+    * @desc setting of general and basic Bye header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersBYE(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "BYE"); // cseq, contact, branch, via
+      
+      //vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      f_addTagInTo(vc_to);
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersBYE
+    
+    /**
+    * 
+    * @desc setting of general and basic CANCEL header fields
+    * @param p_cSeq_s
+    */
+    function f_setHeadersCANCEL(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      
+      p_cSeq_s.method := "CANCEL"; 
+      //vc_branch := c_branchCookie & f_getRndTag(); // STF 406: CANCEL and ACK should have the same branch as the INVITE
+      vc_via:={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };		
+    }// end function f_setHeadersCANCEL
+    
+    /**
+    * 
+    * @desc function sets header field for the next outgoing REGISTER message
+    * @param p_cSeq_s CSeq parameter to be applied
+    */
+    function f_setHeaders_REGISTER(inout CSeq p_cSeq_s) runs on SipComponent
+    {
+      var SemicolonParam_List v_params;
+      
+      f_setHeadersGeneral(p_cSeq_s, "REGISTER"); // cseq, contact, branch, via
+      
+      vc_requestUri:=
+      {
+        scheme := c_sipScheme,
+        userInfo := omit,
+        hostPort := {host:=vc_userprofile.registrarDomain, portField:=omit},
+        urlParameters := omit,
+        headers := omit
+      };
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+      vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      vc_callIdReg := vc_callId; //remember callId for de-registration
+      
+      
+      vc_to := valueof(m_To(m_SipUrl_currDomain(vc_userprofile)));
+      vc_cancel_To := vc_to;
+      v_params := {{id:=c_tagId, paramValue:=f_getRndTag()}}
+      vc_from := {fieldName := FROM_E,
+        addressField :=vc_to.addressField,
+        fromParams := v_params
+      };
+      
+      if(not vc_firstREGISTER_sent)
+      {
+        v_params := {{id:=c_expiresId, paramValue:=c_shortRegistration}};
+        vc_contact.contactBody.contactAddresses[0].contactParams := v_params;
+      }
+      
+      vc_firstREGISTER_sent := true;//f_setHeaders_Register is called in deREGISTER function
+      
+      vc_authorization := 
+      {
+        fieldName := AUTHORIZATION_E,
+        body := f_calculatecCredentials_empty(vc_userprofile)
+      }
+      
+      vc_via_REG := vc_via;
+    }// end function setHeaders_REGISTER
+    
+    /**
+    * 
+    * @desc function sets via, cseq and authorization header for the next outgoing (protected) REGISTER
+    * @verdict 
+    */
+    function f_setHeaders_2ndREGISTER(inout CSeq p_cSeq_s) runs on SipComponent
+    {
+      var CommaParam_List v_challenge;
+      
+      //Increment CSeq sequence number 
+      p_cSeq_s.seqNumber := p_cSeq_s.seqNumber + 1;
+      vc_cSeq := p_cSeq_s;
+      
+      vc_requestUri:=
+      {
+        scheme := c_sipScheme,
+        userInfo := omit,
+        hostPort := {host:=vc_userprofile.registrarDomain, portField:=omit},
+        urlParameters := omit,
+        headers := omit
+      };
+      
+      //new branch tag due to different branch tag in new REGISTER method
+      vc_branch := c_branchCookie & f_getRndTag();
+      
+      vc_via_REG :={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };
+      
+      // Extract challenge and calculate credentials for a response.
+      v_challenge := vc_response.msgHeader.wwwAuthenticate.challenge[0].digestCln;
+      
+      
+      // Prepair right answer      
+      vc_authorization := 
+      {
+        fieldName := AUTHORIZATION_E,
+        body := f_calculatecCredentials(vc_userprofile, "REGISTER", v_challenge)
+      }
+      
+    }// end function f_setHeaders_2ndREGISTER
+    
+    /**
+    * 
+    * @desc function sets via, cseq and authorization header for the next outgoing (protected) REGISTER
+    * NO response in Authorization header to cause an error
+    * @verdict 
+    */
+    function f_setHeaders_2ndREGISTER_wo_response() runs on SipComponent
+    {
+      var CommaParam_List v_challenge;
+      
+      vc_branch := c_branchCookie & f_getRndTag();
+      
+      vc_via_REG :={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };
+      
+      if(ischosen(vc_response.msgHeader.wwwAuthenticate.challenge[0].otherChallenge))
+      // Extract challenge and calculate credentials for a response.
+      {
+        v_challenge := vc_response.msgHeader.wwwAuthenticate.challenge[0].otherChallenge.authParams;
+      }
+      else
+      {
+        v_challenge := vc_response.msgHeader.wwwAuthenticate.challenge[0].digestCln;
+      }
+      
+      // Increment CSeq sequence number 
+      vc_cSeq.seqNumber := vc_cSeq.seqNumber + 1;
+      
+      // Prepair right answer      
+      vc_authorization := 
+      {
+        fieldName := AUTHORIZATION_E,
+        body := f_calculatecCredentials_wo_response(vc_userprofile, "REGISTER", v_challenge)
+      }
+      
+    }// end function f_setHeaders_2ndREGISTER_wo_response
+    
+    /**
+    * 
+    * @desc function sets via, cseq and authorization header with different private name for the next outgoing (protected) REGISTER
+    * @verdict 
+    */
+    function f_setHeaders_2ndREGISTER_authorizationWithDifferentUserName() runs on SipComponent
+    {
+      var CommaParam_List v_challenge;
+      
+      vc_branch := c_branchCookie & f_getRndTag();
+      
+      vc_requestUri:=
+      {
+        scheme := c_sipScheme,
+        userInfo := omit,
+        hostPort := {host:=vc_userprofile.registrarDomain, portField:=omit},
+        urlParameters := omit,
+        headers := omit
+      };
+      
+      vc_via_REG :={
+        fieldName := VIA_E,
+        viaBody 	 := {valueof(m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+      };
+      
+      // Extract challenge and calculate credentials for a response.
+      v_challenge := vc_response.msgHeader.wwwAuthenticate.challenge[0].otherChallenge.authParams;
+      
+      // Increment CSeq sequence number 
+      vc_cSeq.seqNumber := vc_cSeq.seqNumber + 1;
+      
+      // Prepair right answer      
+      vc_authorization := 
+      {
+        fieldName := AUTHORIZATION_E,
+        body := f_calculatecCredentialsAndChangeUserName(vc_userprofile, "REGISTER", v_challenge)
+      }
+      
+    }// end function f_setHeaders_2ndREGISTER_authorizationWithDifferentUserName
+    
+    
+    /**
+    * 
+    * @desc function sets header fields for the next outgoing REGISTER (de-registration)
+    * @param p_cSeq_s cSeq to be used
+    * @verdict 
+    */
+    function f_setHeaders_deREGISTER(inout CSeq p_cSeq_s) runs on SipComponent
+    {
+      var SemicolonParam_List v_params;
+      
+      f_setHeadersGeneral(p_cSeq_s, "REGISTER"); // cseq, contact, branch, via
+      
+      vc_requestUri:=
+      {
+        scheme := c_sipScheme,
+        userInfo := omit,
+        hostPort := {host:=vc_userprofile.registrarDomain, portField:=omit},
+        urlParameters := omit,
+        headers := omit
+      };
+      vc_to := valueof(m_To(m_SipUrl_currDomain(vc_userprofile)));
+      v_params := {{id:=c_tagId, paramValue:=f_getRndTag()}}
+      vc_from := {fieldName := FROM_E,
+        addressField :=vc_to.addressField,
+        fromParams := v_params
+      };
+      
+      vc_contact := 
+      {
+        fieldName := CONTACT_E,
+        contactBody := {wildcard := "*" } 
+      };
+    } // end function f_setHeaders_deREGISTER
+    
+    
+    /**
+    * 
+    * @desc setting of general and basic Invite header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersINVITE(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "INVITE"); // cseq, contact, branch, via
+      
+      vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersINVITE
+    
+    /**
+    * 
+    * @desc setting of general and basic Update header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersUPDATE(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "UPDATE"); // cseq, contact, branch, via
+      
+      vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersUPDATE
+    
+    /**
+    * 
+    * @desc setting of general and basic Message header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersMESSAGE(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "MESSAGE"); // cseq, contact, branch, via
+      
+      vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersMESSAGE
+    
+    /**
+    * 
+    * @desc setting of general and basic Notify header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersNOTIFY(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "NOTIFY"); // cseq, contact, branch, via
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersNOTIFY
+    
+    /**
+    * 
+    * @desc setting of general and basic Publish header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersPUBLISH(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "PUBLISH"); // cseq, contact, branch, via
+      
+      //after SUBSCRIBE message callid shall be same
+      //vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersPUBLISH
+    
+    /**
+    * 
+    * @desc function sets header field for the next outgoing SUBSCRIBE message
+    * @param p_cSeq_s CSeq parameter to be applied
+    */
+    function f_setHeaders_SUBSCRIBE(inout CSeq p_cSeq_s) runs on SipComponent
+    {
+      var SemicolonParam_List v_params;
+      
+      f_setHeadersGeneral(p_cSeq_s, "SUBSCRIBE"); // cseq, contact, branch, via
+      
+      vc_requestUri:=valueof(m_SipUrl_currDomain(vc_userprofile));
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+      vc_callId := {
+        fieldName := CALL_ID_E,
+        callid := f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr
+      }
+      
+      vc_to := valueof(m_To(m_SipUrl_currDomain(vc_userprofile)));
+      vc_cancel_To := vc_to;
+      v_params := {{id := c_tagId, paramValue := f_getRndTag()}};
+      vc_from := {
+        fieldName := FROM_E,
+        addressField := vc_to.addressField,
+        fromParams := v_params
+      };
+      
+    }// end function setHeaders_SUBSCRIBE
+    
+    /**
+    * 
+    * @desc setting of general and basic Subscribe header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersSUBSCRIBE(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "SUBSCRIBE"); // cseq, contact, branch, via
+      
+      vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersMESSAGE
+    
+    /**
+    * 
+    * @desc setting of general and basic REFER header fields
+    * 		in additon to the addresses (To, From, ReqUri)
+    * @param p_cSeq_s
+    */
+    function f_setHeadersREFER(inout CSeq p_cSeq_s) runs on SipComponent
+    {      
+      f_setHeadersGeneral(p_cSeq_s, "REFER"); // cseq, contact, branch, via
+      
+      //vc_callId := { fieldName:=CALL_ID_E, callid:=f_getRndCallId(p_cSeq_s) & c_AT & vc_userprofile.currIpaddr };
+      
+      vc_cancel_To := vc_to;
+      vc_caller_To := vc_to;
+      
+      vc_caller_From := vc_from;
+      
+      vc_reqHostPort := vc_requestUri.hostPort;
+      
+    }// end function f_setHeadersREFER
+    
+    /**
+    * 
+    * @desc This function reads all necessary headers from the received REGISTER message and generate the tag for the answer
+    * @param p_Request REGISTER that has been received
+    */
+    function f_setHeadersOnReceiptOfREGISTER(Request p_Request)
+    runs on SipComponent {
+      
+      f_setHeadersOnReceiptOfRequest(p_Request);
+      
+      vc_callId := p_Request.msgHeader.callId;
+      vc_caller_From := vc_from;
+      f_addTagInTo(vc_to);
+      vc_caller_To := vc_to;
+      vc_requestUri := p_Request.requestLine.requestUri;
+      
+      vc_cancel_To := p_Request.msgHeader.toField;
+      
+      if (ispresent(p_Request.msgHeader.contact) and (not ischosen(p_Request.msgHeader.contact.contactBody.wildcard))) {
+        vc_reqHostPort := f_getContactAddr(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+      }
+      
+      // update callee information and pick up tag if the call need to be canceled
+      vc_callee_To := {fieldName := TO_E,
+        addressField := vc_caller_From.addressField,
+        toParams := vc_caller_From.fromParams};
+      
+      vc_callee_From := {fieldName := FROM_E,
+        addressField := vc_caller_To.addressField,
+        fromParams := vc_caller_To.toParams};
+      
+      if (ispresent(p_Request.msgHeader.authorization)) {
+        vc_authorization := p_Request.msgHeader.authorization;
+      };
+      
+    } // end f_setHeadersOnReceiptOfREGISTER
+    
+    /**
+    * 
+    * @desc This function reads all necessary headers from the received SUBSCRIBE message and generate the tag for the answer
+    * @param p_Request SUBSCRIBE that has been received
+    */
+    function f_setHeadersOnReceiptOfSUBSCRIBE(Request p_Request)
+    runs on SipComponent {
+      
+      f_setHeadersOnReceiptOfRequest(p_Request);
+      
+      vc_callId := p_Request.msgHeader.callId;
+      vc_caller_From := vc_from;
+      f_addTagInTo(vc_to);
+      vc_caller_To := vc_to;
+      vc_requestUri := p_Request.requestLine.requestUri;
+      
+      vc_cancel_To := p_Request.msgHeader.toField;
+      
+      if (ispresent(p_Request.msgHeader.contact)) {
+        vc_reqHostPort := f_getContactAddr(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+      }
+      
+      // update callee information and pick up tag if the call need to be canceled
+      vc_callee_To := {fieldName := TO_E,
+        addressField := vc_caller_From.addressField,
+        toParams := vc_caller_From.fromParams};
+      
+      vc_callee_From := {fieldName := FROM_E,
+        addressField := vc_caller_To.addressField,
+        fromParams := vc_caller_To.toParams};
+      
+    } // end f_setHeadersOnReceiptOfSUBSCRIBE
+    
+    function f_setHeadersOnReceiptOfREFER(Request p_Request)
+    runs on SipComponent {
+      
+      f_setHeadersOnReceiptOfRequest(p_Request);
+      
+      vc_requestUri := p_Request.requestLine.requestUri;
+      vc_cancel_To := p_Request.msgHeader.toField;
+      
+      if (ispresent(p_Request.msgHeader.contact)) {
+        vc_reqHostPort := f_getContactAddr(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+        vc_requestUri := f_getContactUri(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+      }
+      
+      // update callee information and pick up tag if the call need to be canceled
+      vc_callee_To := {fieldName := TO_E,
+        addressField := vc_caller_From.addressField,
+        toParams := vc_caller_From.fromParams};
+      
+      vc_callee_From := {fieldName := FROM_E,
+        addressField := vc_caller_To.addressField,
+        fromParams := vc_caller_To.toParams};
+      
+    } // end f_setHeadersOnReceiptOfSUBSCRIBE
+    
+    /**
+    * 
+    * @desc function reads all necessary headers from 
+    * the received INVITE message and generate the tag for the answer
+    * @param p_Request received INVITE message
+    * @verdict 
+    */
+    function f_setHeadersOnReceiptOfINVITE(Request p_Request) runs on SipComponent {
+      
+      f_setHeadersOnReceiptOfRequest(p_Request);
+      
+      vc_callId := p_Request.msgHeader.callId;
+      
+      vc_requestUri2 := p_Request.requestLine.requestUri;
+      
+      vc_cancel_To := p_Request.msgHeader.toField;
+      f_addTagInTo(vc_to);
+      vc_caller_From := vc_from;
+      vc_caller_To := vc_to;
+      
+      if (ispresent(p_Request.msgHeader.contact)) {
+        vc_reqHostPort := 
+        f_getContactAddr(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+        vc_requestUri := f_getContactUri(p_Request.msgHeader.contact.contactBody.contactAddresses[0]);
+      };
+      
+      // update callee information and pick up tag if the call need to be canceled
+      vc_callee_To := {fieldName := TO_E,
+        addressField := vc_caller_From.addressField,
+        toParams := vc_caller_From.fromParams};
+      
+      vc_callee_From := {fieldName := FROM_E,
+        addressField := vc_caller_To.addressField,
+        fromParams := vc_caller_To.toParams};
+      
+      if (ispresent(p_Request.msgHeader.privacy)) {
+        vc_privacy := p_Request.msgHeader.privacy;
+      };
+      
+      if (ispresent(p_Request.messageBody)) { 
+        //cleaning of attributes before assignment
+        if (ispresent(vc_sdp_remote.media_list))
+        {
+          var integer v_length := sizeof(vc_sdp_remote.media_list);
+          for (var integer i:=0; i<v_length; i:=i+1)
+          {			
+            if (ispresent(vc_sdp_remote.media_list[i].attributes))
+            {
+              vc_sdp_remote.media_list[i].attributes := omit ; 
+            }
+          };
+        }		
+        
+        // save SDP if present
+        /*		if ( ischosen(p_Request.messageBody.sdpMessageBody)) 
+        {
+        vc_sdp_remote := p_Request.messageBody.sdpMessageBody;		  
+        vc_sdp_remote_is_valid := true;
+        f_prepare_SDP_answer();			 			
+        };
+        
+        // save XML if present
+        if ( ischosen(p_Request.messageBody.xmlBody))
+        {
+        vc_xml_remote := p_Request.messageBody.xmlBody;		 			
+        }
+        
+        if ( ischosen(p_Request.messageBody.mimeMessageBody))
+        {
+        
+        for (var integer j:=0; j<sizeof(p_Request.messageBody.mimeMessageBody.mimeEncapsulatedList); j:=j+1){
+        if (match(p_Request.messageBody.mimeMessageBody.mimeEncapsulatedList[j].content_type,c_sdpAplication))
+        {
+        vc_sdp_remote := p_Request.messageBody.mimeMessageBody.mimeEncapsulatedList[j].mime_encapsulated_part.sdpMessageBody;
+        vc_sdp_remote_is_valid := true;
+        f_prepare_SDP_answer();
+        };
+        if (match(p_Request.messageBody.mimeMessageBody.mimeEncapsulatedList[j].content_type,c_xmlAplication))
+        {
+        vc_xml_remote := p_Request.messageBody.mimeMessageBody.mimeEncapsulatedList[j].mime_encapsulated_part.xmlBody;
+        };			
+        }	
+        }
+        */
+        
+      };
+      
+      if (ispresent(p_Request.msgHeader.supported.optionsTags)) {
+        for (var integer i := sizeof(p_Request.msgHeader.supported.optionsTags); i>0; i:=i-1)
+        {
+          if (p_Request.msgHeader.supported.optionsTags[i-1]=="100rel")
+          { vc_supported_100rel := true };
+          if (p_Request.msgHeader.supported.optionsTags[i-1]=="precondition")
+          { vc_supported_precondition := true }
+        }
+      };
+      
+    } // end f_setHeadersOnReceiptOfINVITE
+    
+    /**
+    * 
+    * @desc function reads header field of a received BYE message 
+    * @param p_Request received BYE
+    */
+    function f_setHeadersOnReceiptOfBYE(Request p_BYE_Request)
+    runs on SipComponent
+    {
+      
+      f_setHeadersOnReceiptOfRequest(p_BYE_Request);
+      vc_callId := p_BYE_Request.msgHeader.callId;
+      
+    } // end f_setHeadersOnReceiptOfBYE
+    
+    /**
+    * 
+    * @desc function reads header field from an incoming Request message
+    * @param p_Request received Request message
+    */
+    function f_setHeadersOnReceiptOfRequest(Request p_Request) runs on SipComponent {
+      vc_request := p_Request;
+      vc_callId := p_Request.msgHeader.callId;
+      vc_cSeq := p_Request.msgHeader.cSeq;
+      vc_iut_CSeq  := p_Request.msgHeader.cSeq;
+      vc_from := p_Request.msgHeader.fromField;
+      vc_caller_From := p_Request.msgHeader.fromField;
+      vc_to := p_Request.msgHeader.toField;
+      vc_caller_To := p_Request.msgHeader.toField;
+      vc_via := p_Request.msgHeader.via;
+      // update sent_label according to received via header field
+      f_getViaReplyAddr(vc_via.viaBody, vc_sent_label);
+      
+      // Catch route
+      vc_boo_recordRoute:=false;
+      
+      //add tag field into To header if tag is not present
+      if (not(ispresent(p_Request.msgHeader.toField.toParams)))
+      {
+        vc_to.toParams := {{id := c_tagId, paramValue := f_getRndTag()}};
+        vc_caller_To := vc_to;
+      }
+      if (ispresent(p_Request.msgHeader.recordRoute))
+      {
+        vc_boo_recordRoute:=true;
+        vc_recordRoute := p_Request.msgHeader.recordRoute;
+      }
+    } // end f_setHeadersOnReceiptOfRequest
+    
+    /**
+    * 
+    * @desc functions reads header fields from an incoming Response message
+    * @param p_cSeq
+    * @param p_response received response message
+    * @verdict 
+    */
+    function f_setHeadersOnReceiptOfResponse(inout CSeq p_cSeq, Response p_response) runs on SipComponent
+    {
+      var integer v_i, v_j, v_nbroute;
+      var Contact v_contact; //only for local purpose
+      
+      vc_response := p_response;
+      //vc_cSeq := p_cSeq; //must not save global c_seq because it can overwrite temporary cSeq
+      vc_to :=p_response.msgHeader.toField;
+      vc_from :=p_response.msgHeader.fromField;
+      vc_caller_To := vc_to;
+      vc_caller_From := vc_from;
+      
+      if (ispresent(p_response.msgHeader.contact))
+      {
+        v_contact := p_response.msgHeader.contact;
+        if (ischosen(v_contact.contactBody.contactAddresses))
+        {
+          vc_reqHostPort := f_getContactAddr(v_contact.contactBody.contactAddresses[0]);
+          vc_requestUri := f_getContactUri(v_contact.contactBody.contactAddresses[0]);
+        }
+      }
+      else
+      {
+        if (ischosen(vc_to.addressField.nameAddr))
+        {
+          vc_reqHostPort := vc_to.addressField.nameAddr.addrSpec.hostPort;
+          vc_requestUri := vc_to.addressField.nameAddr.addrSpec;
+        }
+        else
+        {
+          vc_reqHostPort := vc_to.addressField.addrSpecUnion.hostPort;
+          vc_requestUri := vc_to.addressField.addrSpecUnion;
+        }
+      }
+      
+      vc_callee_To:={fieldName := TO_E,
+        addressField := vc_caller_From.addressField,
+        toParams := vc_caller_From.fromParams};
+      
+      vc_callee_From:= {fieldName := FROM_E,
+        addressField := vc_caller_To.addressField,
+        fromParams := vc_caller_To.toParams};
+      
+      vc_via:= p_response.msgHeader.via;
+      
+      // Route Management
+      if (ispresent(p_response.msgHeader.recordRoute))
+      {
+        vc_recordRoute := p_response.msgHeader.recordRoute;
+        v_nbroute := sizeof(vc_recordRoute.routeBody);
+        // copy and reverse the order of the routes in route header
+        for (v_i:=0; v_i<=(v_nbroute - 1); v_i:=v_i+1)
+        {
+          v_j:= v_nbroute - 1 - v_i;
+          vc_route.routeBody[v_j]:=vc_recordRoute.routeBody[v_i];
+        }
+        vc_route.fieldName := ROUTE_E;
+        vc_boo_recordRoute := true;
+        vc_boo_route := true;
+      }
+      else
+      {
+        vc_boo_recordRoute := false;
+        vc_boo_route := false;
+      };
+      
+      
+      // extentions due to new fields in PRACK and UPDATE messages
+      if (ispresent(p_response.msgHeader.rseq)) {
+        vc_rAck := 
+        { fieldName := RACK_E, 
+          response_num := valueof(p_response.msgHeader.rseq.response_num),
+          seqNumber := valueof(p_response.msgHeader.cSeq.seqNumber),
+          method := valueof(p_response.msgHeader.cSeq.method)
+        };
+      };
+      
+      // extentions due to new HistoryInfo fields 180 or 200OK messages
+      if (ispresent(p_response.msgHeader.historyInfo)) {
+        vc_historyInfoList := valueof(p_response.msgHeader.historyInfo.hi_entries);
+        vc_history_is_valid := true
+      }
+      else {vc_history_is_valid := false};
+      
+      //sdpMessageBody answer
+      if (ispresent(p_response.messageBody)) { 
+        /*		if ( ischosen(p_response.messageBody.sdpMessageBody))
+        {
+        vc_sdp_remote := p_response.messageBody.sdpMessageBody;		  
+        vc_sdp_remote_is_valid := true;
+        }
+        
+        if ( ischosen(p_response.messageBody.xmlBody))
+        {
+        vc_xml_remote := p_response.messageBody.xmlBody;		 			
+        }
+        
+        if ( ischosen(p_response.messageBody.mimeMessageBody))
+        {
+        
+        for (var integer j:=0; j<sizeof(p_response.messageBody.mimeMessageBody.mimeEncapsulatedList); j:=j+1){
+        if (match(p_response.messageBody.mimeMessageBody.mimeEncapsulatedList[j].content_type,c_sdpAplication))
+        {
+        vc_sdp_remote := p_response.messageBody.mimeMessageBody.mimeEncapsulatedList[j].mime_encapsulated_part.sdpMessageBody;
+        };
+        if (match(p_response.messageBody.mimeMessageBody.mimeEncapsulatedList[j].content_type,c_xmlAplication))
+        {
+        vc_xml_remote := p_response.messageBody.mimeMessageBody.mimeEncapsulatedList[j].mime_encapsulated_part.xmlBody;
+        };			
+        }	
+        }
+        */
+        
+      };
+      
+    }// end function f_setHeadersOnReceiptOfResponse
+    
+    /**
+    * 
+    * @desc functions reads ServiceRoute header field from an incoming 200 Response message in registration
+    * @param p_cSeq
+    * @param p_response received response message
+    */
+    function f_getServiceRouteMapIntoRouteInRegistration(inout CSeq p_cSeq, Response p_response) runs on SipComponent
+    {
+      var integer v_i, v_j, v_nbroute;
+      var Service_route v_serviceRoute;
+      
+      // Route Management
+      if (ispresent(p_response.msgHeader.service_route))
+      {
+        v_serviceRoute := p_response.msgHeader.service_route;
+        v_nbroute := sizeof(v_serviceRoute.routeBody);
+        // copy and reverse the order of the routes in route header
+        for (v_i:=0; v_i<=(v_nbroute - 1); v_i:=v_i+1)
+        {
+          v_j:= v_nbroute - 1 - v_i;
+          vc_route.routeBody[v_j]:=v_serviceRoute.routeBody[v_i];
+        }
+        vc_route.fieldName := ROUTE_E;
+        vc_route_REG := vc_route;
+        vc_boo_route := true;
+      }
+      
+    }// end function f_getServiceRouteMapIntoRouteInRegistration
+    
+    /**
+    * 
+    * @desc functions reads Route header field from an incoming Request message and generate RecordRoute
+    * @param p_cSeq
+    * @param p_request received request message
+    */
+    function f_getRouteMapIntoRecordRoute(inout CSeq p_cSeq, Request p_request) runs on SipComponent
+    {
+      var integer v_i, v_j, v_nbroute;
+      var Route v_route;
+      
+      // Route Management
+      if (ispresent(p_request.msgHeader.route))
+      {
+        v_route := p_request.msgHeader.route;
+        v_nbroute := sizeof(v_route.routeBody);
+        // copy and reverse the order of the routes in route header
+        for (v_i:=0; v_i<=(v_nbroute - 1); v_i:=v_i+1)
+        {
+          v_j:= v_nbroute - 1 - v_i;
+          vc_recordRoute.routeBody[v_j]:=v_route.routeBody[v_i];
+        }
+        vc_recordRoute.fieldName := RECORD_ROUTE_E;
+        
+        vc_boo_recordRoute := true;
+      }
+      
+    }// end function f_getRouteMapIntoRecordRoute
+    
+    
+  } // end group SetHeaders
+  
+} // end group FieldOperations
+
+group SDPOperations{
+  
+  /** 
+  *  @desc check if message body include SDP attribute (2nd parameter)
+  *        for any media 
+  *		 
+  */
+  function f_check_attribute(in SDP_Message p_sdp, in template SDP_attribute p_attribute) runs on SipComponent return boolean {
+    
+    if (ispresent(p_sdp.media_list)) {
+      for (var integer j:=0; j<sizeof(p_sdp.media_list); j:=j+1){			
+        if (ispresent(p_sdp.media_list[j].attributes)) {
+          for (var integer i:=0; i<sizeof(p_sdp.media_list[j].attributes); i:=i+1){			
+            if (match(p_sdp.media_list[j].attributes[i],p_attribute)) 
+            {return(true);};
+          };
+        }
+      };
+    }
+    if (ispresent(p_sdp.attributes)) {
+      for (var integer j:=0; j<sizeof(p_sdp.attributes); j:=j+1){			
+        if (match(p_sdp.attributes[j],p_attribute)) {return(true);};
+      };
+    }
+    
+    return(false);
+  }		
+  
+  /** 
+  *  @desc check if message body include SDP (session level) attribute (2nd parameter)
+  *        for any media 
+  *		 
+  */
+  function f_check_session_attribute(in SDP_Message p_sdp, in template SDP_attribute p_attribute) runs on SipComponent return boolean {
+    
+    if (ispresent(p_sdp.attributes)) {
+      for (var integer j:=0; j<sizeof(p_sdp.attributes); j:=j+1){			
+        if (match(p_sdp.attributes[j],p_attribute)) {return(true);};
+      };
+    }
+    
+    return(false);
+  }
+  
+  /**
+  * 
+  * @desc 	identify an SDP direction attribute (session or first media attribute) in a SDP message and return its answer value
+  * @param 	p_sdp 		the SDP message that has been received
+  * @param 	p_attribute incoming SDP attribute that need to be used for the SDP direction (answer)
+  * @return 	the new attribute (to be send out) derived from the incoming SDP value
+  * @verdict 
+  */
+  function f_get_attribute_answer(in SDP_Message p_sdp, in template SDP_attribute p_attribute) runs on SipComponent return SDP_attribute {
+    
+    var template SDP_attribute v_attribute := p_attribute;
+    
+    // check if the selected attribute is included in the SDP offer (session attributes)
+    if (ispresent(p_sdp.attributes)) {
+      for (var integer j:=0; j<sizeof(p_sdp.attributes); j:=j+1){			
+        if (match(p_sdp.attributes[j],p_attribute)) {v_attribute := p_sdp.attributes[j];};
+      };
+    }
+    
+    // check if the selected attribute is included in the SDP offer (any of the media attributes)
+    else {if (ispresent(p_sdp.media_list)) {
+        for (var integer j:=0; j<sizeof(p_sdp.media_list); j:=j+1){			
+          if (ispresent(p_sdp.media_list[j].attributes)) {
+            for (var integer i:=0; i<sizeof(p_sdp.media_list[j].attributes); i:=i+1){			
+              if (match(p_sdp.media_list[j].attributes[i],p_attribute)) 
+              {v_attribute := p_sdp.media_list[j].attributes[i];};
+            };
+          }
+        };
+      }};
+    
+    select (valueof(v_attribute))
+    {
+      case (mw_attribute_sendonly) {return(valueof(m_attribute_recvonly));}
+      case (mw_attribute_sendrecv) {return(valueof(m_attribute_sendrecv));}//MRO	
+      case (mw_attribute_inactive) {return(valueof(m_attribute_inactive));}//MRO
+      case (mw_attribute_recvonly) {return(valueof(m_attribute_sendonly));}//MRO
+    }
+    return(valueof(m_attribute_sendrecv));//the default return value in case of missing attribute offer  
+  }
+  
+  /** 
+  *  @desc check if message body include SDP bandwidth (2nd parameter)
+  *		 either for the session or a media description
+  */
+  function f_check_bandwidth(in SDP_Message loc_sdp, in template SDP_bandwidth loc_bandw) runs on SipComponent return boolean {
+    
+    if (ispresent(loc_sdp.bandwidth)) {
+      for (var integer j:=0; j<sizeof(loc_sdp.bandwidth); j:=j+1){			
+        if (match(loc_sdp.bandwidth[j],loc_bandw)) {return(true);};
+      };
+    };
+    if (ispresent(loc_sdp.media_list)) {
+      for (var integer j:=0; j<sizeof(loc_sdp.media_list); j:=j+1){
+        if (ispresent(loc_sdp.media_list[j].bandwidth)) {
+          for(var integer i:=0; i< sizeof(loc_sdp.media_list[j].bandwidth); i:=i+1) {
+            if (match(loc_sdp.media_list[j].bandwidth[i],loc_bandw)) {
+              return(true);};
+          }
+        }
+      };
+    };
+    
+    return(false);
+  }
+  
+  /** 
+  *  @desc check if message body include SDP media (2nd parameter)
+  *		 
+  */
+  function f_check_media(in SDP_Message loc_sdp, in template SDP_media_desc loc_media) runs on SipComponent return boolean {
+    
+    if (ispresent(loc_sdp.media_list)) {
+      for (var integer j:=0; j<sizeof(loc_sdp.media_list); j:=j+1){			
+        if (match(loc_sdp.media_list[j].media_field.transport,loc_media.media_field.transport) and
+          match(loc_sdp.media_list[j].media_field.fmts,loc_media.media_field.fmts)) 
+        {return(true);};
+      };
+    }
+    return(false);
+  }
+  
+  /**
+  * @desc
+  *     check if message body include precondition mechanism (a=des and
+  *     a=curr) retrun true, else false
+  * @param loc_sdp SDP message
+  */
+  function f_check_precondition(in SDP_Message loc_sdp) runs on SipComponent return boolean {
+    if (f_check_attribute(loc_sdp, mw_attribute_des) or
+      f_check_attribute(loc_sdp, mw_attribute_curr)) 
+    {return(true);}
+    
+    return(false);
+  }	
+  
+  
+  /** 
+  *  @desc check if message body include SDP media direction return true, else false
+  *		 
+  */
+  function f_check_media_direction(in SDP_Message loc_sdp) runs on SipComponent return boolean {
+    
+    if (f_check_attribute(loc_sdp, mw_attribute_sendonly) or
+      f_check_attribute(loc_sdp, mw_attribute_recvonly) or
+      f_check_attribute(loc_sdp, mw_attribute_sendrecv) or
+      f_check_attribute(loc_sdp, mw_attribute_inactive)) 
+    {return(true);}
+    
+    return(false);
+  }		
+  
+  /** 
+  *  @desc copy media/attribute lines from remote to local SDP variable
+  *		 
+  */
+  function f_check_SDP(integer loc_sdp, integer loc_codec) runs on SipComponent
+  return boolean
+  {
+    var SDP_media_desc v_media := f_prepare_media(loc_sdp,loc_codec);
+    log("log0"); 
+    if (vc_sdp_remote.media_list[0].media_field.media != v_media.media_field.media)
+    { log("log1"); return false };
+    if (vc_sdp_remote.media_list[0].media_field.transport != v_media.media_field.transport)
+    { log("log2"); return false };
+    if (vc_sdp_remote.media_list[0].media_field.fmts != v_media.media_field.fmts)
+    { log("remote:",vc_sdp_remote.media_list[0].media_field.fmts,"expect:",v_media.media_field.fmts); return false };
+    
+    return true
+  }
+  
+  /**
+  * @desc replace the first curr media attribute with the given value.
+  * @param p_sdp SDP message to modify
+  * @param p_curr new curr attribute
+  */
+  function f_replace_curr_attribute(inout SDP_Message p_sdp, in SDP_attribute_curr p_curr) {
+    if(ispresent(p_sdp.media_list)) {
+      var integer mn := sizeof(p_sdp.media_list[0].attributes);
+      for(var integer i := 0; i<=mn; i := i+1) {
+        if(ischosen(p_sdp.media_list[0].attributes[i].curr)){
+          p_sdp.media_list[0].attributes[i].curr := p_curr;
+          i:=mn; 
+        }	
+      }
+    }
+  }
+  
+  /**
+  * @desc append new media attribute to the first media description.
+  * @param p_sdp SDP message to modify
+  * @param p_att SDP attribute to appand
+  */
+  function f_append_media_attribute(inout SDP_Message p_sdp, in SDP_attribute p_att) {
+    if(ispresent(p_sdp.media_list)) {
+      var integer mn := sizeof(p_sdp.media_list[0].attributes);
+      p_sdp.media_list[0].attributes[mn] := p_att;
+    }
+  }
+  
+  
+  /** 
+  *  @desc append new media to the existing media list in SDP
+  *		 
+  */
+  function f_append_media(inout SDP_Message loc_SDP, in template SDP_media_desc loc_media)
+  {
+    var integer mn := sizeof(loc_SDP.media_list);
+    loc_SDP.media_list[mn] := valueof(loc_media);
+  }
+  
+  /** 
+  *  @desc repare media/attribute lines
+  *		 
+  */
+  function f_prepare_media(integer loc_sdp, integer loc_codec) runs on SipComponent
+  return SDP_media_desc
+  {
+    var charstring v_codecs[32] := {
+      "PCMU/8000", "GSM/8000", "G723/8000", "DVI4/8000",
+      "DVI4/16000", "LPC/8000", "PCMA/8000", "G722/8000",
+      "L16/44100/2", "L16/44100", "QCELP/8000", "CN/8000",
+      "MPA/90000", "G728/8000", "DVI4/11025", "DVI4/22050",
+      "G729/8000", "G726-40/8000", "G726-32/8000", "G726-24/8000",
+      "G726-16/8000", "G726D/8000", "G726E/8000", "GSM-EFR/8000",
+      "CelB/90000", "JPEG/90000", "Nv/90000", "H261/90000",
+      "MPV/90000", "MP2T/90000", "H263/90000", "H263-1998/90000"
+    }
+    var SDP_media_desc v_media :=
+    {
+      media_field := {
+        media := "audio",
+        ports := { 
+          port_number := 10000, 
+          num_of_ports:=omit },
+        transport := "RTP/AVP",
+        fmts := { "0" }
+      }, //m=audio 8500 RTP/AVP 0
+      information := omit,
+      connections := omit,
+      bandwidth := omit,
+      key := omit,						
+      attributes := omit
+    };
+    
+    if (32<loc_codec or loc_codec<1) {
+      log("Unexpected SDP variant");
+      setverdict(inconc); 
+      return (v_media)}
+    
+    if (loc_sdp == 1) {}
+    else if (loc_sdp == 2) {
+      v_media.media_field.fmts := {PX_SIP_SDP_dyn}; //{ "98", "0" };
+      v_media.attributes := {{
+          rtpmap := { attr_value := PX_SIP_SDP_dyn & " " & v_codecs[loc_codec-1] } // PX_SIP_SDP_dyn := 98
+        }}
+    } else if (loc_sdp == 3) {
+      v_media.media_field.fmts := { "8" }
+    } else if (loc_sdp == 4) {
+      v_media.media_field.fmts := { "99", "8" };
+      v_media.attributes := {{
+          rtpmap := { attr_value := "99 " & v_codecs[loc_codec-1] }
+        }}
+    } else if (loc_sdp == 5) {
+      v_media.media_field.media := "image";
+      v_media.media_field.transport := "udptl";
+      v_media.media_field.fmts := { "t38" }
+    } else if (loc_sdp == 6) {
+      v_media.media_field.media := "image";
+      v_media.media_field.transport := "tcptl";
+      v_media.media_field.fmts := { "t38" }
+    } else {
+      log("Unexpected SDP variant"); setverdict(inconc) 
+    };
+    
+    return (v_media);
+  }
+  
+  /** 
+  *  @desc repare media/attribute lines
+  *		 
+  */
+  function f_prepare_SDP(integer loc_sdp, integer loc_codec) runs on SipComponent
+  {
+    
+    vc_sdp_local.media_list := {f_prepare_media(loc_sdp,loc_codec)};
+  }
+  
+  /**
+  * 
+  * @desc function that copy media/attribute lines from remote to local SDP variable
+  */
+  function f_prepare_SDP_answer() runs on SipComponent
+  {
+    var integer mn, cn := 0, i, j, k :=0;
+    var charstring v_PT, v_rtpmap := "";
+    var SDP_attribute_list v_mediaAttributes := {};
+    //increase session version
+    vc_sdp_local.origin.session_version := 	int2str(str2int(vc_sdp_remote.origin.session_version)+1);
+    // if more than one codec, select the firs one
+    mn:= sizeof(vc_sdp_remote.media_list);
+    for (i :=0;  i < mn; i := i+1)
+    {
+      //for every single media
+      if (ispresent(vc_sdp_remote.media_list[i].attributes))
+      {
+        cn := sizeof(vc_sdp_remote.media_list[i].attributes);
+      };
+      if (sizeof(vc_sdp_remote.media_list[i].media_field.fmts)>0) 
+      {
+        // select the first one
+        v_PT := vc_sdp_remote.media_list[i].media_field.fmts[0];
+        vc_sdp_local.media_list[i].media_field.fmts := {v_PT};
+        for (j :=0; j<cn; j:=j+1)
+        {
+          if (ischosen(vc_sdp_remote.media_list[i].attributes[j].rtpmap))
+          {
+            if (v_PT == regexp(vc_sdp_remote.media_list[i].attributes[j].rtpmap.attr_value,	"[ \t]#(0,)([\d]+)*", 0))
+            {
+              v_rtpmap := vc_sdp_remote.media_list[i].attributes[j].
+              rtpmap.attr_value;
+              v_mediaAttributes[k] := {rtpmap := {attr_value := v_rtpmap}};
+              k := k+1;
+            } // else line is not copied
+          }
+          else 
+          {
+            // simple copy of attribute
+            v_mediaAttributes[k] := vc_sdp_remote.media_list[i].attributes[j];
+            k := k+1;
+          }
+        }
+        vc_sdp_local.media_list[i].attributes := v_mediaAttributes;
+        
+        if (ispresent(vc_sdp_local.media_list[i].attributes))
+        {
+          cn := sizeof(vc_sdp_local.media_list[i].attributes);
+          for (j :=0; j<cn; j:=j+1)
+          {
+            // simplified handling of status attributes (copy/keep status from peer):
+            // a) copy/keep SDP_attribute_curr (invert tags if applicable)
+            if (ischosen(vc_sdp_local.media_list[i].attributes[j].curr))
+            {
+              /*    FIXME           // invert local/remote status tags
+              if (vc_sdp_local.media_list[i].attributes[j].curr.statusType == "local")
+              {vc_sdp_local.media_list[i].attributes[j].curr.statusType := "remote"};
+              if (vc_sdp_local.media_list[i].attributes[j].curr.statusType == "remote")
+              {vc_sdp_local.media_list[i].attributes[j].curr.statusType := "local"};
+              // invert send/recv direction tags
+              if (vc_sdp_local.media_list[i].attributes[j].curr.direction == "send")
+              {vc_sdp_local.media_list[i].attributes[j].curr.direction := "recv"};
+              if (vc_sdp_local.media_list[i].attributes[j].curr.direction == "recv")
+              {vc_sdp_local.media_list[i].attributes[j].curr.direction := "send"};
+              */    }				
+            // b) copy/keep SDP_attribute_des (keep strength, invert tags if applicable)	
+            else if (ischosen(vc_sdp_local.media_list[i].attributes[j].des))
+            {
+              // invert local/remote status tags
+              /*   FIXME          if (vc_sdp_local.media_list[i].attributes[j].des.statusType == "local")
+              {vc_sdp_local.media_list[i].attributes[j].des.statusType := "remote"};
+              if (vc_sdp_local.media_list[i].attributes[j].des.statusType == "remote")
+              {vc_sdp_local.media_list[i].attributes[j].des.statusType := "local"};
+              // invert send/recv direction tags
+              if (vc_sdp_local.media_list[i].attributes[j].des.direction == "send")
+              {vc_sdp_local.media_list[i].attributes[j].des.direction := "recv"};
+              if (vc_sdp_local.media_list[i].attributes[j].des.direction == "recv")
+              {vc_sdp_local.media_list[i].attributes[j].des.direction := "send"};
+              */     }				
+            // c) simplification: assume no SDP_attribute_conf	
+            else if (ischosen(vc_sdp_local.media_list[i].attributes[j].conf))
+            {
+              // todo: handle SDP_attribute_conf
+            }
+          }
+        };
+        
+      }
+    }
+    // add handling of prenegotiation, change ports if required etc.
+    //if prenegotiation...
+  }
+  
+  /** 
+  *  @desc reject SDP offer by setting media ports to 0
+  *		 
+  */
+  function f_reject_SDP_offer() runs on SipComponent
+  {
+    var integer mn, i;
+    f_copy_SDP(); // TO BE DONE with more details!
+    //increase session version
+    vc_sdp_local.origin.session_version := int2str(str2int(vc_sdp_local.origin.session_version)+1);
+    // if more than one codec, select the firs one
+    mn:= sizeof(vc_sdp_local.media_list);
+    for (i :=0;  i < mn; i := i+1)
+    {
+      vc_sdp_local.media_list[i].media_field.ports := {0, omit};
+      vc_sdp_local.media_list[i].attributes := omit; //{};
+    };
+  }
+  
+  /**
+  * 
+  * @desc 	copies SDP message elements from remote to local component variable: 
+  * 				- bandwidth
+  * 				- session version (will be incremented)
+  * 				- media list
+  * 			modify the direction attribute of an SDP media list entry within an SDP message (vc_sdp_local)
+  * @param 	p_medianum 		list position number of the media (if value 0 identifies first media list element)
+  * @param 	p_direction		the new direction attribute to be included in the media entry
+  * @verdict 
+  */
+  function f_SIP_modMediaDirection(integer p_medianum, template SDP_attribute p_direction) runs on SipComponent
+  {
+    var boolean v_set_direction; // flag indicates if direction attribute has been modified
+    var integer v_mn := 0; 		 // length of media list (number of entries)
+    var integer v_cn := 0; 		 // number of attributes of a media entry
+    var integer i, j, k := 0;
+    var SDP_attribute_list v_mediaAttributes := {}; // collect the media attributes (to be assigned at end of function)
+    
+    f_copy_SDP(); // copy SDP session bandwidth and media list from remote to local component variable
+    
+    // increment session version
+    vc_sdp_local.origin.session_version := int2str(str2int(vc_sdp_local.origin.session_version)+1);
+    
+    // if more than one codec, select the first one
+    v_mn:= sizeof(vc_sdp_local.media_list);
+    
+    if (p_medianum == 0) //specific media requested
+    {
+      p_medianum := 1; // start checking from first media
+    };
+    if (p_medianum > 0) //specific media requested
+    {
+      if (not(p_medianum > v_mn)) 
+      {v_mn := p_medianum}
+    };
+    
+    // handling of media list elements
+    for (i :=0;  i < v_mn; i := i+1)
+    {
+      v_cn := 0; // initialize the number of attributes of the media list entry
+      
+      if (ispresent(vc_sdp_local.media_list)) //media_list is optional
+      {						
+        //				log("vc_sdp_local.media_list[i] ",vc_sdp_local.media_list[i]);
+        if (ispresent(vc_sdp_local.media_list[i].attributes))
+        {
+          v_cn := sizeof(vc_sdp_local.media_list[i].attributes);
+        };
+        
+        v_set_direction := false;
+        
+        //if (sizeof(vc_sdp_local.media_list[i].media_field.fmts)>1) 
+        // select the first one
+        for (j :=0; j<v_cn; j:=j+1)
+        { 
+          if (ischosen(vc_sdp_local.media_list[i].attributes[j].recvonly)
+            or ischosen(vc_sdp_local.media_list[i].attributes[j].sendonly)
+            or ischosen(vc_sdp_local.media_list[i].attributes[j].inactive)
+            or ischosen(vc_sdp_local.media_list[i].attributes[j].sendrecv))
+          {
+            v_mediaAttributes[k] := valueof(p_direction); 
+            v_set_direction := true;
+          }
+          else // non-direction attributes will be copied
+          {
+            v_mediaAttributes[k] := vc_sdp_local.media_list[i].attributes[j];
+            k := k+1;
+          }
+        }
+        
+        if (not v_set_direction) 
+        { v_mediaAttributes[k] := valueof(p_direction)};
+        vc_sdp_local.media_list[i].attributes := v_mediaAttributes;
+        
+        // }
+      }
+    }	 
+    // add handling of prenegotiation, change ports if required etc.
+    //if prenegotiation...
+  }
+  
+  /** 
+  *  @desc modify session and media attributes direction
+  *		 
+  */
+  function f_SIP_modSessionDirection(template SDP_attribute p_direction) runs on SipComponent
+  {
+    var boolean v_set_direction := false;
+    var integer v_mn:= 0, i:=0;
+    
+    if (ispresent(vc_sdp_local.attributes))
+    { v_mn:= sizeof(vc_sdp_local.attributes);			
+      
+      for (i :=0;  i < v_mn; i := i+1)
+      {//for every single attribute (that is not omit)    
+        if (ischosen(vc_sdp_local.attributes[i].recvonly)
+          or ischosen(vc_sdp_local.attributes[i].sendonly)
+          or ischosen(vc_sdp_local.attributes[i].inactive)
+          or ischosen(vc_sdp_local.attributes[i].sendrecv))
+        {
+          vc_sdp_local.attributes[i] := valueof(p_direction);
+          v_set_direction := true;
+        }
+      }
+      if (not v_set_direction) // if not sent before
+      { 
+        vc_sdp_local.attributes[v_mn] := valueof(p_direction);
+      };
+    } 
+    else 
+    {vc_sdp_local.attributes[0] := valueof(p_direction)};    
+  }
+  
+  /** 
+  *  @desc c
+  *		 
+  */
+  
+  
+  /*
+  * 
+  * @desc check (from remote) and set (local) the session/media attribute lines on directions
+  * @param p_direction_in incoming SDP attribute that need to be checked
+  * @param p_direction_out SDP attribute that should be included in the SDP answer (to be returned to peer)
+  * @return 
+  * @verdict 
+  */	
+  /*	function f_SIP_checksetSDPreqDirection(template SDP_attribute p_direction_in, template SDP_attribute p_direction_out) runs on SipComponent
+  {	var template SDP_attribute v_direction_out := p_direction_out;
+  // check incoming SDP attribute
+  log(vc_request.messageBody.sdpMessageBody);log(p_direction_in);
+  if (not (ispresent(vc_request.messageBody) and (f_check_attribute(vc_request.messageBody.sdpMessageBody,p_direction_in)
+  ))) 
+  {log("than branch of if");
+  if (
+  match(valueof(p_direction_in),valueof(mw_attribute_sendrecv)) and
+  not(f_check_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_sendrecv) or
+  f_check_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_sendonly) or
+  f_check_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_recvonly) or
+  f_check_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_inactive)
+  )
+  ){
+  log("no direction attributes with expectation: ", p_direction_in)			
+  }
+  else {setverdict(fail);};}
+  else {setverdict(pass);log("attribute found in message body");};
+  //if (match(omit,p_direction_out))//not isvalue(v_direction_out))//MRO
+  if (not isvalue(v_direction_out))
+  
+  {v_direction_out := f_get_attribute_answer(vc_request.messageBody.sdpMessageBody, p_direction_in);}
+  f_SIP_modMediaDirection(1, v_direction_out); // handling of attribute in media description
+  f_SIP_modSessionDirection(v_direction_out); // handling of attribute in session		
+  }
+  */
+  /*
+  * 
+  * @desc check (from remote) and set (local) the session/media attribute lines on directions
+  * @param p_direction_in incoming SDP attribute that need to be checked
+  * @param p_direction_out SDP attribute that should be included in the SDP answer (to be returned to peer)
+  * @return 
+  * @verdict 
+  */	
+  /*    function f_SIP_checkResponsesetSDPreqDirection(template SDP_attribute p_direction_in, template SDP_attribute p_direction_out) runs on SipComponent
+  {	var template SDP_attribute v_direction_out := p_direction_out;
+  // check incoming SDP attribute
+  log(vc_response.messageBody.sdpMessageBody);log(p_direction_in);
+  if (not (ispresent(vc_response.messageBody) and (f_check_attribute(vc_response.messageBody.sdpMessageBody,p_direction_in)
+  ))) 
+  {log("than branch of if");
+  if (
+  match(valueof(p_direction_in),valueof(mw_attribute_sendrecv)) and
+  not(f_check_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_sendrecv) or
+  f_check_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_sendonly) or
+  f_check_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_recvonly) or
+  f_check_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_inactive)
+  )
+  ){
+  log("no direction attributes with expectation: ", p_direction_in)			
+  }
+  else {setverdict(fail);};}
+  else {setverdict(pass);log("attribute found in message body");};
+  // if (match(omit,p_direction_out))//not isvalue(v_direction_out))//MRO
+  
+  if (not isvalue(v_direction_out))
+  
+  {v_direction_out := f_get_attribute_answer(vc_response.messageBody.sdpMessageBody, p_direction_in);}
+  f_SIP_modMediaDirection(1, v_direction_out); // handling of attribute in media description
+  f_SIP_modSessionDirection(v_direction_out); // handling of attribute in session		
+  }
+  */
+  /*
+  * 
+  * @desc check (from remote) and set (local) the session attribute lines on directions
+  * @param p_direction_in incoming SDP attribute that need to be checked
+  * @param p_direction_out SDP attribute that should be included in the SDP answer (to be returned to peer)
+  * @return 
+  * @verdict 
+  */	
+  /*   function f_SIP_checksetSDPreqDirectionSession(template SDP_attribute p_direction_in, template SDP_attribute p_direction_out) runs on SipComponent
+  {	var template SDP_attribute v_direction_out := p_direction_out;
+  // check incoming SDP attribute
+  if (not (ispresent(vc_request.messageBody) and (f_check_session_attribute(vc_request.messageBody.sdpMessageBody,p_direction_in)
+  ))) 
+  {if (
+  match(valueof(mw_attribute_sendrecv),valueof(p_direction_in)) and
+  not(f_check_session_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_sendrecv) or
+  f_check_session_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_sendonly) or
+  f_check_session_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_recvonly) or
+  f_check_session_attribute(vc_request.messageBody.sdpMessageBody,mw_attribute_inactive)
+  )
+  ){
+  log("no direction attributes with expectation: ", p_direction_in)			
+  }
+  else {setverdict(fail);};};
+  //if (match(omit,p_direction_out))//not isvalue(v_direction_out))//MRO
+  
+  if (not isvalue(v_direction_out))
+  
+  {v_direction_out := f_get_attribute_answer(vc_request.messageBody.sdpMessageBody, p_direction_in);}
+  f_SIP_modSessionDirection(v_direction_out); // handling of attribute in session		
+  }
+  */
+  /*
+  * 
+  * @desc check (from remote) and set (local) the session attribute lines on directions
+  * @param p_direction_in incoming SDP attribute that need to be checked
+  * @param p_direction_out SDP attribute that should be included in the SDP answer (to be returned to peer)
+  * @return 
+  * @verdict 
+  */	
+  /*  function f_SIP_checkResponsesetSDPreqDirectionSession(template SDP_attribute p_direction_in, template SDP_attribute p_direction_out) runs on SipComponent
+  {	var template SDP_attribute v_direction_out := p_direction_out;
+  // check incoming SDP attribute
+  if (not (ispresent(vc_response.messageBody) and (f_check_session_attribute(vc_response.messageBody.sdpMessageBody,p_direction_in)
+  ))) 
+  {if (
+  match(valueof(mw_attribute_sendrecv),valueof(p_direction_in)) and
+  not(f_check_session_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_sendrecv) or
+  f_check_session_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_sendonly) or
+  f_check_session_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_recvonly) or
+  f_check_session_attribute(vc_response.messageBody.sdpMessageBody,mw_attribute_inactive)
+  )
+  ){
+  log("no direction attributes with expectation: ", p_direction_in)			
+  }
+  else {setverdict(fail);};};
+  //   if (match(omit,p_direction_out))//not isvalue(v_direction_out))//MRO
+  
+  if (not isvalue(v_direction_out))
+  
+  {v_direction_out := f_get_attribute_answer(vc_response.messageBody.sdpMessageBody, p_direction_in);}
+  f_SIP_modSessionDirection(v_direction_out); // handling of attribute in session		
+  }
+  */
+  
+  /*
+  * 
+  * @desc check (from remote) and set (local)the session/media attribute lines on directions
+  * @param p_direction_in attribute to be check
+  * @param p_direction_out attrubyte to be 
+  * @return 
+  * @verdict 
+  */	
+  /*   function f_SIP_checkSDPrespDirection(template SDP_attribute p_direction_in) runs on SipComponent
+  {		
+  // check incoming SDP attribute
+  if (not (ispresent(vc_response.messageBody) and f_check_attribute(vc_response.messageBody.sdpMessageBody,p_direction_in))) 
+  {setverdict(fail);};
+  }
+  */
+  /** 
+  *  @desc check media/attribute lines from remote
+  *		 
+  */
+  function f_SIP_checkMediaDirection(integer p_medianum, template SDP_attribute p_direction) runs on SipComponent
+  return boolean
+  {
+    var integer v_mn, v_cn := 0, i, j;
+    var boolean v_result := false;
+    //increase session version
+    vc_sdp_remote.origin.session_version := int2str(str2int(vc_sdp_remote.origin.session_version)+1);
+    // if more than one codec, select the firs one
+    v_mn:= sizeof(vc_sdp_remote.media_list);
+    if (p_medianum == 0) //specific media requested
+    {
+      p_medianum := 1; // start checking from first media
+    };
+    if (p_medianum > 0) //specific media requested
+    {
+      if (p_medianum > v_mn) {return false}
+      else {v_mn := p_medianum}
+    };
+    for (i :=p_medianum-1;  i < v_mn; i := i+1)
+    {
+      //for every single media
+      if (ispresent(vc_sdp_remote.media_list[i].attributes))
+      {
+        v_cn := sizeof(vc_sdp_remote.media_list[i].attributes);
+        log (v_cn);
+      };
+      if (sizeof(vc_sdp_remote.media_list[i].attributes)>0) 
+      {
+        // select the first one
+        log(vc_sdp_remote.media_list[i].attributes);
+        for (j :=0; j<sizeof(vc_sdp_remote.media_list[i].attributes); j:=j+1)
+        {
+          log(vc_sdp_remote.media_list[i].attributes[j]);
+          if (ischosen(vc_sdp_remote.media_list[i].attributes[j].recvonly)
+            or ischosen(vc_sdp_remote.media_list[i].attributes[j].sendonly)
+            or ischosen(vc_sdp_remote.media_list[i].attributes[j].inactive)
+            or ischosen(vc_sdp_remote.media_list[i].attributes[j].sendrecv))
+          {
+            if (match(vc_sdp_remote.media_list[i].attributes[j],p_direction))
+            { v_result :=  true; }
+            else { return  false; }
+          }
+          
+          //v_result :=  true; // TODO This is a shortcut since direction attributes are not decoded
+        }
+      }
+    }
+    return v_result
+  }
+  
+  /** 
+  *  @desc copy media/attribute lines from remote to local SDP variable
+  *		 
+  */
+  function f_copy_SDP() runs on SipComponent
+  {
+    if (ispresent(vc_sdp_remote.connection))
+    {vc_sdp_local.connection := vc_sdp_remote.connection}
+    else {vc_sdp_local.connection := omit};
+    
+    vc_sdp_local.origin := vc_sdp_remote.origin;
+    vc_sdp_local.session_name := vc_sdp_remote.session_name;
+    
+    if (ispresent(vc_sdp_remote.bandwidth))
+    {vc_sdp_local.bandwidth := vc_sdp_remote.bandwidth}
+    else {vc_sdp_local.bandwidth := {}};
+    
+    if (ispresent(vc_sdp_remote.media_list))
+    {
+      //			// cleaning of media before assignment	
+      //			if (ispresent(vc_sdp_local.media_list))
+      //			{
+      //				for (var integer i:=0; i<sizeof(vc_sdp_local.media_list); i:=i+1)
+      //				{			
+      //					vc_sdp_local.media_list[i] := omit ; 						  
+      //				}			
+      //			};		
+      vc_sdp_local.media_list := vc_sdp_remote.media_list;
+    }
+  }
+}//end group SDPOperations
+
+group AwaitingMessage {
+  
+  /**
+  * 
+  * @desc Function for time delay 
+  */
+  function f_awaitingDelayTimer(float p_delay) runs on SipComponent
+  {
+    tc_tDelay.start(p_delay);
+    alt
+    {
+      [] tc_tDelay.timeout
+      {
+        setverdict (pass);
+      }
+    }
+  } //end f_awaitingDelayTimer
+  
+  /**
+  * 
+  * @desc Function waiting for any MSG -request/response 
+  */
+  function f_awaitingAnyPassOnTimeout() runs on SipComponent
+  {
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive	//TAU error if expect (*)
+      {
+        tc_wait.stop;
+        vc_boo_response:=true;
+        vc_boo_request:=true;
+        //setverdict(pass)
+      }
+      [] tc_wait.timeout
+      {
+        vc_boo_response:=false;
+        vc_boo_request:=false;
+        //setverdict (pass)
+      }
+    }
+  } //end f_awaitingResponsePassOnTimeout
+  
+  /**
+  * 
+  * @desc Function waiting for no MSG -request/response 
+  */
+  function f_awaitingNonePassOnTimeout() runs on SipComponent
+  {
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] tc_wait.timeout
+      {
+        setverdict (pass);
+      }
+    }
+  } //end f_awaitingResponsePassOnTimeout
+  
+  /**
+  * 
+  * @desc function awaits REGISTER
+  * @param p_register expected REGISTER request
+  */	
+  function f_awaitingREGISTER(in template REGISTER_Request p_register) runs on SipComponent
+  {
+    var REGISTER_Request v_request;
+    
+
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_register)-> value v_request sender vc_sent_label
+      {
+
+
+        tc_wait.stop;
+       // f_setHeadersOnReceiptOfREGISTER(f_conv_REGISTER_Request_2_Request(v_request));
+     f_setHeadersOnReceiptOfREGISTER(v_request);
+
+      }
+      [] tc_wait.timeout
+      {
+        setverdict (fail);
+        f_componentStop();               
+      }
+    }		
+  }
+  
+  /**
+  * 
+  * @desc function awaits SUBSCRIBE
+  * @param p_register expected SUBSCRIBE request
+  */	
+  function f_awaitingSUBSCRIBE(in template SUBSCRIBE_Request p_subscribe) runs on SipComponent
+  {
+    var SUBSCRIBE_Request	v_request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_subscribe)-> value v_request sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfSUBSCRIBE(v_request);
+      }
+      [] SIPP.receive(mw_SUBSCRIBE_Request_Base)-> value v_request sender vc_sent_label
+      {
+        tc_wait.stop;
+        setverdict(fail);
+        f_setHeadersOnReceiptOfSUBSCRIBE(v_request);
+        //f_send200OK();
+      }
+    }		
+  }
+  
+  /**
+  * 
+  * @desc function awaits REGISTER and sends a 200 OK response
+  * @param p_reply flag used to avoid the 200OK response sending
+  */	
+  function f_awaitingREGISTER_sendReply(in template REGISTER_Request p_register, in boolean p_reply) runs on SipComponent
+  {
+    var REGISTER_Request	v_request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_register)-> value v_request sender vc_sent_label
+      {
+        tc_wait.stop;
+        vc_request := v_request;
+        f_setHeadersOnReceiptOfREGISTER(v_request);
+        //Answer to the Request
+        if (p_reply) {f_send200OK();};
+      }
+      
+      [] tc_wait.timeout
+      {
+        setverdict (fail);
+        f_componentStop(); 
+      }
+    }		
+  }
+  
+  
+  /**
+  * 
+  * @desc Function waiting for a 200 OK response
+  * @param p_cSeq_s current cSeq expectation
+  */
+  function f_awaitingOkResponse(inout CSeq p_cSeq_s) runs on SipComponent
+  { 
+    
+    tc_resp.start(PX_SIP_TRESP);
+    alt
+    {
+      [] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callId, p_cSeq_s)) -> value vc_response
+      {
+        tc_resp.stop;
+        f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+        setverdict(pass)
+      }
+    }
+  } //end awaitingOkResponse
+  
+  /**
+  * 
+  * @desc Function waiting for a response
+  * @param p_Response expected response message
+  */
+  function f_awaitingResponse(in template Response p_Response) runs on SipComponent
+  {
+    tc_resp.start(PX_SIP_TRESP);
+    alt
+    {
+      [] SIPP.receive	(p_Response) -> value vc_response
+      {
+        tc_resp.stop;
+        f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+        //setverdict(pass)
+      }
+    }
+  } //end f_awaitingResponse
+  
+  /**
+  * 
+  * @desc Function waiting for a response and send ACK on FailureResponses 4xx,5xx,6xx
+  * @param p_Response expected response message
+  */
+  function f_awaitingResponseSendACK(in template Response p_Response) runs on SipComponent
+  {
+    tc_resp.start(PX_SIP_TRESP);
+    alt {
+      [] SIPP.receive	(p_Response) -> value vc_response {
+        tc_resp.stop;
+        f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+        LibSip_Steps.f_setHeadersACK();
+        f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via));
+        setverdict(pass);
+      }
+    }
+  } //end f_awaitingResponse
+  
+  /**
+  * 
+  * @desc Function waiting for a response
+  * @param p_Response expected response message
+  */
+  function f_awaitingResponsePassOnTimeout(in template Response p_Response) runs on SipComponent
+  {
+    tc_resp.start(PX_SIP_TRESP);
+    alt
+    {
+      [] SIPP.receive	(p_Response) -> value vc_response
+      {
+        tc_resp.stop;
+        f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+        vc_boo_response:=true;
+        //setverdict(pass)
+      }
+      [] tc_resp.timeout
+      {
+        vc_boo_response:=false;
+        //setverdict (pass)
+      }
+    }
+  } //end f_awaitingResponsePassOnTimeout
+  
+  /** 
+  *  @desc await INFO request
+  *		 reply with 200 OK
+  */
+  function f_awaitingINFO_sendReply(in template INFO_Request p_info) runs on SipComponent
+  {
+    var INFO_Request	v_request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_info)-> value v_request sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_request);
+        //Answer to the INFO
+        f_send200OK();
+      }
+    }
+  } // end of f_awaitingINFO_sendReply
+  
+  /**
+  * 
+  * @desc function awaiting for an incoming INVITE
+  * @param p_request expected message
+  */
+  function f_awaitingINVITE(template INVITE_Request p_request) runs on SipComponent
+  {
+    var INVITE_Request v_INVITE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_request) -> value v_INVITE_Request sender vc_sent_label
+      { 
+        tc_wait.stop;
+        vc_ignore_invite := true;
+        vc_first_recv:= true; // communication has started
+        f_setHeadersOnReceiptOfINVITE(v_INVITE_Request);
+        SIPP.send(m_Response_Base(c_statusLine100, vc_callId, vc_cSeq, vc_from, vc_to, vc_via)) to vc_sent_label;
+      }
+      [vc_interface_isc]SIPP.receive	(mw_INVITE_Request_Base) -> value v_INVITE_Request sender vc_sent_label
+      { 
+        tc_wait.stop;
+        setverdict(fail);
+        f_setHeadersOnReceiptOfINVITE(v_INVITE_Request);
+        SIPP.send(m_Response_Base(c_statusLine100, vc_callId, vc_cSeq, vc_from, vc_to, vc_via)) to vc_sent_label;
+        //clear session - send 486 and await ACK
+        f_sendResponse(m_Response_Base(c_statusLine486,vc_callId,vc_cSeq,vc_caller_From,vc_caller_To,vc_via));
+        f_awaitingACK(mw_ACK_Request_Base(?));
+        //await 486 which go towards and send ACK        
+        f_awaitingResponse(mw_Response_Base(c_statusLine486,?,?));
+        f_SendACK(m_ACK_Request_Base(vc_requestUri,vc_callId,vc_cSeq,vc_from,vc_to,vc_via));
+        syncPort.send(m_syncClientStop);
+        stop
+      }
+    }
+  } //end f_awaitingINVITE
+  
+  /**
+  * 
+  * @desc function awaiting for an incoming INVITE
+  * @param p_request expected message
+  */
+  function f_awaitingINVITE_No100Response(template INVITE_Request p_request) runs on SipComponent
+  {
+    var INVITE_Request v_INVITE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_request) -> value v_INVITE_Request sender vc_sent_label
+      { 
+        tc_wait.stop;
+        vc_ignore_invite := true;
+        vc_first_recv:= true; // communication has started
+        f_setHeadersOnReceiptOfINVITE(v_INVITE_Request);
+        //SIPP.send(m_Response_Base(c_statusLine100, vc_callId, vc_cSeq, vc_from, vc_to, vc_via)) to vc_sent_label;
+      }
+    }
+  } //end f_awaitingInviteRequest
+  
+  /**
+  * 
+  * @desc function awaiting for an incoming INVITE
+  * @param p_request expected message
+  */
+  function f_awaitingINVITE_PassOnTimeout(template INVITE_Request p_request) runs on SipComponent
+  {
+    var INVITE_Request v_INVITE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_request) -> value v_INVITE_Request sender vc_sent_label
+      { 
+        tc_wait.stop;
+        vc_ignore_invite := true;
+        vc_first_recv:= true; // communication has started
+        vc_boo_request := true;
+        f_setHeadersOnReceiptOfINVITE(v_INVITE_Request);
+        SIPP.send(m_Response_Base(c_statusLine100, vc_callId, vc_cSeq, vc_from, vc_to, vc_via)) to vc_sent_label;
+      }
+      []tc_wait.timeout
+      {
+        vc_boo_request := false;
+      }
+    }
+  } //end f_awaitingInviteRequest
+  
+  /**
+  * 
+  * @desc function awaiting ACK request
+  */
+  function f_awaitingACK(in template ACK_Request p_ACK) runs on SipComponent
+  {
+    var ACK_Request v_ACK_Request;
+    tc_ack.start(PX_SIP_TACK);
+    
+    alt
+    {
+      [] SIPP.receive(p_ACK) -> value v_ACK_Request
+      {
+        tc_ack.stop;
+      }
+    }
+  } //end f_awaitingAckRequest
+  
+  /**
+  * 
+  * @desc function awaiting BYE and sending 200OK response
+  * @param p_BYE expected BYE
+  */
+  function f_awaitingBYE(in template BYE_Request p_BYE) runs on SipComponent
+  {
+    var BYE_Request v_BYE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_BYE) -> value v_BYE_Request sender vc_sent_label
+      {
+        tc_wait.stop;
+        vc_ignore_bye:= true;
+        f_setHeadersOnReceiptOfBYE(v_BYE_Request);
+        //f_send200OK();
+      }
+    }		
+  } // end f_awaitingBYE
+  
+  /**
+  * 
+  * @desc function awaiting BYE and sending 200OK response
+  * @param p_BYE expected BYE
+  */
+  function f_awaitingBYE_sendReply
+  (in template BYE_Request p_BYE) runs on SipComponent
+  {
+    var BYE_Request v_BYE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_BYE) -> value v_BYE_Request sender vc_sent_label
+      {
+        tc_wait.stop;
+        vc_ignore_bye:= true;
+        f_setHeadersOnReceiptOfBYE(v_BYE_Request);
+        f_send200OK();
+      }
+    }		
+  } // end f_awaitingBYE_sendReply
+  
+  /**
+  * 
+  * @desc function awaiting BYE and sending 200OK response
+  * @param p_BYE expected BYE
+  */
+  function f_awaitingBYE_sendReply_PassOnTimeout(in template BYE_Request p_BYE) runs on SipComponent
+  {
+    var BYE_Request v_BYE_Request;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_BYE) -> value v_BYE_Request sender vc_sent_label
+      {
+        tc_wait.stop;
+        vc_ignore_bye:= true;
+        vc_boo_request := true;
+        f_setHeadersOnReceiptOfBYE(v_BYE_Request);
+        f_send200OK();
+      }
+      [] tc_wait.timeout
+      {
+        vc_boo_request := false;
+      }		
+    }		
+  } // end f_awaitingBYE_sendReply_PassOnTimeout
+  
+  /**
+  * 
+  * @desc function awaiting CANCEL
+  * @param p_CANCEL expected CANCEL
+  */
+  function f_awaitingCANCEL(in template CANCEL_Request p_CANCEL) runs on SipComponent
+  {
+    var CANCEL_Request v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      []SIPP.receive	(p_CANCEL) -> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+      }
+    }		
+  } // end f_awaitingCANCEL
+  /** 
+  *  @desc await MESSAGE request
+  */
+  function f_awaitingMESSAGE(in template MESSAGE_Request p_MSG) runs on SipComponent
+  {
+    var MESSAGE_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+      }
+      [] SIPP.receive(mw_MESSAGE_Request_Base)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        log("Received MESSAGE not as expected!");
+        setverdict (fail);
+      }
+    }
+  } // end of f_awaitingMESSAGE
+  
+  /** 
+  *  @desc await MESSAGE request
+  *		 reply with 200 OK
+  */
+  function f_awaitingMESSAGE_sendReply() runs on SipComponent
+  {
+    var MESSAGE_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(mw_MESSAGE_Request_Base)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the MESSAGE
+        f_send200OK();
+      }
+    }		
+    
+  } // end of f_awaitingMESSAGE_sendReply
+  
+  /** 
+  *  @desc await MESSAGE request
+  */
+  function f_awaitingMESSAGE_sendReply_PassOnTimeout(in template MESSAGE_Request p_MSG) runs on SipComponent
+  {
+    var MESSAGE_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the MESSAGE
+        //f_send200OK();
+        vc_boo_request := true;
+        f_send200OK();
+        //setverdict (pass);
+      }
+      [] tc_wait.timeout
+      {
+        vc_boo_request := false;
+        //setverdict (pass);
+      }
+    }
+  } // end of f_awaitingMESSAGE_PassOnTimeout
+  
+  /** 
+  *  @desc await NOTIFY request
+  */
+  function f_awaitingNOTIFY(in template NOTIFY_Request p_MSG) runs on SipComponent
+  {
+    var NOTIFY_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_getRouteMapIntoRecordRoute(vc_cSeq, v_MSG);
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+      }
+    }
+  } // end of f_awaitingNOTIFY
+  
+  /** 
+  *  @desc await NOTIFY request
+  *		 reply with 200 OK
+  */
+  function f_awaitingNOTIFY_sendReply(in template NOTIFY_Request p_MSG) runs on SipComponent
+  {
+    var NOTIFY_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_getRouteMapIntoRecordRoute(vc_cSeq, v_MSG);
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the NOTIFY
+        f_send200OK();
+      }
+    }
+  } // end of f_awaitingNOTIFY_sendReply	
+  
+  /** 
+  *  @desc await PRACK request
+  *		 reply with 200 OK
+  */
+  function f_awaitingPRACK_sendReply(in template PRACK_Request p_MSG) runs on SipComponent
+  {
+    var PRACK_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the PRACK
+        f_send200OK();
+      }
+    }		
+    
+  } // end of f_awaitingPRACK_sendReply
+  
+  /** 
+  *  @desc await PUBLISH request
+  *		 reply with 200 OK
+  */
+  function f_awaitingPUBLISH_sendReply(in template PUBLISH_Request p_MSG) runs on SipComponent
+  {
+    var PUBLISH_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the PUBLISH
+        f_send200OK();
+      }
+    }		
+    
+  } // end of f_awaitingPUBLISH_sendReply
+  
+  /** 
+  *  @desc await UPDATE request
+  */
+  function f_awaitingUPDATE(in template UPDATE_Request p_MSG) runs on SipComponent
+  {
+    var UPDATE_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+      }
+    }
+  } // end of f_awaitingUPDATE	
+  
+  /** 
+  *  @desc await UPDATE request
+  *		 reply with 200 OK
+  */
+  function f_awaitingUPDATE_sendReply(in template UPDATE_Request p_MSG) runs on SipComponent
+  {
+    var UPDATE_Request	v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfRequest(v_MSG);
+        //Answer to the UPDATE
+        f_send200OK();
+      }
+    }		
+    
+  } // end of f_awaitingUPDATE_sendReply
+  
+  
+  /** 
+  *  @desc await REFER request
+  */
+  function f_awaitingREFER(in template REFER_Request p_MSG) runs on SipComponent
+  {
+    var REFER_Request v_MSG;
+    
+    tc_wait.start(PX_SIP_TWAIT);
+    alt
+    {
+      [] SIPP.receive(p_MSG)-> value v_MSG sender vc_sent_label
+      {
+        tc_wait.stop;
+        f_setHeadersOnReceiptOfREFER(v_MSG);
+      }
+    }
+  } // end of f_awaitingUPDATE
+  
+} // end AwaitingMessage
+
+group SendMessage {
+  
+  /**
+  * 
+  * @desc  send ACK message, update the route and recordRoute header fields depending on boolean flags
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendACK(template ACK_Request p_request) runs on SipComponent
+  {
+    //p_request.msgHeader.route 		:= f_route(); 		// update the route header field depending on vc_boo_route
+    // n/a p_request.msgHeader.recordRoute := f_recordroute(); // update the route header field depending on vc_boo_route
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send BYE message, update the route and recordRoute header fields depending on boolean flags
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendBYE(template BYE_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send CANCEL message
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendCANCEL(template CANCEL_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send INFO message
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendINFO(template INFO_Request p_request) runs on SipComponent
+  {
+    f_setHeadersGeneral(vc_cSeq, "INFO"); // cseq, contact, branch, via
+    SIPP.send(p_request) to vc_sent_label;
+  }
+  
+  /**
+  * 
+  * @desc  send INVITE message
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendINVITE(template INVITE_Request p_request) runs on SipComponent
+  {
+    vc_requestFor407 := valueof(p_request);
+    SIPP.send(p_request) to vc_sent_label;
+    if(PX_SIP_INVITE_AUTHENTICATION_ENABLED) {a_altstep_401or407();};	  
+  }
+  
+  /**
+  * 
+  * @desc  send PRACK message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendPRACK() runs on SipComponent
+  {
+    
+    vc_rAck := valueof(m_RAck(vc_response.msgHeader.rseq.response_num, vc_cSeq.seqNumber, vc_cSeq.method));
+    f_setHeadersGeneral(vc_cSeq, "PRACK"); // cseq, contact, branch, via	
+    SIPP.send(m_PRACK_Request_Base(
+        vc_requestUri, 
+        vc_callId, 
+        vc_cSeq, 
+        vc_from, 
+        vc_to, 
+        vc_via,
+        vc_rAck
+      )) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send PUBLISH message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendPUBLISH(template PUBLISH_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send REGISTER message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendREGISTER(template REGISTER_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send SUBSCRIBE message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendSUBSCRIBE(template SUBSCRIBE_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send UPDATE message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendUPDATE(template UPDATE_Request p_request) runs on SipComponent
+  {
+    f_setHeadersGeneral(vc_cSeq, "UPDATE"); // cseq, contact, branch, via	
+    p_request.msgHeader.cSeq := vc_cSeq;
+    p_request.msgHeader.contact := vc_contact;
+    p_request.msgHeader.via := vc_via;
+    vc_requestFor407 := valueof(p_request);
+    SIPP.send(p_request) to vc_sent_label;	  
+    if(PX_SIP_INVITE_AUTHENTICATION_ENABLED) {a_altstep_401or407();};	  
+  }	
+  
+  /**
+  * 
+  * @desc function send MESSAGE message
+  * @param p_request template of the message to be sent
+  */
+  function f_SendMESSAGE(template MESSAGE_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc function send NOTIFY message
+  * @param p_request template of the notify to be sent
+  */
+  function f_SendNOTIFY(template NOTIFY_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;	  
+  }
+  
+  /**
+  * 
+  * @desc  send REFER message
+  * @param p_request template of the message to be sent
+  */	
+  function f_SendREFER(template REFER_Request p_request) runs on SipComponent
+  {
+    SIPP.send(p_request) to vc_sent_label;
+  }
+  
+  /**
+  * 
+  * @desc  send 200 OK
+  */
+  function f_send200OK() runs on SipComponent
+  {
+    f_sendResponse(m_Response_Base(c_statusLine200, vc_callId, vc_cSeq, vc_caller_From, vc_caller_To, vc_via));
+  }
+  
+  /**
+  * 
+  * @desc  send response
+  * @param p_request template of the message to be sent
+  */
+  function f_sendResponse(template Response p_response) runs on SipComponent
+  {
+    //p_response.msgHeader.route 		 := f_route(); 		// update the route header field depending on vc_boo_route//TODO check if route header is needed in responses
+    p_response.msgHeader.recordRoute := f_recordroute(); // update the route header field depending on vc_boo_route
+    SIPP.send(p_response) to vc_sent_label;
+  }
+  
+} // end SendMessage
+
+group GlobalSteps {
+  /**
+  * 
+  * @desc component initialization
+  * @param p_cSeq_s cSeq value to be assigned to the component variable
+  */
+  function f_init_component(inout CSeq p_cSeq_s)  runs on SipComponent
+  {
+    //Variables
+    vc_cSeq := p_cSeq_s;
+    
+    //Defaults
+    vc_def_catchSyncStop := activate(a_Sip_catchSyncStop());
+    vc_default := activate (a_clearRegistration());
+  }
+  
+  /**
+  * 
+  * @desc component termination
+  */
+  function f_terminate_component() runs on SipComponent
+  {
+    log("component terminated - forced!"); 
+    deactivate;
+    stop;
+  }
+  
+  /**
+  * 
+  * @desc component termination
+  */
+  function f_componentStop() runs on SipComponent
+  {
+    syncPort.send(m_syncClientStop);
+    SIPP.clear;
+    stop;
+  }
+  
+  /**
+  * 
+  * @desc setting of user parameters with PIXIT values
+  * @param p_user identifies the selected user configuration and location
+  */
+  function f_init_userprofile(in integer p_user) runs on SipComponent
+  {
+    vc_userprofile.id := p_user;
+    
+    select(p_user){
+      case (c_userProfile_SIP1_home) { //variant c_userProfile_SIP1_home
+        vc_userprofile.currPort := PX_SIP_TS1_PORT;
+        vc_userprofile.currIpaddr := PX_SIP_TS1_IPADDR;
+        vc_userprofile.contactPort := PX_SIP_TS1_PORT;
+        vc_userprofile.contactIpaddr := PX_SIP_TS1_IPADDR;
+        vc_userprofile.bearerIpaddr := PX_SIP_TS1_BEARER_IPADDR;
+        vc_userprofile.homeDomain := PX_SIP_TS1_LOCAL_DOMAIN;	
+        vc_userprofile.publUsername := PX_SIP_TS1_LOCAL_USER;
+        vc_userprofile.qop := PX_SIP_SUT_UE1_QOP;
+        vc_userprofile.privUsername := PX_SIP_SUT_UE1_USERNAME;	
+        vc_userprofile.passwd := PX_SIP_SUT_UE1_PASSWD;	
+        vc_userprofile.registrarDomain := PX_SIP_SUT_REGISTRAR_DOMAIN;
+      }
+      case (c_userProfile_SIP2_home) { //variant c_userProfile_SIP2_home
+        vc_userprofile.currPort := PX_SIP_TS2_PORT;
+        vc_userprofile.currIpaddr := PX_SIP_TS2_IPADDR;
+        vc_userprofile.contactPort := PX_SIP_TS2_PORT;
+        vc_userprofile.contactIpaddr := PX_SIP_TS2_IPADDR;
+        vc_userprofile.bearerIpaddr := PX_SIP_TS2_BEARER_IPADDR;	
+        vc_userprofile.homeDomain := PX_SIP_TS2_LOCAL_DOMAIN;	
+        vc_userprofile.publUsername := PX_SIP_TS2_LOCAL_USER;
+        vc_userprofile.qop := PX_SIP_SUT_UE2_QOP;
+        vc_userprofile.privUsername := PX_SIP_SUT_UE2_USERNAME;	
+        vc_userprofile.passwd := PX_SIP_SUT_UE2_PASSWD;	
+        vc_userprofile.registrarDomain := PX_SIP_SUT_REGISTRAR_DOMAIN;
+      }
+      
+    }
+  }
+  
+  /**
+  * 
+  * @desc function waits for particular time that allows the SUT to return to idle state
+  */	
+  function f_awaitSUTidle() runs on SipComponent
+  {
+    vc_ignore4xx := true; // allow 4xx in default
+    tc_noAct.start;
+    alt {
+      [] tc_noAct.timeout{}		
+    }
+  }	
+  
+  /**
+  * 
+  * @desc function waits for particular time before next expected message
+  */	
+  function f_wait(float p_time) runs on SipComponent
+  {
+    tc_noAct.start(p_time);
+    alt {
+      [] tc_noAct.timeout{}		
+    }
+  }	
+  
+  /**
+  * 
+  * @desc function cause termination of a PTC
+  * @param p_syncPoint dummy parameter (copied from the common lib)
+  */	
+  function f_check2Null(in charstring p_syncPoint) runs on SipComponent 
+  {
+    //!= pass does not work, because in case of "none" execution shall continue
+    if (getverdict == inconc or getverdict == fail){
+      log("**** f_check2Null: Verdict evaluated to fail or inconc. Stopping test execution now ");
+      f_selfOrClientSyncAndVerdict (p_syncPoint, e_error) ;
+    }//end if
+  }
+  
+  /*
+  * 
+  * @desc original copied from older LibCommon_VerdictControl
+  */
+  function f_getVerdict()
+  return FncRetCode {
+    var FncRetCode v_ret := e_error;
+    if (getverdict == pass or getverdict == none) {
+      v_ret := e_success;	
+    }
+    return v_ret;
+  }
+  
+}// end group GlobalSteps
+
+group Registration {
+  
+  /**
+  * 
+  * @desc  registration and authentication with MD5
+  * @param p_cSeq_s		cseq parameter 
+  * @param p_register	register template
+  * @param p_auth		flag indicating if authentication is needed
+  */
+  function f_Registration(inout CSeq p_cSeq_s, out template REGISTER_Request p_register, in boolean p_auth) runs on SipComponent
+  {
+    if (PX_SIP_REGISTRATION)
+    {
+      f_setHeaders_REGISTER(p_cSeq_s);
+      p_register := m_REGISTER_Request_Base(vc_requestUri, vc_callId, p_cSeq_s, vc_from, vc_to, vc_via_REG, vc_contact, vc_authorization);	
+      f_SendREGISTER(p_register); //LibSip
+      
+      //awaiting of 401 and sending 2nd REGISTER and awaiting 200 OK REGISTER
+      if (p_auth)
+      {
+        // receiving 401 Unauthorized response.
+        // and Re-send REGISTER request with Authorization header
+        tc_resp.start(PX_SIP_TRESP);
+        alt
+        {
+          [] SIPP.receive	(mw_Response_Base(c_statusLine401, vc_callId, p_cSeq_s)) -> value vc_response
+          {
+            tc_resp.stop;
+            f_setHeadersOnReceiptOfResponse(p_cSeq_s, vc_response);
+            // set headers via, cseq and authorization
+            f_setHeaders_2ndREGISTER(p_cSeq_s);
+            p_register := m_REGISTER_Request_Base(vc_requestUri, vc_callId, p_cSeq_s, vc_from, vc_to, vc_via_REG, vc_contact, vc_authorization);
+            // Re-send protected REGISTER
+            f_SendREGISTER(p_register);//LibSip
+            
+            // awaiting 200 OK REGISTER
+            f_awaitingOkResponse(p_cSeq_s);
+            f_getServiceRouteMapIntoRouteInRegistration(p_cSeq_s, vc_response);
+          }
+          [] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callId, p_cSeq_s)) -> value vc_response
+          {
+            tc_resp.stop;
+            f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+            f_getServiceRouteMapIntoRouteInRegistration(p_cSeq_s, vc_response);
+            log ("Authorization was not requested as expected");
+          }
+        }
+      }
+      else
+      {
+        f_awaitingOkResponse(p_cSeq_s);
+        f_getServiceRouteMapIntoRouteInRegistration(p_cSeq_s, vc_response);
+      }      
+      
+    };
+  }//end function f_Registration
+  
+  
+  /**
+  * 
+  * @desc remove registration
+  * @param p_cSeq_s cseq parameter
+  */	
+  function f_RemoveRegistration(inout CSeq p_cSeq) runs on SipComponent
+  {
+    var CommaParam_List v_challenge;
+    var Credentials v_credentials;
+    var template REGISTER_Request v_request;
+    
+    // 		
+    if(vc_DeregDone)
+    {
+      f_componentStop();
+    }
+    else {vc_DeregDone := true;}
+    
+    if (PX_SIP_REGISTRATION)
+    {
+      f_setHeaders_deREGISTER(p_cSeq);
+      v_request := m_REGISTER_Request_expires(vc_requestUri, vc_callIdReg,
+        p_cSeq,  vc_from, vc_to, vc_via, vc_contact, vc_authorization, "0");
+      v_request.msgHeader.route := f_route();
+      
+      f_SendREGISTER(v_request);
+      if (PX_SIP_REGISTER_AUTHENTICATION_ENABLED)
+      {
+        // receiving 401 Unauthorized response.
+        // and Re-send REGISTER request with Authorization header
+        tc_resp.start(PX_SIP_TRESP);
+        alt
+        {
+          [] SIPP.receive	(mw_Response_Base(c_statusLine401, vc_callIdReg, p_cSeq)) -> value vc_response
+          {
+            tc_resp.stop;
+            // set headers via, cseq and authorization
+            f_setHeaders_2ndREGISTER(p_cSeq);
+            v_request := m_REGISTER_Request_expires(vc_requestUri, vc_callIdReg,
+              p_cSeq,  vc_from, vc_to, vc_via, vc_contact, vc_authorization, "0");
+            v_request.msgHeader.route := f_route();
+            // Re-send protected REGISTER
+            f_SendREGISTER(v_request);//LibSip
+            
+            // awaiting 200 OK REGISTER
+            f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq));
+          }
+          [] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq))-> value vc_response
+          {
+            tc_resp.stop;
+            f_setHeadersOnReceiptOfResponse(vc_cSeq, vc_response);
+            //log ("Authorization was not requested as expected");
+          }
+        }
+      }
+      else
+      {
+        f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq));
+      }
+    }
+  } // end f_RemoveRegistration
+  
+  /**
+  * 
+  * @desc remove registration without authorization
+  * @param p_cSeq_s cseq parameter
+  */	
+  function f_RemoveRegistration_wo_authorization(inout CSeq p_cSeq) runs on SipComponent
+  {
+    var SemicolonParam_List tmp_params;
+    if (PX_SIP_REGISTRATION)
+    {
+      f_setHeaders_deREGISTER(p_cSeq);
+      f_SendREGISTER(m_REGISTER_Request_expires(vc_requestUri, vc_callIdReg, p_cSeq,
+          vc_from, vc_to, vc_via, vc_contact, vc_authorization, "0" ));
+      f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callIdReg, p_cSeq));		
+    }
+  } // end f_RemoveRegistration_wo_authorization
+  
+}//end group Registration
+
+group Subscription {
+  
+  /**
+  * 
+  * @desc  UE send subscrbe, await on 200 OK, await notify and send 200 OK
+  * @param p_cSeq_s		cseq parameter 
+  * @param p_subscribe	subscribe template
+  */
+  function f_Subscription(inout CSeq p_cSeq_s,template SUBSCRIBE_Request p_subscribe) runs on SipComponent
+  {
+    //f_setHeaders_SUBSCRIBE(p_cSeq_s);
+    //send SUBSCRIBE
+    f_SendSUBSCRIBE(p_subscribe);
+    // awaiting 200 OK SUBSCRIBE
+    f_awaitingOkResponse(p_cSeq_s);
+    
+    //await NOTIFY and send reply 200 OK
+    f_awaitingNOTIFY_sendReply(mw_NOTIFY_Request_Base(vc_callId));
+    
+  }//end function f_Subscription
+  
+  /**
+  * 
+  * @desc  UE send subscrbe, await on 200 OK, await notify and send 200 OK
+  * @param p_cSeq_s		cseq parameter 
+  * @param p_subscribe	subscribe template
+  * @param p_notify		notify template
+  */
+  function f_SubscriptionWithNotification(inout CSeq p_cSeq_s, template SUBSCRIBE_Request p_subscribe, template NOTIFY_Request p_notify) runs on SipComponent
+  {
+    f_setHeaders_SUBSCRIBE(p_cSeq_s);
+    //send SUBSCRIBE
+    f_SendSUBSCRIBE(p_subscribe);
+    // awaiting 200 OK SUBSCRIBE
+    f_awaitingOkResponse(p_cSeq_s);
+    
+    //await NOTIFY and send reply 200 OK
+    f_awaitingNOTIFY_sendReply(p_notify);
+    
+  }//end function f_Subscription
+  
+  /**
+  * 
+  * @desc  UE await subscrbe, send on 200 OK; possibility to handle also other SUBSCRIBE methods where event is different than reg
+  * @param p_cSeq_s		cseq parameter 
+  * @param p_subscribe	subscribe template
+  */
+  function f_awaitingSubscription(inout CSeq p_cSeq_s, template SUBSCRIBE_Request p_subscribe) runs on SipComponent
+  {
+    var SUBSCRIBE_Request	v_request;//FIXME
+    
+    tc_wait.start(2.0);//awaiting of all SUBSCRIBES
+    alt
+    {
+      [] SIPP.receive(p_subscribe)-> value v_request sender vc_sent_label
+      {
+        f_setHeadersOnReceiptOfSUBSCRIBE(v_request);
+        f_send200OK();
+        repeat;
+      }
+      [] SIPP.receive(mw_SUBSCRIBE_Request_Base)-> value v_request sender vc_sent_label
+      {
+        f_setHeadersOnReceiptOfSUBSCRIBE(v_request);
+        f_send200OK();
+        repeat;
+      }
+      [] tc_wait.timeout
+      {
+        setverdict(pass);
+      }
+      
+      
+    }
+    //          TODO check how to solve sending of NOTIFY on SUBSCRIBE
+    
+  }//end function f_awaitingSubscription
+  
+}//end group Subscription
+
+group Preambles {
+  
+  /**
+  * 
+  * @desc  Set variables and default initialization for user profile
+  * @param p_userprofile	user profile of call
+  * @param p_cSeq_s 		cseq parameter
+  */
+  function f_SIP_preamble_woREG(in integer p_userprofile, inout CSeq p_cSeq_s)  runs on SipComponent
+  {
+    //varables and altsteps
+    f_init_component(p_cSeq_s);
+    
+    //Preamble
+    f_init_userprofile(p_userprofile); // assignment of PIXIT values to component variable
+    vc_sdp_local := valueof(m_SDP_bandwidth(valueof(m_media_dynPT(PX_SIP_SDP_dyn, PX_SIP_SDP_encoding)), vc_userprofile));
+  }
+  
+  /**
+  * 
+  * @desc  Set variables and default initialization for user profile and handle registration and authentication with MD5 
+  * @param p_userprofile   	user profile of call
+  * @param p_cSeq_s		  	cseq parameter
+  * @param p_register		register template
+  */
+  function f_SIP_preamble_withREG(in integer p_userprofile, inout CSeq p_cSeq_s, template REGISTER_Request p_register)  runs on SipComponent
+  {
+    //preamble
+    f_SIP_preamble_woREG(p_userprofile, p_cSeq_s);
+    
+    //Registration, Awaiting
+    f_Registration(p_cSeq_s, p_register, PX_SIP_REGISTER_AUTHENTICATION_ENABLED);
+  }	
+  
+}// end group Preambles
+
+group Postambles {
+  
+  /**
+  * 
+  * @desc function send BYE and awaits reponse
+  * @param p_CallId parameter for outgoing BYE
+  * @param p_cSeq parameter for outgoing BYE
+  * @param p_from parameter for outgoing BYE
+  * @param p_to parameter for outgoing BYE
+  * @param p_reqHostPort parameter for outgoing BYE
+  */
+  function f_terminateCall(SipUrl p_requestUri, CallId p_CallId, inout CSeq p_cSeq, From p_from,
+    template To p_to) runs on SipComponent
+  {
+    // Sending of a BYE request to release the call and expect a final response
+    f_SendBYE(m_BYE_Request_cause(p_requestUri, p_CallId, p_cSeq, p_from, valueof(p_to), vc_via, PX_SIP_BYE_CAUSE));
+    
+    tc_resp.start(PX_SIP_TRESP);
+    alt
+    {
+      [] SIPP.receive	(mw_Response_Base(mw_statusLine1xx, p_CallId, p_cSeq))
+      {
+        repeat;
+      }
+      [] SIPP.receive	(mw_Response_Base(mw_statusLineFinal, p_CallId, p_cSeq))
+      {
+        tc_resp.stop;
+      }
+    }
+  } // end function f_terminateCall
+  
+  function f_cancelCall(template CANCEL_Request p_request)
+  runs on SipComponent
+  {
+    // This function is called to bring back the IUT in idle condition
+    // in case of errors or unexpected behaviour.
+    
+    // Sending of a CANCEL request with the same Cseq
+    f_setHeadersCANCEL(vc_cSeq);
+    f_SendCANCEL(p_request);
+    tc_resp.start(PX_SIP_TRESP);
+    alt
+    {
+      [] SIPP.receive	(mw_Response_Base(c_statusLine200, vc_callId, vc_cSeq))
+      {
+        tc_resp.stop;
+      }
+    }
+  }
+  
+  function f_cancelCall_await487(template CANCEL_Request p_request)
+  runs on SipComponent
+  {
+    // This function is called to bring back the IUT in idle condition
+    // in case of errors or unexpected behaviour.
+    
+    // Sending of a CANCEL request with the same Cseq
+    f_cancelCall(p_request);
+    // set method on INVITE
+    vc_cSeq.method := "INVITE";
+    
+    //await on 487 response and send ACK
+    f_awaitingResponse(mw_Response_Base(c_statusLine487, vc_callId, vc_cSeq));					
+    f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via));
+  }
+  
+  function f_awaitCancelCall_send487(template CANCEL_Request p_request)
+  runs on SipComponent
+  {
+    f_awaitingCANCEL(p_request);
+    f_sendResponse(m_Response_Base(c_statusLine200, vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via));
+    
+    // set method on INVITE
+    vc_cSeq.method := "INVITE";
+    
+    //send 487 response and await ACK
+    f_sendResponse(m_Response_Base(c_statusLine487, vc_callId, vc_cSeq,vc_caller_From, vc_caller_To, vc_via));					
+    // await ACK
+    f_awaitingACK(mw_ACK_Request_Base(vc_callId));
+  }
+  
+} // end group Postambles
+
+group SipChecks
+{
+  
+  
+  /* 
+  *  @desc check the presence of conversation at SIP side
+  *		 
+  */
+  function f_check_Conversation() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if conversation at SIP port";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_conversation:{v_question, -})
+      {[] opPort.getreply(s_SIP_conversation:{-, true}) {}
+        [] opPort.getreply(s_SIP_conversation:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_uPlane, f_getVerdict()); // Note: implemented in test bodies
+    
+    return			
+  } // end of f_check_Conversation
+  
+  /* 
+  *  @desc check the presence of conversation at SIP side
+  *		 
+  */
+  function f_check_Ringing() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if ringing at SIP port";
+    
+    if (PX_SIP_CheckRinging) {				
+      opPort.call(s_SIP_ringing:{v_question, -})
+      {[] opPort.getreply(s_SIP_ringing:{-, true}) {}
+        [] opPort.getreply(s_SIP_ringing:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_Ringing, f_getVerdict());
+    return			
+  } // end of f_check_Ringing
+  
+  /* 
+  *  @desc check the announcement at SIP side (UE A)
+  *		 
+  */
+  function f_check_AnnouncementUE_A() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if announcement at UE A";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_announcementA:{v_question, -})
+      {[] opPort.getreply(s_SIP_announcementA:{-, true}) {}
+        [] opPort.getreply(s_SIP_announcementA:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_annoucA, f_getVerdict());
+    return			
+  } // end of f_check_AnnouncementUE_A
+  
+  /* 
+  *  @desc check the announcement at SIP side (UE B)
+  *		 
+  */
+  function f_check_AnnouncementUE_B() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if announcement at UE B";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_announcementB:{v_question, -})
+      {[] opPort.getreply(s_SIP_announcementB:{-, true}) {}
+        [] opPort.getreply(s_SIP_announcementB:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_annoucB, f_getVerdict());
+    return			
+  } // end of f_check_AnnouncementUE_B
+  
+  /* 
+  *  @desc check the announcement at SIP side
+  *		 
+  */
+  function f_check_Announcement() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if announcement at SIP side";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_announcement:{v_question, -})
+      {[] opPort.getreply(s_SIP_announcement:{-, true}) {}
+        [] opPort.getreply(s_SIP_announcement:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_annouc, f_getVerdict());
+    return			
+  } // end of f_check_Announcement
+  
+  /* 
+  *  @desc check the Voice message at SIP side
+  *		 
+  */
+  function f_check_VoiceMessage() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if voice message at SIP side";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_voiceMessage:{v_question, -})
+      {[] opPort.getreply(s_SIP_voiceMessage:{-, true}) {}
+        [] opPort.getreply(s_SIP_voiceMessage:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_voicem, f_getVerdict());
+    return			
+  } // end of f_check_Announcement
+  
+  /* 
+  *  @desc check the stop of media stream
+  *		 
+  */
+  function f_check_MediaStopped() runs on SipComponent
+  {
+    var boolean v_result;
+    var charstring v_question := "confirm if media stream stopped";
+    
+    if (PX_SIP_CheckConversation) {				
+      opPort.call(s_SIP_mediastopped:{v_question, -})
+      {[] opPort.getreply(s_SIP_mediastopped:{-, true}) {}
+        [] opPort.getreply(s_SIP_mediastopped:{-, false}) 
+        {all timer.stop;
+          setverdict(fail);
+          syncPort.send(m_syncClientStop);
+          stop;}
+      }
+    }
+    
+    f_selfOrClientSyncAndVerdict(c_uPlaneStop, f_getVerdict());
+    return			
+  } // end of f_check_MediaStopped
+  
+}
+
+group DefaultsTestStep
+{
+  
+  
+  /**
+  * @desc	This default handles receiving of the sync server
+  *		STOP message and calls the RT HUT postamble. (copy from common lib)
+  */	
+  altstep a_Sip_catchSyncStop() runs on SipComponent 
+  {
+    []	syncPort.receive(m_syncServerStop)
+    {
+      tc_sync.stop ;
+      log("**** a_Sip_catchSyncStop: Test component received STOP signal from MTC - going to IDLE state **** ");
+      //TODO complete postamble
+      syncPort.send(m_syncClientStop);
+      //in case if deregistration was not done
+      //f_RemoveRegistration(vc_cSeq); 
+      f_terminate_component();
+      log("**** a_Sip_catchSyncStop: TEST COMPONENT NOW STOPPING ITSELF! **** ") ;
+      setverdict(inconc);
+      stop ;
+    }
+  }
+  
+  
+  /**
+  * 
+  * @desc main default altstep to handle unexpected messages and timeout
+  * @verdict fail for all unexpected branches
+  */	
+  altstep a_clearRegistration() runs on SipComponent
+  {
+    var Response v_response;
+    var Request v_request;
+    
+    var REGISTER_Request 	  v_REGISTER_request; 
+    var INVITE_Request 	  v_INVITE_request ;
+    var OPTIONS_Request 	  v_OPTIONS_request ;
+    var BYE_Request 	      v_BYE_request ;
+    var CANCEL_Request 	  v_CANCEL_request; 
+    var ACK_Request 	      v_ACK_request ;
+    var PRACK_Request 	  v_PRACK_request ;
+    var NOTIFY_Request 	  v_NOTIFY_request ;
+    var SUBSCRIBE_Request   v_SUBSCRIBE_request ;
+    var PUBLISH_Request 	  v_PUBLISH_request ;
+    var UPDATE_Request 	  v_UPDATE_request ;
+    var REFER_Request 	  v_REFER_request ;
+    var MESSAGE_Request 	  v_MESSAGE_request ;
+    var INFO_Request 	      v_INFO_request ;
+    
+    
+    
+    
+    [] any timer.timeout 
+    {
+      setverdict(fail); 
+      all timer.stop; 
+      //TODO check how to solve release of call 
+      //f_SendCANCEL(m_CANCEL_Request(vc_callId, vc_cSeq, vc_from, vc_cancel_To, vc_reqHostPort, vc_via )); // difference between registration state or transaction state
+      vc_callId := vc_callIdReg;
+      f_RemoveRegistration(vc_cSeq); 
+    }
+    
+    // allow repeated INVITEs
+    [vc_ignore_invite] SIPP.receive(mw_INVITE_Request_Base)
+    {
+      repeat
+    }
+    
+    // allow repeated BYEs after ack of the first BYE
+    [vc_ignore_bye] SIPP.receive (mw_BYE_Request_Base(?))
+    {
+      repeat
+    }
+    [] SIPP.receive (mw_ACK_Request_Base(?))
+    {
+      repeat
+    }
+    // allow 100 replies
+    [] SIPP.receive(mw_Response_Base(c_statusLine100,?, ?))
+    {
+      repeat
+    }
+    
+    //	ignore 181 if flag is set (following TS 183004 Â§4.5.2.1)		  
+    [vc_ignore181] SIPP.receive(mw_Response_Base(c_statusLine181,vc_callId, vc_cSeq))-> value v_response sender vc_sent_label
+    { 
+      f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+      repeat;
+    } 
+    
+    // according to SIP chap.8.1.3.2
+    [] SIPP.receive(mw_Response_Base(c_statusLine183,vc_callId, vc_cSeq))
+    { 
+      repeat;
+    } 
+    
+    // ignore 484 if flag is set
+    [vc_ignore484] SIPP.receive(mw_Response_Base(c_statusLine484,vc_callId, vc_cSeq))
+    {
+      repeat
+    }
+    
+    [vc_ignore4xx] SIPP.receive(mw_Response_Base(mw_statusLine4xx,vc_callId, ?))-> value v_response sender vc_sent_label
+    { 
+      f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+      f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, valueof(vc_route)));
+      repeat
+    }			
+    
+    [vc_ignore200OKinv] SIPP.receive(mw_Response_Base(c_statusLine200, vc_callId, ?))
+    { 
+      repeat
+    }
+    
+    [] SIPP.receive(mw_INFO_Request_Base(vc_callId))->value v_INFO_request sender vc_sent_label
+    { 
+      f_setHeadersOnReceiptOfRequest(v_INFO_request); 
+      f_send200OK();
+      repeat
+    }
+    
+    // awaiting of Notify
+    [] SIPP.receive(mw_NOTIFY_Request_Base(vc_callId))->value v_NOTIFY_request sender vc_sent_label
+    { 
+      f_setHeadersOnReceiptOfRequest(v_NOTIFY_request); 
+      f_send200OK();
+      repeat
+    }
+    // awaiting of subscribe from UE
+    [vc_ignore_subscribe] SIPP.receive(mw_SUBSCRIBE_Request_Base)-> value v_SUBSCRIBE_request sender vc_sent_label
+    {
+      f_setHeadersOnReceiptOfSUBSCRIBE(v_SUBSCRIBE_request);
+      f_send200OK();
+      repeat;
+    }
+    
+    //awaiting of subscribe on proxy
+    [] SIPP.receive(mw_SUBSCRIBE_Request_Base)->value v_SUBSCRIBE_request sender vc_sent_label
+    { 
+      f_setHeadersOnReceiptOfRequest(v_SUBSCRIBE_request); 
+      f_sendResponse(m_Response_Contact(c_statusLine200,vc_callId, vc_cSeq,vc_callee_From, vc_callee_To, vc_via,vc_contact));
+      //f_setHeadersGeneral(vc_cSeq, "NOTIFY"); // cseq, contact, branch, via
+      //f_SendNOTIFY(m_NOTIFY_Request_contact(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via, vc_contact));
+      log(v_SUBSCRIBE_request.msgHeader.contact.contactBody.contactAddresses[0].addressField.nameAddr.addrSpec);
+      f_SendNOTIFY(m_NOTIFY_Request_contact(v_SUBSCRIBE_request.msgHeader.contact.contactBody.contactAddresses[0].addressField.nameAddr.addrSpec, vc_callId, vc_cSeq, vc_callee_From, vc_callee_To, vc_via, vc_contact));		
+      f_awaitingOkResponse(vc_cSeq);
+      repeat
+    }
+    
+    // unexpected BYE is acknowledged to avoid retransmissions
+    [] SIPP.receive(mw_BYE_Request_Base(?))-> value v_BYE_request sender vc_sent_label
+    {
+      setverdict(fail);
+      f_setHeadersOnReceiptOfRequest(v_BYE_request); 
+      f_send200OK();
+      f_RemoveRegistration(vc_cSeq); 
+    }			  
+    
+    // unexpected CANCEL is acknowledged to avoid retransmissions
+    [] SIPP.receive(mw_CANCEL_Request_Base(?))-> value v_CANCEL_request sender vc_sent_label
+    {
+      setverdict(fail);
+      f_setHeadersOnReceiptOfRequest(v_CANCEL_request);
+      //Answer to the CANCEL
+      f_send200OK();
+      f_RemoveRegistration(vc_cSeq); 
+    }
+    // catch 4xx response
+    [] SIPP.receive(mw_Response_Base(mw_statusLine4xx, vc_callId, ?))-> value v_response sender vc_sent_label
+    { 
+      setverdict(fail);
+      f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+      LibSip_Steps.f_setHeadersACK();
+      f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, vc_route));
+      f_RemoveRegistration(vc_cSeq); 
+    }
+    // catch 5xx response
+    [] SIPP.receive(mw_Response_Base(mw_statusLine5xx, vc_callId, ?))-> value v_response sender vc_sent_label
+    { 
+      setverdict(fail);
+      f_setHeadersOnReceiptOfResponse(v_response.msgHeader.cSeq, v_response); 
+      LibSip_Steps.f_setHeadersACK();
+      f_SendACK(m_ACK_Request_route(vc_requestUri, vc_callId, v_response.msgHeader.cSeq, vc_from, vc_to, vc_via, vc_route));
+      f_RemoveRegistration(vc_cSeq); 
+    }	
+    // catch invalid REGISTER	  
+    [] SIPP.receive(mw_REGISTER_Request_Base)-> value v_REGISTER_request sender vc_sent_label
+    {
+      setverdict(fail); 
+      f_componentStop(); 
+    }
+    // any	  
+    [] SIPP.receive
+    {
+      setverdict(fail); 
+      all timer.stop; 
+      //			f_setHeadersCANCEL(vc_cSeq);
+      //			f_SendCANCEL(m_CANCEL_Request_Base(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_cancel_To, vc_via )); // difference between registration state or transaction state
+      f_RemoveRegistration(vc_cSeq);
+    }
+  }
+  
+  /**
+  * 
+  * @desc altstep handle authentication for INVITE message
+  */	
+  altstep a_altstep_401or407() runs on SipComponent {
+    [] any port.check (receive) {
+      var CommaParam_List v_challenge;
+      var Credentials v_Credentials;
+      var Response v_Response;
+      var Request v_Request := valueof (vc_requestFor407);
+      
+      tc_resp.start (PX_SIP_TRESP);
+      alt {
+        [] SIPP.receive (mw_Response_Base((c_statusLine401,c_statusLine407),
+            vc_callId,
+            vc_cSeq)) -> value v_Response {
+          tc_resp.stop;
+          //	get tag from To header if available							
+          vc_to := v_Response.msgHeader.toField;
+          if (vc_cSeq.method == "INVITE"){
+            // send ACK
+            f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq, vc_from, vc_to, vc_via));
+          }							
+          // resent the INVITE message with Proxyauthorization header include
+          // Extract challenge and calculate credentials for a response.
+          if (ischosen (v_Response
+              .msgHeader
+              .proxyAuthenticate
+              .challenge[0]
+              .otherChallenge // instead of digestCln (changed by axr to comply to alcatel)
+            )) {
+            v_challenge :=
+            v_Response
+            .msgHeader
+            .proxyAuthenticate
+            .challenge[0]
+            .otherChallenge.authParams; 
+            v_Credentials :=
+            f_calculatecCredentials(vc_userprofile,
+              vc_requestFor407.msgHeader.cSeq.method,
+              v_challenge);
+          } else {
+            log ("No scheme in Proxy Authenticate header!!");
+            setverdict (inconc);
+            stop;
+          }
+          
+          vc_branch := c_branchCookie & f_getRndTag();
+          vc_via := {
+            fieldName := VIA_E,
+            viaBody := {
+              valueof (m_ViaBody_currIpaddr(vc_branch, vc_userprofile))}
+          };
+          
+          v_Request.msgHeader.via := vc_via;
+          // Increment CSeq sequence number of and add the credentials
+          // to the original saved INVITE message.
+          vc_cSeq.method := vc_requestFor407.msgHeader.cSeq.method;
+          vc_cSeq.seqNumber := vc_cSeq.seqNumber + 1;
+          v_Request.msgHeader.cSeq.seqNumber :=
+          vc_cSeq.seqNumber;
+          v_Request.msgHeader.proxyAuthorization.fieldName :=
+          PROXY_AUTHORIZATION_E;
+          v_Request.msgHeader.proxyAuthorization.credentials :=
+          v_Credentials;
+          
+          // Re-send the saved INVITE with Authorization header
+          // included.
+          SIPP.send (v_Request) to vc_sent_label;
+        }
+      }
+    }
+  }
+  
+  
+} // end of group DefaultsTestStep
+} // end module LibSip_Steps

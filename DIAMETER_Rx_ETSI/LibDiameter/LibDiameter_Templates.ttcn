@@ -1,0 +1,2303 @@
+/**
+*  @author   STF 434
+*  @version  $Id: LibDiameter_Templates.ttcn 654 2013-07-16 07:58:10Z rennoch $
+*  @desc     This module defines Diameter Templates for message, header, and
+*            structured types. <br>
+*            Note that any changes made to the definitions in this module
+*            may be overwritten by future releases of this library
+*            End users are encouraged to contact the distributers of this
+*            module regarding their modifications or additions
+*  @remark   Any additions to the templates shall follow the design rules
+*            and always modify base templates only;
+*/
+
+//            Adapted to Titan    Elemer Lelik  2016.02.08
+//            Further corrections may be needed 
+
+module LibDiameter_Templates {
+
+//LibCommon
+import from LibCommon_DataStrings {type Bit1, Bit4, Bit5, Bit8;}//all;
+import from LibCommon_BasicTypesAndValues {type UInt8, UInt32;};
+
+//LibDiameter
+import from LibDiameter_TypesAndValues all;
+import from LibDiameter_PIXITS all;
+
+group LowerLayerPrimitives {
+  
+  template Lower_Layer_Primitive m_llp_listen(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port) := {
+    ll_header := m_llh_listen(p_ETS_address, p_ETS_port, p_SUT_address, p_SUT_port),
+    pdu := omit
+  }
+  
+  template Lower_Layer_Primitive m_llp_connect(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template integer p_ETS_conn) := {
+    ll_header := m_llh_connect(p_ETS_address, p_ETS_port, p_SUT_address, p_SUT_port, p_ETS_conn),
+    pdu := omit
+  }
+  
+  template Lower_Layer_Primitive mw_llp_connectIndication(template charstring p_ETS_address,  template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template integer p_ETS_conn) := {
+    ll_header := mw_llh_connectIndication(p_ETS_address, p_ETS_port, p_SUT_address, p_SUT_port, p_ETS_conn),
+    pdu := *
+  }
+  
+  template Lower_Layer_Primitive mw_llp_connectConfirm(template charstring p_ETS_address,  template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template integer p_ETS_conn) := {
+    ll_header := mw_llh_connectConfirm(p_ETS_address, p_ETS_port, p_SUT_address, p_SUT_port, p_ETS_conn),
+    pdu := *
+  }
+  
+  template Lower_Layer_Primitive m_llp_disconnect(template integer p_ETS_conn) := {
+    ll_header := m_llh_disconnect(p_ETS_conn),
+    pdu := omit
+  }
+  
+  template Lower_Layer_Primitive mw_llp_disconnectIndication(template integer p_ETS_conn) := {
+    ll_header := mw_llh_disconnectIndication(p_ETS_conn),
+    pdu := *
+  }
+  
+  template Lower_Layer_Primitive m_llp_dataRequest( template integer p_ETS_conn, template DIAMETER_MSG p_pdu) := {
+    ll_header := m_llh_dataRequest(p_ETS_conn),
+    pdu := p_pdu
+  }
+  
+  template Lower_Layer_Primitive mw_llp_dataIndication(template integer p_ETS_conn, template DIAMETER_MSG p_pdu) := {
+    ll_header := mw_llh_dataIndication(p_ETS_conn),
+    pdu := p_pdu
+  }
+  
+  template Lower_Layer_Header m_llh_listen(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port) := {
+    primitive := LISTEN_REQUEST_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := p_ETS_address,
+    ETS_port := p_ETS_port,
+    SUT_address := p_SUT_address,
+    SUT_port := p_SUT_port,
+    ETS_conn := omit
+  }
+  
+  template Lower_Layer_Header m_llh_connect(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template integer p_ETS_conn) := {
+    primitive := CONNECT_REQUEST_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := p_ETS_address,
+    ETS_port := p_ETS_port,
+    SUT_address := p_SUT_address,
+    SUT_port := p_SUT_port,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header mw_llh_connectIndication(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template  integer p_ETS_conn) := {
+    primitive := CONNECT_INDICATION_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := p_ETS_address,
+    ETS_port := p_ETS_port,
+    SUT_address := p_SUT_address,
+    SUT_port := p_SUT_port,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header mw_llh_connectConfirm(template charstring p_ETS_address, template integer p_ETS_port, template charstring p_SUT_address, template integer p_SUT_port, template  integer p_ETS_conn) := {
+    primitive := CONNECT_CONFIRM_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := p_ETS_address,
+    ETS_port := p_ETS_port,
+    SUT_address := p_SUT_address,
+    SUT_port := p_SUT_port,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header m_llh_disconnect(template integer p_ETS_conn) := {
+    primitive := DISCONNECT_REQUEST_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := omit,
+    ETS_port := omit,
+    SUT_address := omit,
+    SUT_port := omit,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header mw_llh_disconnectIndication(template integer p_ETS_conn) := {
+    primitive := DISCONNECT_INDICATION_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := *,
+    ETS_port := *,
+    SUT_address := *,
+    SUT_port := *,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header m_llh_dataRequest(template integer p_ETS_conn) := {
+    primitive := DATA_REQUEST_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := omit,
+    ETS_port := omit,
+    SUT_address := omit,
+    SUT_port := omit,
+    ETS_conn := p_ETS_conn
+  }
+  
+  template Lower_Layer_Header mw_llh_dataIndication(template integer p_ETS_conn) := {
+    primitive := DATA_INDICATION_E,
+    transport_used := c_defaultTransportProtocol,
+    ETS_address := *,
+    ETS_port := *,
+    SUT_address := *,
+    SUT_port := *,
+    ETS_conn := p_ETS_conn
+  }
+  
+}//end group LowerLayerPrimitives
+
+//internal PIXITS if some
+group ModuleParameters {
+} //end group ModuleParameters
+
+group SubFields{
+  
+  template Result_Code_Type/*integer*/ m_resultCode_diameterSuccess := DIAMETER_SUCCESS_E/*2001*/;
+  template Result_Code_Type/*integer*/ mw_resultCode_diameterSuccess := (DIAMETER_SUCCESS_E,DIAMETER_LIMITED_SUCCESS_E/*2000..2999*/);
+  
+} //end group SubFields
+
+group HeaderFieldTemplates{
+  group DiameterHeaderGroup{
+    template Command_Flags m_cmdFlagsAns := {
+      r_bit := '0'B,
+      p_bit := '0'B,
+      e_bit := '0'B,
+      t_bit := '0'B,
+      reserved_bits := '0000'B
+    }
+    
+    template Command_Flags m_cmdFlagsAnsProx modifies m_cmdFlagsAns:= {
+      p_bit := '1'B
+    }
+    
+    template Command_Flags m_cmdFlagsReq modifies m_cmdFlagsAns:= {
+      r_bit := '1'B
+    }
+    
+    template Command_Flags mw_cmdFlags := {
+      r_bit := ?,
+      p_bit := ?,
+      e_bit := ?,
+      t_bit := ?,
+      reserved_bits := ?
+    }
+    
+    template DiameterHeader m_diameterHeaderReq_dummy(Command_Code p_cmdcode, UInt32 p_applid) := {
+      version := c_versionId,
+      msglen := 0,                //Message lenght with AVPs has to be calculated
+      cmdflags := m_cmdFlagsReq,  //RPETrrrr
+      cmdcode := p_cmdcode,       //Command code
+      applid := p_applid,         //Diameter common messages =0, Vendor specific applications = 16777216 - 4294967294(0x01000000-0xfffffffe) -Gx=16777238,Rx=16777236, 3GPP Cx/Dx=13777216,3GPP Sh=16777217
+      hopid := 0,
+      endid := 0
+    }
+    
+    template DiameterHeader mw_diameterHeaderReq_dummy(Command_Code p_cmdcode, template (present) UInt32 p_applid) := {
+      version := c_versionId,
+      msglen := ?,               //Message lenght with AVPs has to be calculated
+      cmdflags := mw_cmdFlags,   //RPETrrrr
+      cmdcode := p_cmdcode,      //Command code
+      applid := p_applid,        //Diameter common messages =0, Vendor specific applications = 16777216 - 4294967294(0x01000000-0xfffffffe) -Gx=16777238,Rx=16777236, 3GPP Cx/Dx=13777216,3GPP Sh=16777217
+      hopid := ?,
+      endid := ?
+    }
+    
+    template DiameterHeader m_diameterHeaderAns_dummy(Command_Code p_cmdcode, UInt32 p_applid) := {
+      version := c_versionId,
+      msglen := 0,               //Message lenght with AVPs has to be calculated
+      cmdflags := m_cmdFlagsAns, //RPETrrrr
+      cmdcode := p_cmdcode,      //Command code
+      applid := p_applid,        //Diameter common messages =0, Vendor specific applications = 16777216 - 4294967294(0x01000000-0xfffffffe) -Gx=16777238,Rx=16777236, 3GPP Cx/Dx=13777216,3GPP Sh=16777217
+      hopid := 0,
+      endid := 0
+    }
+    
+    template DiameterHeader mw_diameterHeaderAns_dummy(Command_Code p_cmdcode, template (present) UInt32 p_applid) := {
+      version := c_versionId,
+      msglen := ?,               //Message lenght with AVPs has to be calculated
+      cmdflags := mw_cmdFlags,   //RPETrrrr
+      cmdcode := p_cmdcode,      //Command code
+      applid := p_applid,        //Diameter common messages =0, Vendor specific applications = 16777216 - 4294967294(0x01000000-0xfffffffe) -Gx=16777238,Rx=16777236, 3GPP Cx/Dx=13777216,3GPP Sh=16777217
+      hopid := ?,
+      endid := ?
+    }
+    
+    template AVP_Flags m_avpFlags_Mbit1 := {
+      v_bit := '0'B,
+      m_bit := '1'B,
+      p_bit := '0'B,
+      reserved_bits := '00000'B
+    }
+    
+    template AVP_Flags m_avpFlags_Mbit0 := {
+      v_bit := '0'B,
+      m_bit := '0'B,
+      p_bit := '0'B,
+      reserved_bits := '00000'B
+    }
+    
+    template AVP_Flags m_avpFlags_VMbit1 := {
+      v_bit := '1'B,
+      m_bit := '1'B,
+      p_bit := '0'B,
+      reserved_bits := '00000'B
+    }
+    
+    template AVP_Flags mw_avpFlags_any := {
+      v_bit := ?,
+      m_bit := ?,
+      p_bit := ?,
+      reserved_bits := '00000'B
+    }
+    
+    template AVP_Flags mw_avpFlags_VMbits(template Bit1 p_vbit, template Bit1 p_mbit) := {
+      v_bit := p_vbit,
+      m_bit := p_mbit,
+      p_bit := ?,
+      reserved_bits := '00000'B
+    }
+    
+    template AVP_Header mw_aVP_Header_any := {
+      aVP_Code :=?,
+      aVP_flags := mw_avpFlags_any,
+      aVP_len := ?,
+      aVP_vid := *
+    }
+    
+    template AVP_Header mw_aVP_Header_Vbit1Mbit0 (AVP_Code p_avpCode) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := mw_avpFlags_VMbits('1'B, '0'B),
+      aVP_len := ?,
+      aVP_vid := *
+    }
+    
+    template AVP_Header mw_aVP_Header_Vbit0 (AVP_Code p_avpCode) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := mw_avpFlags_VMbits('0'B, ?),
+      aVP_len := ?,
+      aVP_vid := *
+    }
+    
+    template AVP_Header mw_aVP_Header_Vbit0Mbit1 (AVP_Code p_avpCode) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := mw_avpFlags_VMbits('0'B, '1'B),
+      aVP_len := ?,
+      aVP_vid := *
+    }
+    
+    template AVP_Header mw_aVP_Header_VMbit1 (AVP_Code p_avpCode) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := mw_avpFlags_VMbits('1'B, '1'B),
+      aVP_len := ?,
+      aVP_vid := *
+    }
+    
+    template AVP_Header m_aVP_Header_Mbit1(AVP_Code p_avpCode, AVP_Length p_dataLen:=0) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := m_avpFlags_Mbit1,
+      aVP_len := 8 + p_dataLen,
+      aVP_vid := omit
+    }
+    
+    template AVP_Header m_aVP_Header_Mbit0(AVP_Code p_avpCode, AVP_Length p_dataLen:=0) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := m_avpFlags_Mbit0,
+      aVP_len := 8 + p_dataLen,
+      aVP_vid := omit
+    }
+    
+    /**
+    * @desc complete AVP header field template
+    * @param p_avpCode specific Code of the AVP parameter
+    * @param p_avpDataLen additional length caused if AVP data field is present
+    * @param p_avpVid vendor id if needed
+    */
+    template AVP_Header m_aVP_HeaderVid_Mbit0(AVP_Code p_avpCode, AVP_Length p_avpDataLen, template AVP_Vendor_ID p_avpVid) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := {v_bit := f_aVPvBit(p_avpVid),
+        m_bit := '0'B,
+        p_bit := '0'B,
+        reserved_bits := '00000'B},
+      aVP_len :=0,//f_aVP_len(8, p_avpDataLen, p_avpVid), // add length of avpData and optional 4 (if Vid is present)
+      aVP_vid := p_avpVid
+    }
+    
+    /**
+    * @desc complete AVP header field template
+    * @param p_avpCode specific Code of the AVP parameter
+    * @param p_avpDataLen additional length caused if AVP data field is present
+    * @param p_avpVid vendor id if needed
+    */
+    template AVP_Header m_aVP_HeaderVid_Mbit1(AVP_Code p_avpCode, AVP_Length p_avpDataLen, template AVP_Vendor_ID p_avpVid) := {
+      aVP_Code := p_avpCode,
+      aVP_flags := {v_bit := f_aVPvBit(p_avpVid),
+        m_bit := '1'B,
+        p_bit := '0'B,
+        reserved_bits := '00000'B},
+      aVP_len :=0,//f_aVP_len(8, p_avpDataLen, p_avpVid), // add length of avpData and optional 4 (if Vid is present)
+      aVP_vid := p_avpVid
+    }
+    
+    function f_aVP_len(AVP_Length p_length8, AVP_Length p_avpDataLen, template AVP_Vendor_ID p_avpVid)return AVP_Length  {
+      var AVP_Length v_sum;
+      v_sum := p_length8 + p_avpDataLen + f_lengthVid(p_avpVid);
+      return v_sum
+    }
+    
+    function f_getByteAlignedLength(template AVP_Length p_length) return AVP_Length {
+      return (valueof(p_length) + ((4-valueof(p_length) mod 4) mod 4));
+      
+    }
+    
+    function f_lengthVid(template AVP_Vendor_ID p_avpVid) return AVP_Length {
+      if(isvalue(p_avpVid)){return 4} else{return 0}
+    }
+    
+    function f_aVPvBit(template AVP_Vendor_ID p_avpVid) return Bit1 {
+      if(isvalue(p_avpVid)){return '1'B} else{return '0'B}
+    }
+    
+  } //end group DiameterHeaderGroup
+  
+  group DummyAVPHeaders{
+    
+    template Origin_Host_AVP m_originHost_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_origin_Host_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Origin_Realm_AVP m_originRealm_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_origin_Realm_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Vendor_Id_AVP m_vendorId_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_vendor_Id_AVP_Code, 4),
+      aVP_Data := 0
+    }
+    
+    template Product_Name_AVP m_productName_dummy := {
+      aVP_Header := m_aVP_Header_Mbit0(c_product_Name_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Disconnect_Cause_AVP m_disconnectCause_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_disconnect_Cause_AVP_Code, 4),
+      aVP_Data := REBOOTING_E
+    }
+    
+    template Result_Code_AVP m_resultCode_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_result_Code_AVP_Code, 4),
+      aVP_Data := DIAMETER_DUMMY_E
+    }
+    
+    template Destination_Host_AVP m_destinationHost_dummy :=
+    {
+      aVP_Header := m_aVP_Header_Mbit1(c_destination_Host_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Destination_Realm_AVP m_destinationRealm_dummy :=
+    {
+      aVP_Header := m_aVP_Header_Mbit1(c_destination_Realm_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Termination_Cause_AVP m_terminationCause_dummy :=
+    {
+      aVP_Header := m_aVP_Header_Mbit1(c_termination_Cause_AVP_Code, 4),
+      aVP_Data := DIAMETER_LOGOUT_E
+    }
+    
+    template Session_Id_AVP m_sessionId_dummy :=
+    {
+      aVP_Header := m_aVP_Header_Mbit1(c_session_Id_AVP_Code, 3),
+      aVP_Data := "abc"
+    }
+    
+    template Auth_Application_Id_AVP m_authApplicationId_dummy :=
+    {
+      aVP_Header := m_aVP_Header_Mbit1(c_auth_Application_Id_AVP_Code, 4),
+      aVP_Data := 0
+    }
+    
+    template Accounting_Record_Type_AVP m_accounting_Record_Type_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_accounting_Record_Type_AVP_Code,4),
+      aVP_Data := EVENT_RECORD_E
+    }
+    
+    template Accounting_Record_Number_AVP m_accounting_Record_Number_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_accounting_Record_Number_AVP_Code,4),
+      aVP_Data := 0
+    }
+    
+    template Auth_Session_State_AVP m_auth_Session_State_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_auth_Session_State_AVP_Code,4),
+      aVP_Data := STATE_MAINTAINED_E
+    }
+    
+    template SIP_AOR_AVP m_sIP_AOR_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_AOR_AVP_Code, 18, omit),
+      aVP_Data := "aaa://www.etsi.org"/*{
+      scheme := "aaa",
+      diameterId_FQDN := "www.etsi.org",
+      portField := omit,
+      transport := omit,
+      protocol := omit
+      }*/
+    }
+    
+    template SIP_Visited_Network_Id_AVP m_sIP_Visited_Network_Id_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Visited_Network_Id_AVP_Code, 6, omit),
+      aVP_Data := "abcabc"
+    }
+    
+    template SIP_User_Authorization_Type_AVP m_sIP_User_Authorization_Type_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_User_Authorization_Type_AVP_Code, 4, omit),
+      aVP_Data := REGISTRATION_E
+    }
+    
+    template SIP_User_Data_Already_Available_AVP m_sIP_User_Data_Already_Available_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_User_Data_Already_Available_AVP_Code, 4, omit),
+      aVP_Data := USER_DATA_NOT_AVAILABLE_E
+    }
+    
+    template SIP_Server_Assignment_Type_AVP m_sIP_Server_Assignment_Type_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Server_Assignment_Type_AVP_Code, 4, omit),
+      aVP_Data := NO_ASSIGNMENT_E
+    }
+    
+    template SIP_User_Data_AVP m_sIP_User_Data_dummy :=
+    {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_User_Data_AVP_Code, 0, omit),
+      sIP_User_Data_Type := {
+        aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_User_Data_Type_AVP_Code, 3 ,omit),
+        aVP_Data := "abc"
+      },
+      sIP_User_Data_Contents := {
+        aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_User_Data_Contents_AVP_Code, 1, omit),
+        aVP_Data := '00'O
+      },
+      aVP_Type := omit
+    }
+    
+    template SIP_Accounting_Information_AVP m_sIP_Accounting_Information_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Accounting_Information_AVP_Code, 0, omit),
+      sIP_Accounting_Server_URI := omit,
+      sIP_Credit_Control_Server_URI := omit,
+      aVP_Type := omit
+    }
+    
+    template SIP_Method_AVP m_sIP_Method_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Method_AVP_Code, 3, omit),
+      aVP_Data := "sip"
+    }
+    
+    template SIP_Deregistration_Reason_AVP m_sIP_Deregistration_Reason_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Deregistration_Reason_AVP_Code, 8, omit),
+      sIP_Reason_Code_AVP := m_sIP_Reason_Code_dummy,
+      sIP_Reason_Info_AVP := omit,
+      aVP_Type := omit
+    }
+    
+    template SIP_Reason_Code_AVP m_sIP_Reason_Code_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_sIP_Reason_Code_AVP_Code, 4, omit),
+      aVP_Data := PERMANENT_TERMINATION_E
+    }
+    
+    template User_Name_AVP m_user_Name_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_user_Name_AVP_Code, 3, omit),
+      aVP_Data := "dbo"
+    }
+    
+    template User_Identity_AVP m_user_Identity_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_user_Identity_AVP_Code, 0, c_vendId3gpp),
+      public_Identity_AVP := omit,
+      mSISDN_AVP := omit,
+      aVP_Type := omit
+    }
+    
+    template User_Data_AVP m_user_Data_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_user_Data_AVP_Code, 1, c_vendId3gpp),
+      aVP_Data := '00'O
+    }
+    
+    template CC_Request_Type_AVP m_cC_Request_Type_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_cC_Request_Type_AVP_Code,4, omit),
+      aVP_Data := INITIAL_REQUEST_E
+    }
+    
+    template CC_Request_Number_AVP m_cC_Request_Number_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_cC_Request_Number_AVP_Code,4, omit),
+      aVP_Data := 0
+    }
+    
+    template Data_Reference_AVP m_data_Reference_dummy := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_data_Reference_AVP_Code, 4, c_vendId3gpp),
+      aVP_Data := REPOSITORY_DATA_E
+    }
+    
+    template Vendor_Specific_Appl_Id_AVP m_vendor_Specific_Appl_Id_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_vendor_Specific_Appl_Id_AVP_Code),
+      vendor_Id := omit,
+      auth_Application_Id := omit,
+      acct_Application_Id := omit
+    }
+    
+    template Re_Auth_Request_Type_AVP m_re_Auth_Request_dummy := {
+      aVP_Header := m_aVP_Header_Mbit1(c_re_Auth_Request_Type_AVP_Code, 4),
+      aVP_Data := AUTHORIZE_ONLY_E
+    }
+    
+  } //end group DummyAVPHeaders
+  
+  group SpecificAVPHeaders {
+    
+    template Auth_Application_Id_AVP m_authApplicationId(UInt32 p_avpData):=
+    {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_auth_Application_Id_AVP_Code, 4, omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Disconnect_Cause_AVP m_disconnectCause(Disconnect_Cause_Type p_aVP_Data) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_disconnect_Cause_AVP_Code, 4, omit ),
+      aVP_Data := p_aVP_Data
+    }
+    
+    template Host_IP_Address_AVP m_hostIPAddress(Address p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_host_IP_Address_AVP_Code, 0, /*f_IPAdressLength(),*/ omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Origin_Host_AVP m_originHost(charstring p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_origin_Host_AVP_Code, lengthof(p_avpData), omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Origin_Realm_AVP m_originRealm(template(value) charstring p_avpData) :=
+    {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_origin_Realm_AVP_Code, lengthof(p_avpData), omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Product_Name_AVP m_productName(template(value) /*universal*/ charstring p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit0(c_product_Name_AVP_Code, lengthof(p_avpData), omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Result_Code_AVP m_resultCode(template (value) /*integer*/Result_Code_Type p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_result_Code_AVP_Code, 4, omit),
+      aVP_Data := p_avpData
+    }
+    //FIXME
+    template Supported_Vendor_Id_AVP m_supportedVendorId(template(value) UInt32 p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_supported_Vendor_Id_AVP_Code, 4, omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Vendor_Id_AVP m_vendorId(template(value) UInt32 p_avpData) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_vendor_Id_AVP_Code, 4, omit),
+      aVP_Data := p_avpData
+    }
+    
+    template Vendor_Specific_Appl_Id_AVP m_vendor_Specific_Appl_Id(UInt32 p_authApplicationId) := {
+      aVP_Header := m_aVP_HeaderVid_Mbit1(c_vendor_Specific_Appl_Id_AVP_Code, 24, omit),
+      vendor_Id := {m_vendorId(c_vendId3gpp)},
+      auth_Application_Id := {m_authApplicationId(p_authApplicationId)},
+      acct_Application_Id := omit
+    }
+    
+    template Auth_Application_Id_AVP mw_authApplicationId(UInt32 p_avpData) := {
+      aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_result_Code_AVP_Code),
+      aVP_Data := p_avpData
+    }
+    
+    template QoS_Information_AVP mw_qosInformation_QosInfo_ARP := {
+      aVP_Header := mw_aVP_Header_VMbit1(c_qoS_Information_AVP_Code), //<AVP header: 1016 ....>
+      qoS_Class_Identifier :=?,
+      max_Requested_Bandwidth_UL :=*,
+      max_Requested_Bandwidth_DL :=*,
+      guaranteed_Bitrate_UL :=*,
+      guaranteed_Bitrate_DL :=*,
+      bearer_Identifier :=*,
+      allocation_Retention_Priority :=?,
+      aPN_Aggregate_Max_Bitrate_UL :=*,
+      aPN_Aggregate_Max_Bitrate_DL :=*,
+      aVP_Type:=*
+    }
+    
+    template Result_Code_AVP mw_resultCode(template (present)/*integer*/Result_Code_Type p_avpData) := {
+      aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_result_Code_AVP_Code),
+      aVP_Data := p_avpData
+    }
+    
+  } //end group SpecificAVPHeaders
+} //end group HeaderFieldTemplates
+
+/** Message templates for CER,CEA, DWR, DWA, AAA, AAR, .... methods  */
+group MessageTemplates {
+  
+  group dummy_templates {
+    
+    template UNKNOWN_MSG mw_UNKNOWN_dummy := {
+      header := ?,
+      aVP_Type := *
+    }
+    group dummy_request_templates_send {
+      
+      template AAR_MSG m_AAR_dummy :=
+      {
+        header := m_diameterHeaderReq_dummy(AAR_AAA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        destination_Host := m_destinationHost_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        af_Application_Id := omit,
+        media_Component_Description := omit,
+        service_Info_Status := omit,
+        af_Charging_Identifier := omit,
+        sip_Forking_Indication := omit,
+        specific_Action := omit,
+        subscription_Id := omit,
+        supported_Features := omit,
+        reservation_Priority := omit,
+        framed_IP_Address := omit,
+        framed_IPv6_Address := omit,
+        called_Station_Id := omit,
+        service_URN := omit,
+        sponsored_Connectivity_Data := omit,
+        mps_Identifier := omit,
+        user_Name := omit,
+        origin_State_Id := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template ACR_MSG m_ACR_dummy := {
+        header := m_diameterHeaderReq_dummy(ACR_ACA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        accounting_Record_Type := m_accounting_Record_Type_dummy,
+        accounting_Record_Number := m_accounting_Record_Number_dummy,
+        acct_Application_Id := omit,
+        vendor_Specific_Application_Id := omit,
+        user_Name := omit,
+        supported_Features := omit,
+        accounting_Sub_Session_Id := omit,
+        acct_Session_Id := omit,
+        acct_Multi_Session_Id := omit,
+        acct_Interim_Interval := omit,
+        accounting_Realtime_Required := omit,
+        origin_State_Id := omit,
+        event_Timestamp := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template ASR_MSG m_ASR_dummy := {
+        header := m_diameterHeaderReq_dummy(ASR_ASA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        destination_Host := m_destinationHost_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        abort_cause := omit,
+        user_Name := omit,
+        origin_State_Id := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template CCR_MSG m_CCR_dummy := {
+        header := m_diameterHeaderReq_dummy(CCR_CCA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        service_Context_Id := omit,
+        cC_Request_Type := m_cC_Request_Type_dummy,
+        cC_Request_Number := m_cC_Request_Number_dummy,
+        destination_Host := omit,
+        user_Name := omit,
+        cC_Sub_Session_Id := omit,
+        acct_Multi_Session_Id := omit,
+        origin_State_Id := omit,
+        event_Timestamp := omit,
+        subscription_Id := omit,
+        service_Identifier := omit,
+        termination_Cause := omit,
+        requested_Service_Unit := omit,
+        requested_Action := omit,
+        used_Service_Unit := omit,
+        multiple_Services_Indicator := omit,
+        multiple_Services_Credit_Control := omit,
+        service_Parameter_Info := omit,
+        cC_Correlation_Id := omit,
+        supported_Features := omit,
+        network_Request_Support := omit,
+        packet_Filter_Information := omit,
+        packet_Filter_Operation := omit,
+        bearer_Identifier := omit,
+        bearer_Operation := omit,
+        framed_IP_Address := omit,
+        framed_IPv6_Prefix := omit,
+        iP_CAN_Type := omit,
+        threeGPP_RAT_Type := omit,
+        rAT_Type := omit,
+        qoS_Information := omit,
+        qoS_Negotiation := omit,
+        qoS_Upgrade := omit,
+        default_EPS_Bearer_QoS := omit,
+        aN_GW_Address := omit,
+        threeGPP_SGSN_MCC_MNC := omit,
+        threeGPP_SGSN_Address := omit,
+        threeGPP_SGSN_IPv6_Address := omit,
+        rAI := omit,
+        threeGPP_User_Location_Info := omit,
+        threeGPP_MS_TimeZone := omit,
+        called_Station_Id := omit,
+        pDN_Connection_ID := omit,
+        bearer_Usage := omit,
+        online := omit,
+        offline := omit,
+        tFT_Packet_Filter_Information := omit,
+        charging_Rule_Report := omit,
+        event_Trigger := omit,
+        event_Report_Indication := omit,
+        access_Network_Charging_Address := omit,
+        access_Network_Charging_Identifier_Gx := omit,
+        coA_Information := omit,
+        usage_Monitoring_Information := omit,
+        routing_Rule_Install := omit,
+        routing_Rule_Remove := omit,
+        maximum_Bandwidth := omit,
+        logical_Access_ID := omit,
+        physical_Access_ID := omit,
+        user_Equipment_Info := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template CER_MSG m_CER_dummy := {
+        header := m_diameterHeaderReq_dummy(CER_CEA_E, c_applIdCommonMsg),
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        host_IP_Address := {m_hostIPAddress(c_address)}, //         Address:{'0001'O, {ipv4 := {127, 0, 0,1}}})},
+        vendor_Id := m_vendorId_dummy,
+        product_Name := m_productName_dummy,
+        origin_State_Id := omit,
+        supported_Vendor_Id := omit,
+        auth_Application_Id := omit,
+        inband_Security_Id := omit,
+        acct_Application_Id := omit,
+        vendor_Specific_Application_Id := omit,
+        firmware_Revision := omit,
+        aVP_Type := omit
+      }
+      
+      template DWR_MSG m_DWR_dummy := {
+        header := m_diameterHeaderReq_dummy(DWR_DWA_E, c_applIdCommonMsg),
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        origin_State_Id := omit,
+        aVP_Type := omit
+      }
+      
+      template DPR_MSG m_DPR_dummy := {
+        header := m_diameterHeaderReq_dummy(DPR_DPA_E, c_applIdCommonMsg),
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        disconnect_Cause := m_disconnectCause_dummy,
+        aVP_Type := omit
+      }
+      
+      template LIR_MSG m_LIR_dummy := {
+        header := m_diameterHeaderReq_dummy(LIR_LIA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        sIP_AOR := m_sIP_AOR_dummy,
+        destination_Host := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template MAR_MSG m_MAR_dummy := {
+        header := m_diameterHeaderReq_dummy(MAR_MAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        sIP_AOR := m_sIP_AOR_dummy,
+        sIP_Method := m_sIP_Method_dummy,
+        destination_Host := omit,
+        user_Name := omit,
+        sIP_Server_URI := omit,
+        sIP_Number_Auth_Items := omit,
+        sIP_Auth_Data_Item := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template PPR_MSG m_PPR_dummy := {
+        header := m_diameterHeaderReq_dummy(PPR_PPA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        user_Name := m_user_Name_dummy,
+        sIP_User_Data := omit,
+        sIP_Accounting_Information := m_sIP_Accounting_Information_dummy,
+        destination_Host := omit,
+        authorization_Lifetime := omit,
+        auth_Grace_Period := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template PUR_MSG m_PUR_dummy := {
+        header := m_diameterHeaderReq_dummy(PUR_PUA_E, c_applId3GPPSh),
+        session_Id := m_sessionId_dummy,
+        vendor_Specific_Application_Id := m_vendor_Specific_Appl_Id_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Host := omit,
+        destination_Realm := m_destinationRealm_dummy,
+        supported_Features := omit,
+        user_Identity := m_user_Identity_dummy,
+        wildcarded_PSI := omit,
+        wildcarded_IMPU := omit,
+        data_Reference := m_data_Reference_dummy,
+        user_Data := m_user_Data_dummy,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template RAR_MSG m_RAR_dummy := {
+        header := m_diameterHeaderReq_dummy(RAR_RAA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        destination_Host := m_destinationHost_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        specific_action := omit,
+        re_Auth_Request_Type := m_re_Auth_Request_dummy,
+        user_Name := omit,
+        acc_nc_ident := omit,
+        acc_nc_addr := omit,
+        flows := omit,
+        subscription_Id := omit,
+        abort_Cause := omit,
+        ip_Can := omit,
+        rat_Type := omit,
+        sponsored_Connectivity_Data := omit,
+        origin_State_Id := omit,
+        class := omit,
+        session_Release_Cause := omit,
+        event_Trigger := omit,
+        event_Report_Indication := omit,
+        charging_Rule_Remove := omit,
+        charging_Rule_Install := omit,
+        default_EPS_Bearer_QoS := omit,
+        qoS_Information := omit,
+        revalidation_Time := omit,
+        usage_Monitoring_Information := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template RTR_MSG m_RTR_dummy := {
+        header := m_diameterHeaderReq_dummy(RTR_RTA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Host := m_destinationHost_dummy,
+        sIP_Deregistration_Reason := m_sIP_Deregistration_Reason_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        user_Name := omit,
+        sIP_AOR := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template SAR_MSG m_SAR_dummy := {
+        header := m_diameterHeaderReq_dummy(SAR_SAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        sIP_Server_Assignment_Type := m_sIP_Server_Assignment_Type_dummy,
+        sIP_User_Data_Already_Available := m_sIP_User_Data_Already_Available_dummy,
+        destination_Host := omit,
+        user_Name := omit,
+        sIP_Server_URI := omit,
+        sIP_Supported_User_Data_Type := omit,
+        sIP_AOR := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template STR_MSG m_STR_dummy :=
+      {
+        header := m_diameterHeaderReq_dummy(STR_STA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        termination_Cause :=  m_terminationCause_dummy,
+        user_Name := omit,
+        destination_Host := omit,
+        class := omit,
+        origin_State_Id := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template UAR_MSG m_UAR_dummy :=
+      {
+        header := m_diameterHeaderReq_dummy(UAR_UAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Realm := m_destinationRealm_dummy,
+        sIP_AOR := m_sIP_AOR_dummy,
+        destination_Host := omit,
+        user_Name := omit,
+        sIP_Visited_Network_Id := m_sIP_Visited_Network_Id_dummy,
+        sIP_User_Authorization_Type := m_sIP_User_Authorization_Type_dummy,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template UDR_MSG m_UDR_dummy := {
+        header := m_diameterHeaderReq_dummy(UDR_UDA_E, c_applId3GPPSh),
+        session_Id := m_sessionId_dummy,
+        vendor_Specific_Application_Id := omit,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        destination_Host := omit,
+        destination_Realm := m_destinationRealm_dummy,
+        supported_Features := omit,
+        user_Identity := m_user_Identity_dummy,
+        wildcarded_PSI := omit,
+        wildcarded_IMPU := omit,
+        server_Name := omit,
+        service_Indication := omit,
+        data_Reference := {m_data_Reference_dummy},
+        identity_Set := omit,
+        requested_Domain := omit,
+        current_Location := omit,
+        dSAI_Tag := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+    }//end group dummy_request_templates_send
+    group dummy_request_templates_receive {
+      
+      template AAR_MSG mw_AAR_dummy :=
+      {
+        header := mw_diameterHeaderReq_dummy(AAR_AAA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        destination_Host := *,
+        auth_Application_Id := ?,
+        af_Application_Id := *,
+        media_Component_Description := *,
+        service_Info_Status := *,
+        af_Charging_Identifier := *,
+        sip_Forking_Indication := *,
+        specific_Action := *,
+        subscription_Id := *,
+        supported_Features := *,
+        reservation_Priority := *,
+        framed_IP_Address := *,
+        framed_IPv6_Address := *,
+        called_Station_Id := *,
+        service_URN := *,
+        sponsored_Connectivity_Data := *,
+        mps_Identifier := *,
+        user_Name := *,
+        origin_State_Id := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template ACR_MSG mw_ACR_dummy := {
+        header := mw_diameterHeaderReq_dummy(ACR_ACA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        accounting_Record_Type := ?,
+        accounting_Record_Number := ?,
+        acct_Application_Id := *,
+        vendor_Specific_Application_Id := *,
+        user_Name := *,
+        supported_Features := *,
+        accounting_Sub_Session_Id := *,
+        acct_Session_Id := *,
+        acct_Multi_Session_Id := *,
+        acct_Interim_Interval := *,
+        accounting_Realtime_Required := *,
+        origin_State_Id := *,
+        event_Timestamp := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template ASR_MSG mw_ASR_dummy := {
+        header := mw_diameterHeaderReq_dummy(ASR_ASA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        destination_Host := ?,
+        auth_Application_Id := ?,
+        abort_cause := *,
+        user_Name := *,
+        origin_State_Id := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template CCR_MSG mw_CCR_dummy := {
+        header := mw_diameterHeaderReq_dummy(CCR_CCA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        auth_Application_Id := ?,
+        service_Context_Id := *,
+        cC_Request_Type := ?,
+        cC_Request_Number := ?,
+        destination_Host := *,
+        user_Name := *,
+        cC_Sub_Session_Id := *,
+        acct_Multi_Session_Id := *,
+        origin_State_Id := *,
+        event_Timestamp := *,
+        subscription_Id := *,
+        service_Identifier := *,
+        termination_Cause := *,
+        requested_Service_Unit := *,
+        requested_Action := *,
+        used_Service_Unit := *,
+        multiple_Services_Indicator := *,
+        multiple_Services_Credit_Control := *,
+        service_Parameter_Info := *,
+        cC_Correlation_Id := *,
+        supported_Features := *,
+        network_Request_Support := *,
+        packet_Filter_Information := *,
+        packet_Filter_Operation := *,
+        bearer_Identifier := *,
+        bearer_Operation := *,
+        framed_IP_Address := *,
+        framed_IPv6_Prefix := *,
+        iP_CAN_Type := *,
+        threeGPP_RAT_Type := *,
+        rAT_Type := *,
+        qoS_Information := *,
+        qoS_Negotiation := *,
+        qoS_Upgrade := *,
+        default_EPS_Bearer_QoS := *,
+        aN_GW_Address := *,
+        threeGPP_SGSN_MCC_MNC := *,
+        threeGPP_SGSN_Address := *,
+        threeGPP_SGSN_IPv6_Address := *,
+        rAI := *,
+        threeGPP_User_Location_Info := *,
+        threeGPP_MS_TimeZone := *,
+        called_Station_Id := *,
+        pDN_Connection_ID := *,
+        bearer_Usage := *,
+        online := *,
+        offline := *,
+        tFT_Packet_Filter_Information := *,
+        charging_Rule_Report := *,
+        event_Trigger := *,
+        event_Report_Indication := *,
+        access_Network_Charging_Address := *,
+        access_Network_Charging_Identifier_Gx := *,
+        coA_Information := *,
+        usage_Monitoring_Information := *,
+        routing_Rule_Install := *,
+        routing_Rule_Remove := *,
+        maximum_Bandwidth := *,
+        logical_Access_ID := *,
+        physical_Access_ID := *,
+        user_Equipment_Info := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template CER_MSG mw_CER_dummy := {
+        header := mw_diameterHeaderReq_dummy(CER_CEA_E, ?),
+        origin_Host := ?,
+        origin_Realm := ?,
+        host_IP_Address := ?,
+        vendor_Id := ?,
+        product_Name := ?,
+        origin_State_Id := *,
+        supported_Vendor_Id := *,
+        auth_Application_Id := *,
+        inband_Security_Id := *,
+        acct_Application_Id := *,
+        vendor_Specific_Application_Id := *,
+        firmware_Revision := *,
+        aVP_Type := *
+      }
+      
+      template DWR_MSG mw_DWR_dummy := {
+        header := mw_diameterHeaderReq_dummy(DWR_DWA_E, ?),
+        origin_Host := ?,
+        origin_Realm := ?,
+        origin_State_Id := *,
+        aVP_Type := *
+      }
+      
+      template DPR_MSG mw_DPR_dummy := {
+        header := mw_diameterHeaderReq_dummy(DPR_DPA_E, ?),
+        origin_Host := ?,
+        origin_Realm := ?,
+        disconnect_Cause := ?,
+        aVP_Type := *
+      }
+      
+      template LIR_MSG mw_LIR_dummy := {
+        header := mw_diameterHeaderReq_dummy(LIR_LIA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        sIP_AOR := ?,
+        destination_Host := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template MAR_MSG mw_MAR_dummy := {
+        header := mw_diameterHeaderReq_dummy(MAR_MAA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        sIP_AOR := ?,
+        sIP_Method := ?,
+        destination_Host := *,
+        user_Name := *,
+        sIP_Server_URI := *,
+        sIP_Number_Auth_Items := *,
+        sIP_Auth_Data_Item := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template PPR_MSG mw_PPR_dummy := {
+        header := mw_diameterHeaderReq_dummy(PPR_PPA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        user_Name := ?,
+        sIP_User_Data := *,
+        sIP_Accounting_Information := ?,
+        destination_Host := ?,
+        authorization_Lifetime := ?,
+        auth_Grace_Period := ?,
+        proxy_Info := ?,
+        route_Record := ?,
+        aVP_Type := ?
+      }
+      
+      template PUR_MSG mw_PUR_dummy := {
+        header := mw_diameterHeaderReq_dummy(PUR_PUA_E, ?),
+        session_Id := ?,
+        vendor_Specific_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Host := *,
+        destination_Realm := ?,
+        supported_Features := *,
+        user_Identity := ?,
+        wildcarded_PSI := *,
+        wildcarded_IMPU := *,
+        data_Reference := ?,
+        user_Data := ?,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template RAR_MSG mw_RAR_dummy := {
+        header := mw_diameterHeaderReq_dummy(RAR_RAA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        destination_Host := ?,
+        auth_Application_Id := ?,
+        specific_action := *,
+        re_Auth_Request_Type := ?,
+        user_Name := *,
+        acc_nc_ident := *,
+        acc_nc_addr := *,
+        flows := *,
+        subscription_Id := *,
+        abort_Cause := *,
+        ip_Can := *,
+        rat_Type := *,
+        sponsored_Connectivity_Data := *,
+        origin_State_Id := *,
+        class := *,
+        session_Release_Cause := *,
+        event_Trigger := *,
+        event_Report_Indication := *,
+        charging_Rule_Remove := *,
+        charging_Rule_Install := *,
+        default_EPS_Bearer_QoS := *,
+        qoS_Information := *,
+        revalidation_Time := *,
+        usage_Monitoring_Information := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template RTR_MSG mw_RTR_dummy := {
+        header := mw_diameterHeaderReq_dummy(RTR_RTA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Host := ?,
+        sIP_Deregistration_Reason := ?,
+        destination_Realm := ?,
+        user_Name := *,
+        sIP_AOR := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template SAR_MSG mw_SAR_dummy := {
+        header := mw_diameterHeaderReq_dummy(SAR_SAA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        sIP_Server_Assignment_Type := ?,
+        sIP_User_Data_Already_Available := ?,
+        destination_Host := *,
+        user_Name := *,
+        sIP_Server_URI := *,
+        sIP_Supported_User_Data_Type := *,
+        sIP_AOR := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template STR_MSG mw_STR_dummy :=
+      {
+        header := mw_diameterHeaderReq_dummy(STR_STA_E, ?),
+        session_Id := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        auth_Application_Id := ?,
+        termination_Cause := ?,
+        user_Name := *,
+        destination_Host := *,
+        class := *,
+        origin_State_Id := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template UAR_MSG mw_UAR_dummy := {
+        header := mw_diameterHeaderReq_dummy(UAR_UAA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Realm := ?,
+        sIP_AOR := ?,
+        destination_Host := *,
+        user_Name := *,
+        sIP_Visited_Network_Id := ?,
+        sIP_User_Authorization_Type := ?,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template UDR_MSG mw_UDR_dummy := {
+        header := mw_diameterHeaderReq_dummy(UDR_UDA_E, ?),
+        session_Id := ?,
+        vendor_Specific_Application_Id := *,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        destination_Host := *,
+        destination_Realm := ?,
+        supported_Features := *,
+        user_Identity := ?,
+        wildcarded_PSI := *,
+        wildcarded_IMPU := *,
+        server_Name := *,
+        service_Indication := *,
+        data_Reference := ?,
+        identity_Set := *,
+        requested_Domain := *,
+        current_Location := *,
+        dSAI_Tag := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+    }//end group dummy_request_templates_receive
+    group dummy_answer_templates_send {
+      
+      template AAA_MSG m_AAA_dummy :=
+      {
+        header := m_diameterHeaderAns_dummy(AAR_AAA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := omit,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        experimental_result := omit,
+        access_network_charging_Identifier := omit,
+        access_network_charging_address := omit,
+        acceptable_service_info := omit,
+        ip_Can_Type := omit,
+        rat_Type := omit,
+        supported_Features := omit,
+        class := omit,
+        user_Name := omit,
+        origin_State_Id := omit,
+        error_Message := omit,
+        error_Reporting_Host := omit,
+        failed := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        aVP_Type := omit
+      }
+      
+      template ACA_MSG m_ACA_dummy := {
+        header :=  m_diameterHeaderAns_dummy(ACR_ACA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        accounting_Record_Type := m_accounting_Record_Type_dummy,
+        accounting_Record_Number := m_accounting_Record_Number_dummy,
+        acct_Application_Id := omit,
+        vendor_Specific_Application_Id := omit,
+        user_Name := omit,
+        accounting_Sub_Session_Id := omit,
+        acct_Session_Id := omit,
+        acct_Multi_Session_Id := omit,
+        error_Reporting_Host := omit,
+        acct_Interim_Interval := omit,
+        accounting_Realtime_Required := omit,
+        origin_State_Id := omit,
+        event_Timestamp := omit,
+        proxy_Info := omit,
+        aVP_Type := omit
+      }
+      
+      template ASA_MSG m_ASA_dummy := {
+        header := m_diameterHeaderAns_dummy(ASR_ASA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        user_Name := omit,
+        origin_State_Id := omit,
+        error_Message := omit,
+        error_Reporting_Host := omit,
+        failed := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        aVP_Type := omit
+      }
+      
+      template CCA_MSG m_CCA_dummy := {
+        header := m_diameterHeaderAns_dummy(CCR_CCA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        cC_Request_Type := m_cC_Request_Type_dummy,
+        cC_Request_Number := m_cC_Request_Number_dummy,
+        user_Name := omit,
+        cC_Session_Failover := omit,
+        cC_Sub_Session_Id := omit,
+        acct_Multi_Session_Id := omit,
+        origin_State := omit,
+        event_Timestamp := omit,
+        granted_Service_Unit := omit,
+        multiple_Services_Credit_Control := omit,
+        cost_Information := omit,
+        final_Unit_Indication := omit,
+        check_Balance_Result := omit,
+        credit_Control_Failure_Handling := omit,
+        direct_Debiting_Failure_Handling := omit,
+        validity_Time := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        experimental_Result := omit,
+        supported_Features := omit,
+        bearer_Control_Mode := omit,
+        event_Trigger := omit,
+        charging_Rule_Remove := omit,
+        charging_Rule_Install := omit,
+        charging_Information := omit,
+        online := omit,
+        offline := omit,
+        qoS_Information := omit,
+        revalidation_Time := omit,
+        default_EPS_Bearer_QoS := omit,
+        bearer_Usage := omit,
+        threeGPP_User_Location_Info := omit,
+        usage_Monitoring_Information := omit,
+        cSG_Information_Reporting := omit,
+        user_CSG_Information := omit,
+        error_Message := omit,
+        error_Reporting_Host := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        failed := omit,
+        aVP_Type := omit
+      }
+      
+      template CEA_MSG m_CEA_dummy := {
+        header := m_diameterHeaderAns_dummy(CER_CEA_E, c_applIdCommonMsg),
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        host_IP_Address := {m_hostIPAddress(c_address)}, //         Address:{'0001'O, {ipv4 := {127, 0, 0,1}}})},
+        vendor_Id := m_vendorId_dummy,
+        product_Name := m_productName_dummy,
+        origin_State_Id := omit,
+        error_Message := omit,
+        failed := omit,
+        supported_Vendor_Id := omit,
+        auth_Application_Id := omit,
+        inband_Security_Id := omit,
+        acct_Application_Id := omit,
+        vendor_Specific_Application_Id := omit,
+        firmware_Revision := omit,
+        aVP_Type := omit
+      }
+      
+      template DWA_MSG m_DWA_dummy := {
+        header := m_diameterHeaderAns_dummy(DWR_DWA_E, c_applIdCommonMsg),
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        error_Message := omit,
+        failed := omit,
+        origin_State_Id := omit,
+        aVP_Type := omit
+      }
+      
+      template DPA_MSG m_DPA_dummy := {
+        header := m_diameterHeaderAns_dummy(DPR_DPA_E, c_applIdCommonMsg),
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        error_Message := omit,
+        failed := omit,
+        aVP_Type := omit
+      }
+      
+      template LIA_MSG m_LIA_dummy := {
+        header := m_diameterHeaderAns_dummy(LIR_LIA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        result_Code := m_resultCode_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        sIP_Server_URI := omit,
+        sIP_Server_Capabilities := omit,
+        auth_Grace_Period := omit,
+        authorization_Lifetime := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template MAA_MSG m_MAA_dummy := {
+        header := m_diameterHeaderAns_dummy(MAR_MAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        result_Code := m_resultCode_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        user_Name := omit,
+        sIP_AOR := omit,
+        sIP_Number_Auth_Items := omit,
+        sIP_Auth_Data_Item := omit,
+        auth_Grace_Period := omit,
+        authorization_Lifetime := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template PPA_MSG m_PPA_dummy := {
+        header := m_diameterHeaderAns_dummy(PPR_PPA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        result_Code := m_resultCode_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template PUA_MSG m_PUA_dummy := {
+        header := m_diameterHeaderAns_dummy(PUR_PUA_E, c_applId3GPPSh),
+        session_Id := m_sessionId_dummy,
+        vendor_Specific_Application_Id := m_vendor_Specific_Appl_Id_dummy,
+        result_Code := omit,
+        experimental_Result := omit,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        wildcarded_PSI := omit,
+        wildcarded_IMPU := omit,
+        supported_Features := omit,
+        //   aVP_Type := omit,
+        failed := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template RAA_MSG m_RAA_dummy := {
+        header := m_diameterHeaderAns_dummy(RAR_RAA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := omit,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        experimental_result := omit,
+        user_Name := omit,
+        media_Component_Description := omit,
+        service_URN := omit,
+        origin_State_Id := omit,
+        class := omit,
+        iP_CAN_Type := omit,
+        rAT_Type := omit,
+        aN_GW_Address := omit,
+        threeGPP_SGSN_MCC_MNC := omit,
+        threeGPP_SGSN_Address := omit,
+        threeGPP_SGSN_IPv6_Address := omit,
+        rAI := omit,
+        threeGPP_User_Location_Info := omit,
+        threeGPP_MS_TimeZone := omit,
+        charging_Rule_Report := omit,
+        error_Message := omit,
+        error_Reporting_Host := omit,
+        failed := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        aVP_Type := omit
+      }
+      
+      template RTA_MSG m_RTA_dummy := {
+        header := m_diameterHeaderAns_dummy(RTR_RTA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        result_Code := m_resultCode_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        authorization_Lifetime := omit,
+        auth_Grace_Period := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template SAA_MSG m_SAA_dummy :=
+      {
+        header := m_diameterHeaderAns_dummy(SAR_SAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        result_Code := m_resultCode_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        sIP_User_Data := {m_sIP_User_Data_dummy},
+        sIP_Accounting_Information := m_sIP_Accounting_Information_dummy,
+        sIP_Supported_User_Data_Type := omit,
+        user_Name := omit,
+        auth_Grace_Period := omit,
+        authorization_Lifetime := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template STA_MSG m_STA_dummy :=
+      {
+        header := m_diameterHeaderAns_dummy(STR_STA_E, c_applIdCommonMsg),
+        session_Id := m_sessionId_dummy,
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        user_Name := omit,
+        class := omit,
+        error_Message := omit,
+        error_Reporting_Host := omit,
+        failed := omit,
+        sponsored_Connectivity_Data := omit,
+        origin_State_Id := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        aVP_Type := omit
+      }
+      
+      template UAA_MSG m_UAA_dummy := {
+        header := m_diameterHeaderAns_dummy(UAR_UAA_E, c_applId3GPPCxDx),
+        session_Id := m_sessionId_dummy,
+        auth_Application_Id := m_authApplicationId_dummy,
+        auth_Session_State := m_auth_Session_State_dummy,
+        result_Code := m_resultCode_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        sIP_Server_URI := omit,
+        sIP_Server_Capabilities := omit,
+        authorization_Lifetime := omit,
+        auth_Grace_Period := omit,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template UDA_MSG m_UDA_dummy := {
+        header := m_diameterHeaderAns_dummy(UDR_UDA_E, c_applId3GPPSh),
+        session_Id := m_sessionId_dummy,
+        vendor_Specific_Application_Id := m_vendor_Specific_Appl_Id_dummy,
+        result_Code := m_resultCode_dummy,
+        experimental_Result := omit,
+        auth_Session_State := m_auth_Session_State_dummy,
+        origin_Host := m_originHost_dummy,
+        origin_Realm := m_originRealm_dummy,
+        supported_Features := omit,
+        wildcarded_PSI := omit,
+        wildcarded_IMPU := omit,
+        user_Data := omit,
+        //   aVP_Type := omit,
+        failed := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+    }//end group dummy_answer_templates_send
+    group dummy_answer_templates_receive {
+      
+      template AAA_MSG mw_AAA_dummy :=
+      {
+        header := mw_diameterHeaderAns_dummy(AAR_AAA_E, ?),
+        session_Id := ?,
+        result_Code := *,
+        origin_Host := ?,
+        origin_Realm := ?,
+        auth_Application_Id := ?,
+        experimental_result := *,
+        access_network_charging_Identifier := *,
+        access_network_charging_address := *,
+        acceptable_service_info := *,
+        ip_Can_Type := *,
+        rat_Type := *,
+        supported_Features := *,
+        class := *,
+        user_Name := *,
+        origin_State_Id := *,
+        error_Message := *,
+        error_Reporting_Host := *,
+        failed := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        aVP_Type := *
+      }
+      
+      template ACA_MSG mw_ACA_dummy := {
+        header :=  mw_diameterHeaderAns_dummy(ACR_ACA_E, ?),
+        session_Id := ?,
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        accounting_Record_Type := ?,
+        accounting_Record_Number := ?,
+        acct_Application_Id := *,
+        vendor_Specific_Application_Id := *,
+        user_Name := *,
+        accounting_Sub_Session_Id := *,
+        acct_Session_Id := *,
+        acct_Multi_Session_Id := *,
+        error_Reporting_Host := *,
+        acct_Interim_Interval := *,
+        accounting_Realtime_Required := *,
+        origin_State_Id := *,
+        event_Timestamp := *,
+        proxy_Info := *,
+        aVP_Type := *
+      }
+      
+      template ASA_MSG mw_ASA_dummy := {
+        header := mw_diameterHeaderAns_dummy(ASR_ASA_E, ?),
+        session_Id := ?,
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        user_Name := *,
+        origin_State_Id := *,
+        error_Message := *,
+        error_Reporting_Host := *,
+        failed := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        aVP_Type := *
+      }
+      
+      template CCA_MSG mw_CCA_dummy := {
+        header := mw_diameterHeaderAns_dummy(CCR_CCA_E, ?),
+        session_Id := ?,
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        auth_Application_Id := ?,
+        cC_Request_Type := ?,
+        cC_Request_Number := ?,
+        user_Name := *,
+        cC_Session_Failover := *,
+        cC_Sub_Session_Id := *,
+        acct_Multi_Session_Id := *,
+        origin_State := *,
+        event_Timestamp := *,
+        granted_Service_Unit := *,
+        multiple_Services_Credit_Control := *,
+        cost_Information := *,
+        final_Unit_Indication := *,
+        check_Balance_Result := *,
+        credit_Control_Failure_Handling := *,
+        direct_Debiting_Failure_Handling := *,
+        validity_Time := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        experimental_Result := *,
+        supported_Features := *,
+        bearer_Control_Mode := *,
+        event_Trigger := *,
+        charging_Rule_Remove := *,
+        charging_Rule_Install := *,
+        charging_Information := *,
+        online := *,
+        offline := *,
+        qoS_Information := *,
+        revalidation_Time := *,
+        default_EPS_Bearer_QoS := *,
+        bearer_Usage := *,
+        threeGPP_User_Location_Info := *,
+        usage_Monitoring_Information := *,
+        cSG_Information_Reporting := *,
+        user_CSG_Information := *,
+        error_Message := *,
+        error_Reporting_Host := *,
+        proxy_Info := *,
+        route_Record := *,
+        failed := *,
+        aVP_Type := *
+      }
+      
+      template CEA_MSG mw_CEA_dummy := {
+        header := mw_diameterHeaderAns_dummy(CER_CEA_E, ?),
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        host_IP_Address := ?,
+        vendor_Id := ?,
+        product_Name := ?,
+        origin_State_Id := *,
+        error_Message := *,
+        failed := *,
+        supported_Vendor_Id := *,
+        auth_Application_Id := *,
+        inband_Security_Id := *,
+        acct_Application_Id := *,
+        vendor_Specific_Application_Id := *,
+        firmware_Revision := *,
+        aVP_Type := *
+      }
+      
+      template DWA_MSG mw_DWA_dummy := {
+        header := mw_diameterHeaderAns_dummy(DWR_DWA_E, ?),
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        error_Message := *,
+        failed := *,
+        origin_State_Id := *,
+        aVP_Type := *
+      }
+      
+      template DPA_MSG mw_DPA_dummy := {
+        header := mw_diameterHeaderAns_dummy(DPR_DPA_E, ?),
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        error_Message := *,
+        failed := *,
+        aVP_Type := *
+      }
+      
+      template LIA_MSG mw_LIA_dummy := {
+        header := mw_diameterHeaderAns_dummy(LIR_LIA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        result_Code := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        sIP_Server_URI := *,
+        sIP_Server_Capabilities := *,
+        auth_Grace_Period := *,
+        authorization_Lifetime := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template MAA_MSG mw_MAA_dummy := {
+        header := mw_diameterHeaderAns_dummy(MAR_MAA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        result_Code := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        user_Name := *,
+        sIP_AOR := *,
+        sIP_Number_Auth_Items := *,
+        sIP_Auth_Data_Item := *,
+        auth_Grace_Period := *,
+        authorization_Lifetime := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template PPA_MSG mw_PPA_dummy := {
+        header := mw_diameterHeaderAns_dummy(PPR_PPA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        result_Code := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        redirect_Host := omit,
+        redirect_Host_Usage := omit,
+        redirect_Max_Cache_Time := omit,
+        proxy_Info := omit,
+        route_Record := omit,
+        aVP_Type := omit
+      }
+      
+      template PUA_MSG mw_PUA_dummy := {
+        header := mw_diameterHeaderAns_dummy(PUR_PUA_E, ?),
+        session_Id := ?,
+        vendor_Specific_Application_Id := ?,
+        result_Code := *,
+        experimental_Result := *,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        wildcarded_PSI := *,
+        wildcarded_IMPU := *,
+        supported_Features := *,
+        //aVP_Type := *,
+        failed := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template RAA_MSG mw_RAA_dummy := {
+        header := mw_diameterHeaderAns_dummy(RAR_RAA_E, ?),
+        session_Id := ?,
+        result_Code := *,
+        origin_Host := ?,
+        origin_Realm := ?,
+        experimental_result := *,
+        user_Name := *,
+        media_Component_Description := *,
+        service_URN := *,
+        origin_State_Id := *,
+        class := *,
+        iP_CAN_Type := *,
+        rAT_Type := *,
+        aN_GW_Address := *,
+        threeGPP_SGSN_MCC_MNC := *,
+        threeGPP_SGSN_Address := *,
+        threeGPP_SGSN_IPv6_Address := *,
+        rAI := *,
+        threeGPP_User_Location_Info := *,
+        threeGPP_MS_TimeZone := *,
+        charging_Rule_Report := *,
+        error_Message := *,
+        error_Reporting_Host := *,
+        failed := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        aVP_Type := *
+      }
+      
+      template RTA_MSG mw_RTA_dummy := {
+        header := mw_diameterHeaderAns_dummy(RTR_RTA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        result_Code := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        authorization_Lifetime := *,
+        auth_Grace_Period := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template SAA_MSG mw_SAA_dummy :=
+      {
+        header := mw_diameterHeaderAns_dummy(SAR_SAA_E, ?),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        result_Code := ?,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        sIP_User_Data := ?,
+        sIP_Accounting_Information := ?,
+        sIP_Supported_User_Data_Type := *,
+        user_Name := *,
+        auth_Grace_Period := *,
+        authorization_Lifetime := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template STA_MSG mw_STA_dummy :=
+      {
+        header := mw_diameterHeaderAns_dummy(STR_STA_E, ?),
+        session_Id := ?,
+        result_Code := *,
+        origin_Host := ?,
+        origin_Realm := ?,
+        user_Name := *,
+        class := *,
+        error_Message := *,
+        error_Reporting_Host := *,
+        failed := *,
+        sponsored_Connectivity_Data := *,
+        origin_State_Id := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        aVP_Type := *
+      }
+      
+      template UAA_MSG mw_UAA_dummy := {
+        header := mw_diameterHeaderAns_dummy(UAR_UAA_E, c_applIdCommonMsg),
+        session_Id := ?,
+        auth_Application_Id := ?,
+        auth_Session_State := ?,
+        result_Code := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        sIP_Server_URI := *,
+        sIP_Server_Capabilities := *,
+        authorization_Lifetime := *,
+        auth_Grace_Period := *,
+        redirect_Host := *,
+        redirect_Host_Usage := *,
+        redirect_Max_Cache_Time := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+      template UDA_MSG mw_UDA_dummy := {
+        header := mw_diameterHeaderAns_dummy(UDR_UDA_E, ?),
+        session_Id := ?,
+        vendor_Specific_Application_Id := ?,
+        result_Code := ?,
+        experimental_Result := *,
+        auth_Session_State := ?,
+        origin_Host := ?,
+        origin_Realm := ?,
+        supported_Features := *,
+        wildcarded_PSI := *,
+        wildcarded_IMPU := *,
+        user_Data := *,
+        //   aVP_Type := *,
+        failed := *,
+        proxy_Info := *,
+        route_Record := *,
+        aVP_Type := *
+      }
+      
+    }//end group dummy_answer_templates_receive
+  } //end group dummy_templates
+  group base_templates {
+    
+    group basic_request_templates_send {
+      
+      template CER_MSG m_CER_basic(template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm,
+        Address p_address) modifies m_CER_dummy := {
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm,
+        host_IP_Address := {m_hostIPAddress(p_address)},
+        vendor_Id := m_vendorId(c_vendId3gpp),
+        product_Name := m_productName("ETSI")
+      }
+      
+      template DWR_MSG m_DWR_basic(template (present) Origin_Host_AVP p_originHost,
+        template (present) Origin_Realm_AVP p_originRealm) modifies m_DWR_dummy := {
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm
+      }
+      
+      template DPR_MSG m_DPR_basic(template (present) Origin_Host_AVP p_originHost,
+        template (present) Origin_Realm_AVP p_originRealm) modifies m_DPR_dummy := {
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm,
+        disconnect_Cause := m_disconnectCause(REBOOTING_E)
+      }
+      
+    } // end group basic_request_templates_send
+    
+    group basic_request_templates_receive {
+      
+      template CER_MSG mw_CER_basic(template Auth_Application_Id_AVP p_authApplicationId) modifies mw_CER_dummy := {
+        auth_Application_Id := {p_authApplicationId}
+      }
+      
+    }//end group basic_request_templates_receive
+    
+    group basic_answer_templates_send {
+      template CEA_MSG m_CEA_basic(template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm,
+        Address p_address) modifies m_CEA_dummy := {
+        result_Code := m_resultCode(m_resultCode_diameterSuccess),
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm,
+        host_IP_Address := {m_hostIPAddress(p_address)},
+        vendor_Id := m_vendorId(c_vendId3gpp),
+        product_Name := m_productName("ETSI")
+      }
+      
+      template DWA_MSG m_DWA_basic(template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm) modifies m_DWA_dummy := {
+        result_Code := m_resultCode(m_resultCode_diameterSuccess),
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm
+      }
+      
+      template RAA_MSG m_RAA_basic(template Session_Id_AVP p_sessionId,
+        template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm) modifies m_RAA_dummy := {
+        session_Id := p_sessionId,
+        result_Code := m_resultCode(m_resultCode_diameterSuccess),
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm
+      }
+      
+    }//end group basic_answer_templates_send
+    
+    group basic_answer_templates_receive {
+    }//end group basic_answer_templates_receive
+    
+  } //end group base_templates
+  group modified_templates {
+    
+    group modified_request_templates_send {
+      template CER_MSG m_CER_AppId(template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm,
+        Address p_address,
+        UInt32 p_authApplicationId) modifies m_CER_basic := {
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm,
+        host_IP_Address := {m_hostIPAddress(p_address)},
+        vendor_Id := m_vendorId(c_vendId3gpp),
+        product_Name := m_productName("ETSI"),
+        supported_Vendor_Id := {m_supportedVendorId(c_vendId3gpp)},
+        auth_Application_Id := {m_authApplicationId(p_authApplicationId)},
+        vendor_Specific_Application_Id := {m_vendor_Specific_Appl_Id(p_authApplicationId)}
+        
+      }
+      
+    } //end group modified_request_templates_send
+    
+    group modified_request_templates_receive {
+    } //end group modified_request_templates_receive
+    
+    group modified_answer_templates_send {
+      template CEA_MSG m_CEA_AppId(template Origin_Host_AVP p_originHost,
+        template Origin_Realm_AVP p_originRealm,
+        Address p_address,
+        UInt32 p_authApplicationId) modifies m_CEA_basic := {
+        result_Code := m_resultCode(m_resultCode_diameterSuccess),
+        origin_Host := p_originHost,
+        origin_Realm := p_originRealm,
+        host_IP_Address := {m_hostIPAddress(p_address)},
+        vendor_Id := m_vendorId(c_vendId3gpp),
+        product_Name := m_productName("ETSI "),
+        supported_Vendor_Id := {m_supportedVendorId(c_vendId3gpp)},
+        auth_Application_Id := {m_authApplicationId(p_authApplicationId)},
+        vendor_Specific_Application_Id := {m_vendor_Specific_Appl_Id(p_authApplicationId)}
+        
+      }
+      
+    } //end group modified_answer_templates_send
+    
+    group modified_answer_templates_receive {
+    } //end group modified_answer_templates_receive
+    
+  } //end group modified_templates
+} //end group MessageTemplates
+
+group FunctionsForTemplates {
+  
+  function f_IPAdressLength ()
+  return integer
+  {if (PX_IPv6)
+    {return(16+2) } //+2 address family
+    else {return(4+2) }
+  }
+  
+}//end group FunctionsForTemplates
+
+}//end module LibDiameter_Templates

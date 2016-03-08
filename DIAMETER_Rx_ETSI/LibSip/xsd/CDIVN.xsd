@@ -1,0 +1,249 @@
+
+<xs:schema 
+  targetNamespace="http://uri.etsi.org/ngn/params/xml/comm-div-info"  
+  xmlns:tns="http://uri.etsi.org/ngn/params/xml/comm-div-info"  
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"  
+  xmlns="http://uri.etsi.org/ngn/params/xml/comm-div-info" 
+  elementFormDefault="qualified" 
+  attributeFormDefault="unqualified">
+  <!--
+  This import brings in the XML language definition
+  -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+    schemaLocation="xml.xsd"/>
+  <!-- 
+  Communication Diversion Information. This is the top-level XML element 
+  -->
+  <xs:element name="comm-div-info" 
+    type="comm-div-info-type" /> 
+  <!--
+  Communication Diversion Information Type. This is the top-level XML element 
+  -->
+  <xs:complexType name="comm-div-info-type">
+    <xs:sequence>
+      <xs:element name="comm-div-subs-info"
+        type="comm-div-subs-info-type" minOccurs="0" />
+      <xs:element name="comm-div-ntfy-info"
+        type="comm-div-ntfy-info-type" minOccurs="0" />
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="entity" type="xs:anyURI" 
+      use="required"/>
+  </xs:complexType>
+  <!---
+  Communication Diversion Subscription Type.
+  Used at Subscription time to
+        select Communication Diversions for notification,
+        when to notify them and
+        what to notify.
+  -->
+  <xs:complexType name="comm-div-subs-info-type">
+    <xs:sequence>
+      <xs:element name="comm-div-selection-criteria"
+        type="comm-div-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="comm-div-ntfy-trigger-criteria"
+        type="comm-div-ntfy-trigger-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="comm-div-info-selection-criteria"
+        type="comm-div-info-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!---
+  Communication Diversion Notification Information Type
+  Used while notifying the User about the Communication Diversion
+  -->
+  <xs:complexType name="comm-div-ntfy-info-type">
+    <xs:sequence>
+      <xs:element name="originating-user-info"
+        type="user-info-type" minOccurs="0" />
+      <xs:element name="diverting-user-info"
+        type="xs:anyURI" minOccurs="0" />
+      <xs:element name="diverted-to-user-info"
+        type="xs:anyURI" minOccurs="0" />
+      <xs:element name="diversion-time-info" 
+        type="xs:dateTime" minOccurs="0" />
+      <xs:element name="diversion-reason-info"
+        type="diversion-reason-info-type" minOccurs="0" />
+      <xs:element name="diversion-rule-info"
+        type="diversion-rule-info-type" minOccurs="0" />
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  COMMUNICATION DIVERSION SELECTION CRITERIA
+  -->
+  <xs:complexType name="comm-div-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="originating-user-selection-criteria"
+        type="user-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="diverting-user-selection-criteria"
+        type="xs:anyURI" 
+        minOccurs="0" />
+      <xs:element name="diverted-to-user-selection-criteria"
+        type="xs:anyURI" 
+        minOccurs="0" />
+      <xs:element name="diversion-time-selection-criteria"
+        type="time-range-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="diversion-reason-selection-criteria"
+        type="diversion-reason-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  COMMUNICATION DIVERSION NOTIFICATION TRIGGER CRITERIA
+  -->
+  <xs:complexType name="comm-div-ntfy-trigger-criteria-type">
+    <xs:sequence>
+      <xs:element name="notification-time-selection-criteria"
+        type="time-range-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="presence-status-selection-criteria"
+        type="presence-status-selection-criteria-type" 
+        minOccurs="0" />
+      <xs:element name="notification-buffer-interval" minOccurs="0" default="86400">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:maxInclusive value="86400"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  COMMUNICATION DIVERSION INFORMATION SELECTION CRITERIA
+  -->
+  <xs:complexType name="comm-div-info-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="disable-originating-user-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:element name="disable-diverting-user-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:element name="disable-diverted-to-user-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:element name="disable-diversion-time-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:element name="disable-diversion-reason-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:element name="disable-diversion-rule-info"
+        type="xs:boolean" default="false" minOccurs="0" />
+      <xs:any namespace="##other" processContents="lax"
+        minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- User Info Type -->
+  <xs:complexType name="user-info-type">
+    <xs:sequence>
+      <xs:element name="user-name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="user-URI" type="xs:anyURI"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!--    
+  DIVERSION REASON INFO
+  -->
+
+    <xs:simpleType name="diversion-reason-info-types">
+        <xs:list itemType="diversion-reason-info-type"/>
+    </xs:simpleType>
+  <xs:simpleType name="diversion-reason-info-type">
+        <xs:restriction base="xs:integer">
+            <xs:enumeration value="404"/>
+            <xs:enumeration value="486"/>
+            <xs:enumeration value="408"/>
+            <xs:enumeration value="302"/>
+            <xs:enumeration value="487"/>
+            <xs:enumeration value="480"/>
+            <xs:enumeration value="503"/>
+        </xs:restriction>
+  </xs:simpleType>
+  <!--    
+  DIVERSION RULE INFO
+  -->
+  <xs:complexType name="diversion-rule-info-type">
+    <xs:sequence>
+      <xs:element name="diversion-rule" type="xs:string"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  ORIGINATING USER SELECTION CRITERIA
+  -->
+  <xs:complexType name="user-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="user-info" 
+        type="user-info-type" minOccurs="0"
+        maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  DIVERSION REASON SELECTION CRITERIA
+  -->
+  <xs:complexType name="diversion-reason-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="diversion-reason-info" 
+        type="diversion-reason-info-types"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  TIME RANGE SELECTION CRITERIA
+  -->
+  <xs:complexType name="time-range-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="time-range" 
+        type="time-range-type" minOccurs="0" 
+        maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  TIME RANGE INFO
+  -->
+  <xs:complexType name="time-range-type">
+    <xs:sequence>
+      <xs:element name="start-time" type="xs:dateTime" />
+      <xs:element name="end-time" type="xs:dateTime" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  PRESENCE STATUS SELECTION CRITERIA
+  -->
+  <xs:complexType name="presence-status-selection-criteria-type">
+    <xs:sequence>
+      <xs:element name="presence-status-info" 
+        type="presence-status-info-type" minOccurs="0"
+        maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <!--
+  PRESENCE STATUS INFo
+  -->
+  <xs:complexType name="presence-status-info-type">
+    <xs:sequence>
+      <xs:element name="presence-status" type="xs:string" />
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+</xs:schema>

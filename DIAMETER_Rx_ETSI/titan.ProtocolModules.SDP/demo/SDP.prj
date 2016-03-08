@@ -1,0 +1,47 @@
+<!--
+ Copyright (c) 2015 Ericsson
+
+  The copyright to the computer  program(s) herein  is the property of Ericsson.
+  The program(s) may be used and/or copied only with the written permission
+  of Ericsson or in accordance with  the terms and conditions  stipulated in the
+  agreement/contract under which the program(s) has been supplied.
+
+
+   File:               SDP_CNL113353.prj
+   Description:        prj project file
+   Rev:                R12A
+   Prodnr:             CNL 113 353
+
+ -->
+<!DOCTYPE TITAN_GUI_project_file>
+<Project>
+    <General>
+        <Project_Name>SDP</Project_Name>
+        <Executable_Path>../bin/SDP</Executable_Path>
+        <Working_Dir>../bin</Working_Dir>
+        <Build_Host>alpha</Build_Host>
+        <Execution_Mode>Parallel</Execution_Mode>
+        <Log_Format>yes</Log_Format>
+        <GNU_Make>no</GNU_Make>
+        <Update_Symlinks>yes</Update_Symlinks>
+        <Update_Makefile>yes</Update_Makefile>
+        <Localhost_Execute>yes</Localhost_Execute>
+        <Execute_Command>rsh %host &quot;cd %project_working_dir ; &quot;%executable&quot; %localhost %mctr_port&quot;</Execute_Command>
+        <Execute_Hosts>alfa, beta, gamma</Execute_Hosts>
+        <UnUsed_List>../../../../../../home/ethecs/SDP_new/MIME_Types.ttcn,../../../../../../home/ethecs/SDP_new/proba.ttcn,../../../../../../home/ethecs/SDP_new/EncText.cc</UnUsed_List>
+    </General>
+    <Modules>
+        <Module>../src/SDP_Types.ttcn</Module>
+        <Module>SDP_Templates.ttcn</Module>
+        <Module>SDP_test.ttcn</Module>
+    </Modules>
+    <Other_Sources>
+        <Other_Source>../src/SDP_EncDec.cc</Other_Source>
+    </Other_Sources>
+    <Test_Cases>
+        <Test_Case>SDP_test.tc_BasicTest</Test_Case>
+    </Test_Cases>
+    <Others>
+        <Other>../bin/Makefile</Other>
+    </Others>
+</Project>

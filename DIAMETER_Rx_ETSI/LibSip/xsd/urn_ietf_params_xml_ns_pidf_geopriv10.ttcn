@@ -1,0 +1,116 @@
+/*******************************************************************************
+* Copyright (c) 2000-2016 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R4D                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          urn_ietf_params_xml_ns_pidf_geopriv10.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Fri Mar  4 09:23:30 2016
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- pidf_lo.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "urn:ietf:params:xml:ns:pidf:geopriv10" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module urn_ietf_params_xml_ns_pidf_geopriv10 {
+
+
+import from XSD all;
+
+
+import from urn_ietf_params_xml_ns_pidf_geopriv10_basicPolicy all;
+
+
+import from http_www_w3_org_XML_1998_namespace all;
+
+
+/* This import brings in the XML language attribute xml:lang */
+
+
+type Geopriv_1 Geopriv
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type record Geopriv_1
+{
+	LocInfoType location_info,
+	LocPolicyType usage_rules,
+	LocMethod method optional,
+	LocProvidedBy provided_by optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'geopriv'";
+  variant (location_info) "name as 'location-info'";
+  variant (usage_rules) "name as 'usage-rules'";
+  variant (provided_by) "name as 'provided-by'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf:geopriv10'";
+};
+
+
+type record LocInfoType
+{
+	record of XSD.String elem_list
+}
+with {
+  variant "name as uncapitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf:geopriv10'";
+};
+
+
+type record LocMethod
+{
+	Lang lang optional,
+	XSD.String base
+}
+with {
+  variant "name as uncapitalized";
+  variant (lang) "attribute";
+  variant (base) "untagged";
+};
+
+
+type record LocProvidedBy
+{
+	record length(1 .. infinity) of XSD.String elem_list
+}
+with {
+  variant "name as uncapitalized";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:pidf:geopriv10'";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'urn:ietf:params:xml:ns:pidf:geopriv10' prefix 'tns'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
+}

@@ -1,0 +1,194 @@
+/*******************************************************************************
+* Copyright (c) 2000-2016 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R4D                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          urn_ietf_params_xml_ns_resource_lists.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Fri Mar  4 09:23:30 2016
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- ResourceList.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" standalone = "no" */
+//			/* targetnamespace = "urn:ietf:params:xml:ns:resource-lists" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module urn_ietf_params_xml_ns_resource_lists {
+
+
+import from XSD all;
+
+
+import from http_www_w3_org_XML_1998_namespace all;
+
+
+type record ListType
+{
+	XSD.String name optional,
+	record of XSD.String attr optional,
+	Display_nameType display_name optional,
+	record of record {
+		union {
+			record {
+				XSD.String name optional,
+				record of XSD.String attr optional,
+				Display_nameType display_name optional,
+				record of record {
+					union {
+						record {
+							XSD.String name optional,
+							record of XSD.String attr optional,
+							record of XSD.String elem_list
+						} list,
+						ExternalType external_,
+						EntryType entry,
+						Entry_refType entry_ref
+					} choice
+				} sequence_list,
+				record of XSD.String elem_list
+			} list,
+			ExternalType external_,
+			EntryType entry,
+			Entry_refType entry_ref
+		} choice
+	} sequence_list,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as uncapitalized";
+  variant (name) "attribute";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (display_name) "name as 'display-name'";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+  variant (sequence_list[-].choice) "untagged";
+  variant (sequence_list[-].choice.list.name) "attribute";
+  variant (sequence_list[-].choice.list.attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (sequence_list[-].choice.list.display_name) "name as 'display-name'";
+  variant (sequence_list[-].choice.list.sequence_list) "untagged";
+  variant (sequence_list[-].choice.list.sequence_list[-]) "untagged";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice) "untagged";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.list.name) "attribute";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.list.attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.list.elem_list) "untagged";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.list.elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.external_) "name as 'external'";
+  variant (sequence_list[-].choice.list.sequence_list[-].choice.entry_ref) "name as 'entry-ref'";
+  variant (sequence_list[-].choice.list.elem_list) "untagged";
+  variant (sequence_list[-].choice.list.elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (sequence_list[-].choice.external_) "name as 'external'";
+  variant (sequence_list[-].choice.entry_ref) "name as 'entry-ref'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+};
+
+
+type record EntryType
+{
+	XSD.AnyURI uri,
+	record of XSD.String attr optional,
+	record {
+		Lang lang optional,
+		XSD.String base
+	} display_name optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as uncapitalized";
+  variant (uri) "attribute";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (display_name) "name as 'display-name'";
+  variant (display_name.lang) "attribute";
+  variant (display_name.base) "untagged";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+};
+
+
+type record Entry_refType
+{
+	XSD.AnyURI ref,
+	record of XSD.String attr optional,
+	Display_nameType display_name optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as 'entry-refType'";
+  variant (ref) "attribute";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (display_name) "name as 'display-name'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+};
+
+
+type record ExternalType
+{
+	XSD.AnyURI anchor optional,
+	record of XSD.String attr optional,
+	Display_nameType display_name optional,
+	record of XSD.String elem_list
+}
+with {
+  variant "name as uncapitalized";
+  variant (anchor) "attribute";
+  variant (attr) "anyAttributes except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+  variant (display_name) "name as 'display-name'";
+  variant (elem_list) "untagged";
+  variant (elem_list[-]) "anyElement except unqualified, 'urn:ietf:params:xml:ns:resource-lists'";
+};
+
+
+type record Resource_lists
+{
+	record of record {
+		ListType list
+	} sequence_list
+}
+with {
+  variant "name as 'resource-lists'";
+  variant "element";
+  variant (sequence_list) "untagged";
+  variant (sequence_list[-]) "untagged";
+};
+
+
+type record Display_nameType
+{
+	Lang lang optional,
+	XSD.String base
+}
+with {
+  variant "name as 'display-nameType'";
+  variant (lang) "attribute";
+  variant (base) "untagged";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'urn:ietf:params:xml:ns:resource-lists'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
+}

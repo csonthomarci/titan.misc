@@ -1,0 +1,994 @@
+/**
+ *  @author   STF 434
+ *  @version  $Id: DiameterRx_Templates.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc     This module defines Rx Diameter Templates for message, header, and
+ *            structured types. <br>
+ *            Note that any changes made to the definitions in this module
+ *            may be overwritten by future releases of this library
+ *            End users are encouraged to contact the distributers of this
+ *            module regarding their modifications or additions
+ *  @remark   Any additions to the templates shall follow the design rules
+ *            and always modify base templates only;
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_Templates {
+
+    //LibCommon
+    import from LibCommon_DataStrings {type Bit1, Bit4, Bit5, Bit8;}//all;
+    import from LibCommon_BasicTypesAndValues {type UInt8, UInt32;};
+
+    //LibDiameter
+    import from LibDiameter_TypesAndValues all;
+    import from LibDiameter_Templates all;
+
+    //DiameterRx
+    import from DiameterRx_PIXITS all;
+
+
+    group SubFields{
+
+        template Media_Component_Number_AVP m_mediaComponentNr(UInt32 p_avpData) :=
+        {
+            aVP_Header :=
+                 m_aVP_HeaderVid_Mbit1(c_media_Component_Number_AVP_Code,4, c_vendId3gpp),
+            aVP_Data := p_avpData
+        }
+
+        template Media_Component_Number_AVP mw_mediaComponentNr(template (present) UInt32 p_avpData) :=
+        {
+            aVP_Header := mw_aVP_Header_VMbit1(c_media_Component_Number_AVP_Code),
+            aVP_Data := p_avpData
+        }
+
+        template Media_Sub_Component_AVP mw_mediaSubComponent_basic(template(present) Flow_Number_AVP p_flowNumber, template Media_Sub_Component_AVP.flow_Description p_flowDescription, template Flow_Status_AVP p_flowStatus, template Flow_Usage_AVP p_flowUsage,
+                    template Max_Requested_Bandwidth_UL_AVP p_RequestedBandwidthUL, template Max_Requested_Bandwidth_DL_AVP p_requestedBandwidthDL, template AF_Signalling_Protocol_AVP p_afSignallingProtocol, template Media_Sub_Component_AVP.aVP_Type p_avpType) :=
+        {
+            aVP_Header := mw_aVP_Header_VMbit1(c_media_Sub_Component_AVP_Code),
+            flow_Number := p_flowNumber,
+            flow_Description := p_flowDescription,
+            flow_Status := p_flowStatus,
+            flow_Usage := p_flowUsage,
+            max_Requested_Bw_Ul := p_RequestedBandwidthUL,
+            max_Requested_Bw_Dl := p_requestedBandwidthDL,
+            af_Signalling_Protocol := p_afSignallingProtocol,
+            aVP_Type := p_avpType
+        }
+
+
+        template Flow_Status_AVP mw_flowStatus(template (present) Flow_Status_Type p_avpData) :=
+        {
+            aVP_Header := mw_aVP_Header_VMbit1(c_flow_Status_AVP_Code),
+            aVP_Data := p_avpData
+        }
+
+        template Flow_Usage_AVP mw_flowUsage(template (present) Flow_Usage_Type p_avpData) :=
+        {
+            aVP_Header := mw_aVP_Header_VMbit1(c_flow_Usage_AVP_Code),
+            aVP_Data := p_avpData
+        }
+
+        template Flow_Number_AVP mw_flowNumber(template (present) UInt32 p_avpData) :=
+        {
+            aVP_Header := mw_aVP_Header_VMbit1(c_flow_Number_AVP_Code),
+            aVP_Data := p_avpData
+        }
+
+        template Flow_Status_AVP m_flowStatus (template(value) Flow_Status_Type p_avpData) := {
+            //Ref: ETSI TS 129 214 Flow_Status AVP
+            aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Status_AVP_Code, 4, c_vendId3gpp),
+            aVP_Data := p_avpData
+            };
+
+        template AF_Signalling_Protocol_AVP m_afSignallingProtocolSIP := {
+          //Ref: ETSI TS 129 214 AF_Signalling_Protocol AVP
+             aVP_Header := m_aVP_HeaderVid_Mbit0(c_aF_Signalling_Protocol_AVP_Code, 4, c_vendId3gpp),
+             aVP_Data := SIP_E
+          };
+
+
+        template AF_Signalling_Protocol_AVP mw_afSignallingProtocolSIP := {
+          //Ref: ETSI TS 129 214 AF_Signalling_Protocol AVP
+             aVP_Header := mw_aVP_Header_Vbit1Mbit0(c_aF_Signalling_Protocol_AVP_Code),
+             aVP_Data := SIP_E
+          };
+
+        template Media_Sub_Component_AVP m_mediaSubComponentUN (template UInt32 p_flowNumber, template Flow_Usage_Type p_flowUsageType ) := {
+             aVP_Header := m_aVP_HeaderVid_Mbit1(c_media_Sub_Component_AVP_Code,
+                                            16 // flow_Number 12+4 for vendorId
+                                            + 16, // flow_Usage 12+4 for vendorId
+                                            c_vendId3gpp),
+             flow_Number := {aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Number_AVP_Code,4, c_vendId3gpp), aVP_Data := p_flowNumber},
+             flow_Description := omit,
+             flow_Status := omit,
+             flow_Usage := {aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Usage_AVP_Code,4, c_vendId3gpp), aVP_Data := p_flowUsageType},
+             max_Requested_Bw_Ul := omit,
+             max_Requested_Bw_Dl := omit,
+             af_Signalling_Protocol := omit,
+             aVP_Type := omit
+        }
+
+        template Media_Sub_Component_AVP m_mediaSubComponentUND2SP
+                (template(value) UInt32 p_flowNumber,
+                 template(value) Flow_Usage_Type p_flowUsageType,
+                 template(value) Flow_Description_AVP p_flowDescription1,
+                 template(value) Flow_Description_AVP p_flowDescription2,
+                 template(value) Flow_Status_AVP p_FlowStatus,
+                 template(value) AF_Signalling_Protocol_AVP p_afSignallingProtocol) := {
+             aVP_Header := m_aVP_HeaderVid_Mbit1(c_media_Sub_Component_AVP_Code,
+                                16 // flow_Number 12+4 for vendorId
+                                + f_getByteAlignedLength(p_flowDescription1.aVP_Header.aVP_len)
+                                + f_getByteAlignedLength(p_flowDescription2.aVP_Header.aVP_len)
+                                + 16 // flow_Usage 12+4 for vendorId
+                                + f_getByteAlignedLength(p_FlowStatus.aVP_Header.aVP_len)
+                                + f_getByteAlignedLength(p_afSignallingProtocol.aVP_Header.aVP_len),
+                                c_vendId3gpp),
+             flow_Number := {aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Number_AVP_Code,4, c_vendId3gpp), aVP_Data := p_flowNumber},
+             flow_Description := {p_flowDescription1, p_flowDescription2},
+             flow_Status := p_FlowStatus,
+             flow_Usage := {aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Usage_AVP_Code,4, c_vendId3gpp), aVP_Data := p_flowUsageType},
+             max_Requested_Bw_Ul := omit,
+             max_Requested_Bw_Dl := omit,
+             af_Signalling_Protocol := p_afSignallingProtocol,
+             aVP_Type := omit
+        }
+
+        template Media_Sub_Component_AVP m_mediaSubComponentN (template UInt32 p_flowNumber) := {
+             aVP_Header := m_aVP_HeaderVid_Mbit1(c_media_Sub_Component_AVP_Code,
+                                            16, // flow_Number 12+4 for vendorId
+                                            c_vendId3gpp),
+             flow_Number := {aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Number_AVP_Code,4, c_vendId3gpp), aVP_Data := p_flowNumber},
+             flow_Description := omit,
+             flow_Status := omit,
+             flow_Usage := omit,
+             max_Requested_Bw_Ul := omit,
+             max_Requested_Bw_Dl := omit,
+             af_Signalling_Protocol := omit,
+             aVP_Type := omit
+        }
+
+
+       template Flow_Description_AVP m_flowDescription (UTF8String p_action, UTF8String p_direction, UTF8String p_proto,
+                               IP_AddressMask p_src, IP_AddressMask p_dst, /*UTF8String p_ports, */ UTF8String p_options) := {
+           aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Description_AVP_Code,
+                              /*  lengthof(p_action)
+                                + 1
+                                + lengthof(p_direction)
+                                + 1
+                                + lengthof(p_proto)
+                                + 1 + 4 + 1
+                                + lengthof(encvalue(p_src))/8
+                                + 1 + 2 + 1
+                                + lengthof(encvalue(p_dst))/8
+                                //+ lengthof(p_ports)
+                                + 1
+                                + lengthof(p_options),*/ 0, //length will be calculated by the codec
+                                c_vendId3gpp),
+           aVP_Data :=  p_action&" "&p_direction&" "&p_proto&" "&p_src&" "&p_dst&" "&p_options  
+         /*  action_ := p_action,
+           direction := p_direction,
+           proto := p_proto,
+           src := p_src,
+           dst := p_dst,
+           //ports := p_ports,
+           options := p_options
+           }*/
+       }
+
+        template Experimental_Result_AVP mw_experimentalResult(template(present) Experimental_Result_Code_AVP p_ExperimentalResultCode) := {
+            aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_experimental_Result_AVP_Code),
+            vendor_Id := ?,
+            experimental_Result_Code := p_ExperimentalResultCode
+        }
+
+        template Experimental_Result_Code_AVP mw_expResultCode(Experimental_Result_Type p_avpData) :=
+        {
+            aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_experimental_Result_Code_AVP_Code),
+            aVP_Data := p_avpData
+        }
+
+        template Sponsor_Identity_AVP m_sponsorIdentity(template(value) UTF8String p_aVP_Data) := {
+         //Ref: ETSI TS 129 214 Sponsor_Identity AVP
+             aVP_Header := m_aVP_HeaderVid_Mbit0(c_sponsor_Identity_AVP_Code,lengthof(p_aVP_Data), c_vendId3gpp),
+             aVP_Data := p_aVP_Data
+         };
+
+
+        template Granted_Service_Unit_AVP m_grantedServiceUnit := {
+            //	Ref: RFC4006 8.17.  Granted-Service-Unit AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_granted_Service_Unit_AVP_Code,12, omit),
+                tariff_Time_Change  := omit,
+                cC_Time  := m_cC_Time(1),
+                cC_Money  := omit,
+                cC_Total_Octets  := omit,
+                cC_Input_Octets  := omit,
+                cC_Output_Octets  := omit,
+                cC_Service_Specific_Units := omit,
+                aVP_Type := omit
+            }
+
+        template CC_Time_AVP m_cC_Time(UInt32 p_avpData) :=
+        {
+            aVP_Header := m_aVP_HeaderVid_Mbit1(c_cC_Time_AVP_Code,4, omit),
+            aVP_Data := p_avpData
+        }
+
+
+
+    } //end group SubFields
+
+    group HeaderFieldTemplates {
+
+        group DummyAVPHeaders{
+
+            template Media_Component_Description_AVP m_mediaComponentDescription_dummy :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_media_Component_Description_AVP_Code, 16, c_vendId3gpp), // considers lengths: media_Component_Nr
+                media_Component_Nr := {
+                    aVP_Header := m_aVP_HeaderVid_Mbit1(c_media_Component_Number_AVP_Code, 4, c_vendId3gpp),
+                    aVP_Data := PX_MediaComponentNr
+                },
+                media_Sub_component := omit,
+                af_Application_Id := omit,
+                media_type := omit,
+                max_Requested_Bw_Ul := omit,
+                max_Requested_Bw_Dl := omit,
+                flow_Status := omit,
+                reservation_Priority := omit,
+                rs_Bw := omit,
+                rr_Bw := omit,
+                codec_data := omit
+            }
+
+
+           template Flow_Description_AVP m_flowDescription_dummy := {
+               aVP_Header := m_aVP_HeaderVid_Mbit1(c_flow_Description_AVP_Code,37, c_vendId3gpp),
+               aVP_Data :=  "permit"&" "&"out"&" "&"ip"&" "&"1.2.3.4"&" "&"1.2.3.4"
+
+/*               aVP_Data := {
+                   action_ := "permit",
+                   direction := "out",
+                   proto := "ip",
+                   src := {addr := "1.2.3.4", mask := omit, ports := omit},
+                   dst := {addr := "1.2.3.4", mask := omit, ports := omit},
+                   options := omit
+               
+           }*/
+           }
+
+        } //end group DummyAVPHeaders
+
+        group SpecificAVPHeaders {
+
+
+            template (value) Access_Network_Charging_Address_AVP m_accessNetworkChargingAddress(template (value) Address p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_access_Network_Charging_Address_AVP_Code, f_IPAdressLength(), c_vendId3gpp),
+                aVP_Data := p_avpData
+            };
+
+            template Destination_Host_AVP m_destinationHost(charstring p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_destination_Host_AVP_Code, lengthof(p_avpData), omit),
+                aVP_Data := p_avpData
+            }
+
+            template Destination_Realm_AVP m_destinationRealm(charstring p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_destination_Realm_AVP_Code, lengthof(p_avpData), omit),
+                aVP_Data := p_avpData
+            }
+
+            template Session_Id_AVP m_sessionId(UTF8String p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_session_Id_AVP_Code, lengthof(p_avpData), omit),
+                aVP_Data := p_avpData
+            }
+
+            template Auth_Application_Id_AVP m_authApplicationId(UInt32 p_avpData):=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_auth_Application_Id_AVP_Code, 4, omit),
+                aVP_Data := p_avpData
+            }
+
+            template AF_Application_Identifier_AVP m_afApplicationIdentifier :=
+            {
+                //Ref: ETSI TS 129 214 AF_Application_Identifier AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_aF_Application_Identifier_AVP_Code, 37, c_vendId3gpp),
+                aVP_Data := '75726e3a75726e2d373a336770702d736572766963652e696d732e696373692e6d6d74656c'O
+                            //urn:urn-7:3gpp -service.ims.ics i.mmtel
+            }
+
+            template AF_Charging_Identifier_AVP m_afChargingIdentifier := {
+            //Ref: ETSI TS 129 214 AF_Charging_Identifier AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_aF_Charging_Identifier_AVP_Code, 4, c_vendId3gpp),
+                aVP_Data := '00000000'O
+            };
+
+            template Service_URN_AVP m_serviceURN := {
+                //Ref: ETSI TS 129 214 Service_URN AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_service_URN_AVP_Code, 8, c_vendId3gpp),
+                aVP_Data := '736F732E66697265'O //sos.fire
+            };
+
+            template MPS_Identifier_AVP m_mspIdentifier := {
+                //Ref: ETSI TS 129 214 MPS_Identifier AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit0(c_mPS_Identifier_AVP_Code, 8, c_vendId3gpp),
+                aVP_Data := '4E474E2047455453'O //NGN GETS
+                };
+
+            template Service_Info_Status_AVP m_serviceInfoStatus(Service_Info_Type p_avpData) := {
+             //Ref: ETSI TS 129 214 Service_Info AVP
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_service_Info_Status_AVP_Code, 4, c_vendId3gpp),
+                aVP_Data := p_avpData
+             };
+
+            template Framed_IP_Address_AVP mw_framedIpAddress(template (present) octetstring p_avpData) :=
+            {
+                aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_framed_IP_Address_AVP_Code),
+                aVP_Data := p_avpData
+            }
+
+            template Framed_IPv6_Prefix_AVP mw_framedIp6Address(template (present) octetstring p_avpData) :=
+            {
+                aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_framed_IPv6_Prefix_AVP_Code),
+                aVP_Data := p_avpData
+            }
+
+            template Framed_IP_Address_AVP m_framedIpAddress(template (value) octetstring p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_framed_IP_Address_AVP_Code, lengthof(p_avpData), omit),
+                aVP_Data := p_avpData
+            }
+
+            template Framed_IPv6_Prefix_AVP m_framedIp6Address(template (value) octetstring p_avpData) :=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_framed_IPv6_Prefix_AVP_Code, lengthof(p_avpData), omit),
+                aVP_Data := p_avpData
+            }
+
+            template Termination_Cause_AVP m_terminationCause(template (value) Termination_Cause_Type p_terminationCauseData):=
+            {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_termination_Cause_AVP_Code, 4, omit),
+                aVP_Data := p_terminationCauseData //DIAMETER_LOGOUT_E
+            }
+
+            template Specific_Action_AVP mw_specificAction(template Specific_Action_Type p_avpData) :=
+            {
+                aVP_Header := mw_aVP_Header_VMbit1(c_specific_Action_AVP_Code),
+                aVP_Data := p_avpData
+            }
+
+            template Specific_Action_AVP m_specificAction(template Specific_Action_Type p_avpData) := {
+                aVP_Header := m_aVP_HeaderVid_Mbit1(c_specific_Action_AVP_Code, 4, c_vendId3gpp),
+                aVP_Data := p_avpData
+            }
+
+            template Abort_Cause_AVP mw_abortCause(template Abort_Cause_Type p_avpData) :=
+            {
+                aVP_Header := mw_aVP_Header_VMbit1(c_abort_Cause_AVP_Code),
+                aVP_Data := p_avpData
+            };
+
+            template Media_Component_Description_AVP mw_mediaComponentDescription :=
+            {
+                aVP_Header := mw_aVP_Header_VMbit1(c_media_Component_Description_AVP_Code),
+                media_Component_Nr := {aVP_Header := ?, aVP_Data := ?},
+                media_Sub_component := *,
+                af_Application_Id := *,
+                media_type := *,
+                max_Requested_Bw_Ul := *,
+                max_Requested_Bw_Dl := *,
+                flow_Status := *,
+                reservation_Priority := *,
+                rs_Bw := *,
+                rr_Bw := *,
+                codec_data := *
+            }
+
+            template Media_Component_Description_AVP mw_mediaComponentDescription_basic
+            (
+                template Media_Component_Number_AVP                  p_media_Component_Nr,
+                template Media_Component_Description_AVP.media_Sub_component  p_media_Sub_component,
+                template AF_Application_Identifier_AVP               p_af_Application_Id,
+                template Media_Type_AVP                              p_media_type,
+                template Max_Requested_Bandwidth_UL_AVP              p_max_Requested_Bw_Ul,
+                template Max_Requested_Bandwidth_DL_AVP              p_max_Requested_Bw_Dl,
+                template Flow_Status_AVP                             p_flow_Status,
+                template Reservation_Priority_AVP                    p_reservation_Priority,
+                template RS_Bandwidth_AVP                            p_rs_Bw,
+                template RR_Bandwidth_AVP                            p_rr_Bw,
+                template Media_Component_Description_AVP.codec_data  p_codecData
+            ):=
+            {
+                aVP_Header := mw_aVP_Header_VMbit1(c_media_Component_Description_AVP_Code),
+                media_Component_Nr := p_media_Component_Nr,
+                media_Sub_component := p_media_Sub_component,
+                af_Application_Id := p_af_Application_Id,
+                media_type := p_media_type,
+                max_Requested_Bw_Ul := p_max_Requested_Bw_Ul,
+                max_Requested_Bw_Dl := p_max_Requested_Bw_Dl,
+                flow_Status := p_flow_Status,
+                reservation_Priority := p_reservation_Priority,
+                rs_Bw := p_rs_Bw,
+                rr_Bw := p_rr_Bw,
+                codec_data := p_codecData
+            }
+
+            template Media_Component_Description_AVP mw_mediaComponentDescription_flowStatus (template Flow_Status_AVP p_flowStatus)
+                modifies mw_mediaComponentDescription :=
+            {
+                flow_Status := p_flowStatus
+            }
+
+            template Media_Component_Description_AVP mw_mediaComponentDescription_mediaSubComponent (template Media_Sub_Component_AVP p_mediaSubComponent)
+                modifies mw_mediaComponentDescription :=
+            {
+                media_Component_Nr := {
+                    aVP_Header := mw_aVP_Header_VMbit1(c_media_Component_Number_AVP_Code),
+                    aVP_Data := 0
+                },
+                media_Sub_component := superset(p_mediaSubComponent)
+            }
+
+            template Media_Component_Description_AVP mw_mediaComponentDescription_mediaSubComponent1 (template Media_Sub_Component_AVP p_mediaSubComponent)
+                modifies mw_mediaComponentDescription :=
+            {
+                media_Component_Nr := {
+                    aVP_Header := mw_aVP_Header_VMbit1(c_media_Component_Number_AVP_Code),
+                    aVP_Data := 0
+                },
+                media_Sub_component := {p_mediaSubComponent}
+            }
+
+            template Media_Component_Description_AVP m_mediaComponentDescription_flowStatus (template(value) Flow_Status_AVP p_flowStatus)
+                modifies m_mediaComponentDescription_dummy :=
+            {
+
+                aVP_Header := {
+                    aVP_len := valueof(m_mediaComponentDescription_dummy.aVP_Header.aVP_len) + f_getByteAlignedLength(p_flowStatus.aVP_Header.aVP_len)  //     considers lengths:
+                                                     //     media_Component_Nr,
+                                                     //     flowstatus
+                },
+                flow_Status := p_flowStatus
+            }
+
+            template Media_Component_Description_AVP m_mediaComponentDescription_subComponentFlow_componentNr
+            (template(value) Media_Sub_Component_AVP p_mediaSubComponent, template(value) Media_Component_Number_AVP p_mediaComponentNr)
+                modifies m_mediaComponentDescription_dummy :=
+            {
+                aVP_Header := {
+                    aVP_len := valueof(m_mediaComponentDescription_dummy.aVP_Header.aVP_len) + f_getByteAlignedLength(p_mediaSubComponent.aVP_Header.aVP_len)
+                },
+                                media_Component_Nr := p_mediaComponentNr,
+                media_Sub_component := {p_mediaSubComponent}
+
+            }
+
+
+            template Sponsored_Connectivity_Data_AVP m_sponsoredConnectivityData_SI_ASPI_GSU
+              (template(value) Sponsor_Identity_AVP p_sponsorIdentity,
+               template(value) Application_Service_Provider_Identity_AVP p_applicationServiceProviderId,
+               template(value) Granted_Service_Unit_AVP p_grantedServiceUnit) :=
+               {
+                  aVP_Header := m_aVP_HeaderVid_Mbit0(c_sponsored_Connectivity_Data_AVP_Code,
+                                f_getByteAlignedLength(p_sponsorIdentity.aVP_Header.aVP_len) // len of 1st subfield
+                                +f_getByteAlignedLength(p_applicationServiceProviderId.aVP_Header.aVP_len) // len of 2nd subfield
+                                +f_getByteAlignedLength(p_grantedServiceUnit.aVP_Header.aVP_len), // len of 3rd subfield
+                                c_vendId3gpp),
+                  sponsor_Identity := p_sponsorIdentity,
+                  application_service_provider_Id := p_applicationServiceProviderId,
+                  granted_Service_Unit := p_grantedServiceUnit,
+                  used_service_unit := omit,
+                  aVP_Type := omit
+            }
+
+            template Sponsored_Connectivity_Data_AVP m_sponsoredConnectivityData_SI_ASPI
+              (template(value) Sponsor_Identity_AVP p_sponsorIdentity,
+               template(value) Application_Service_Provider_Identity_AVP p_applicationServiceProviderId) :=
+               {
+                  aVP_Header := m_aVP_HeaderVid_Mbit0(c_sponsored_Connectivity_Data_AVP_Code,
+                                                f_getByteAlignedLength(p_sponsorIdentity.aVP_Header.aVP_len) // len of 1st subfield
+                                                + f_getByteAlignedLength(p_applicationServiceProviderId.aVP_Header.aVP_len), // len of 2nd subfield
+                                                c_vendId3gpp),
+                  sponsor_Identity := p_sponsorIdentity,
+                  application_service_provider_Id := p_applicationServiceProviderId,
+                  granted_Service_Unit := omit,
+                  used_service_unit := omit,
+                  aVP_Type := omit
+            }
+
+
+            template Application_Service_Provider_Identity_AVP m_applicationServiceProviderIdentity(template UTF8String p_aVP_Data) := {
+                //Ref: ETSI TS 129 214 Application_Service_Provider_Identity AVP
+                 aVP_Header := m_aVP_HeaderVid_Mbit0(c_application_Service_Provider_Identity_AVP_Code,lengthof(p_aVP_Data), c_vendId3gpp),
+                 aVP_Data := p_aVP_Data
+            };
+
+
+            template Sponsored_Connectivity_Data_AVP mw_sponsoredConnectivityData
+              (template Sponsor_Identity_AVP p_sponsorIdentity,
+               template Application_Service_Provider_Identity_AVP p_applicationServiceProviderId,
+               template Granted_Service_Unit_AVP p_grantedServiceUnit,
+               template Used_Service_Unit_AVP p_usedServiceUnit) :=
+               {
+                  aVP_Header := mw_aVP_Header_Vbit1Mbit0(c_sponsored_Connectivity_Data_AVP_Code),
+                  sponsor_Identity := p_sponsorIdentity,
+                  application_service_provider_Id := p_applicationServiceProviderId,
+                  granted_Service_Unit := p_grantedServiceUnit,
+                  used_service_unit := p_usedServiceUnit,
+                  aVP_Type := *
+            }
+
+            template /*Setof_Specific_Action_AVP*/  AAR_MSG.specific_Action m_specificActionsList :=  {
+                m_specificAction(INDICATION_OF_RELEASE_OF_BEARER_E),
+                m_specificAction(INDICATION_OF_LOSS_OF_BEARER_E)
+            }
+
+
+            template Experimental_Result_Code_AVP mw_experimentalResultCode(template Experimental_Result_Type p_aVP_Data) := {
+                //	Ref: 3GPP TS 29.229	6.2 Result-Code AVP values
+                    aVP_Header := mw_aVP_Header_Vbit0Mbit1(c_experimental_Result_Code_AVP_Code),
+                    aVP_Data := p_aVP_Data
+                }
+
+            template Reservation_Priority_AVP m_reservationPriority (Reservation_Priority_Type p_reservationPriorityType):= {
+                aVP_Header := m_aVP_HeaderVid_Mbit0(c_reservation_Priority_AVP_Code, 4, c_vendId3gpp),
+                aVP_Data := p_reservationPriorityType
+            }
+
+
+            template MPS_Identifier_AVP m_mpsIdentifier (octetstring p_mpsIdentifier):= {
+                aVP_Header := m_aVP_HeaderVid_Mbit0(c_mPS_Identifier_AVP_Code, lengthof(p_mpsIdentifier), c_vendId3gpp),
+                aVP_Data := p_mpsIdentifier
+            }
+
+
+        } //end group SpecificAVPHeaders
+    } //end group HeaderFieldTemplates
+
+    /** Message templates for AAR, AAA, RAR, RAA, STR, STA, ASR, ASA.... methods  */
+    group RxMessageTemplates {
+      group Rxdummy_templates {
+          group Rxdummy_request_templates_send {
+
+          }//end group Rxdummy_request_templates_send
+          group Rxdummy_request_templates_receive {
+
+          }//end group Rxdummy_request_templates_receive
+          group Rxdummy_answer_templates_send {
+
+
+          }//end group Rxdummy_answer_templates_send
+          group Rxdummy_answer_templates_receive {
+
+          }//end group Rxdummy_answer_templates_receive
+      } //end group Rxdummy_templates
+      group Rxbase_templates {
+
+        group Rxbasic_request_templates_send {
+
+            template AAR_MSG m_AAR_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm,
+                                         template (present) Destination_Realm_AVP p_destinationRealm,
+                                         template Destination_Host_AVP p_destinationHost
+                                         )
+                modifies m_AAR_dummy :=
+            {
+                header := m_diameterHeaderReq_dummy(AAR_AAA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                destination_Realm := p_destinationRealm,
+                destination_Host := p_destinationHost,
+                auth_Application_Id := m_authApplicationId(c_applIdRx)
+            }
+
+            template STR_MSG m_STR_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm,
+                                         template (present) Destination_Realm_AVP p_destinationRealm,
+                                         template (present) Termination_Cause_AVP p_terminationCause)
+                modifies m_STR_dummy :=
+            {
+                header := m_diameterHeaderReq_dummy(STR_STA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                destination_Realm := p_destinationRealm,
+                auth_Application_Id := m_authApplicationId(c_applIdRx),
+                termination_Cause := p_terminationCause
+            }
+
+
+            template RAR_MSG m_RAR_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm,
+                                         template (present) Destination_Realm_AVP p_destinationRealm,
+                                         template (present) Destination_Host_AVP p_destinationHost)
+                modifies m_RAR_dummy :=
+            {
+                header := m_diameterHeaderReq_dummy(RAR_RAA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                destination_Realm := p_destinationRealm,
+                destination_Host := p_destinationHost,
+                auth_Application_Id := m_authApplicationId(c_applIdRx)
+            }
+
+
+            template ASR_MSG m_ASR_basic(template (present) Session_Id_AVP p_sessionId,
+                             template (present) Origin_Host_AVP p_originHost,
+                             template (present) Origin_Realm_AVP p_originRealm,
+                             template (present) Destination_Realm_AVP p_destinationRealm,
+                             template (present) Destination_Host_AVP p_destinationHost)
+                modifies m_ASR_dummy :=
+            {
+                header := m_diameterHeaderReq_dummy(ASR_ASA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                destination_Realm := p_destinationRealm,
+                destination_Host := p_destinationHost,
+                auth_Application_Id := m_authApplicationId(c_applIdRx),
+                abort_cause := omit,
+                user_Name := omit,
+                origin_State_Id := omit,
+                proxy_Info := omit,
+                route_Record := omit,
+                aVP_Type := omit
+            }
+
+        } // end group Rxbasic_request_templates_send
+
+          group Rxbasic_request_templates_receive {
+
+            template AAR_MSG mw_AAR_basic(template (present) Session_Id_AVP p_sessionId,
+                                          template (present) Origin_Host_AVP p_originHost,
+                                          template (present) Origin_Realm_AVP p_originRealm,
+                                          template (present) Destination_Realm_AVP p_destinationRealm,
+                                          template Destination_Host_AVP p_destinationHost)
+                modifies mw_AAR_dummy :=
+            {
+                header := mw_diameterHeaderReq_dummy(AAR_AAA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                destination_Realm := p_destinationRealm,
+                destination_Host := p_destinationHost
+            }
+
+        }//end group Rxbasic_request_templates_receive
+
+        group Rxbasic_answer_templates_send {
+            template AAA_MSG m_AAA_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm)
+                modifies m_AAA_dummy :=
+            {
+                header := m_diameterHeaderAns_dummy(AAR_AAA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                 result_Code := m_resultCode(m_resultCode_diameterSuccess),
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm,
+                auth_Application_Id := m_authApplicationId(c_applIdRx)
+               
+            }
+
+            template ASA_MSG m_ASA_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm) modifies m_ASA_dummy := {
+                header := m_diameterHeaderAns_dummy(ASR_ASA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                                result_Code := m_resultCode(m_resultCode_diameterSuccess),
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm
+
+            }
+
+            template RAA_MSG m_RAA(template (present) Session_Id_AVP p_sessionId,
+                                   template (present) Origin_Host_AVP p_originHost,
+                                   template (present) Origin_Realm_AVP p_originRealm) modifies m_RAA_basic := {
+
+                header := m_diameterHeaderAns_dummy(RAR_RAA_E, c_applIdRx)
+            }
+
+            template STA_MSG m_STA_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template Result_Code_AVP p_resultCode,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm)
+                modifies m_STA_dummy :=
+            {
+                header := m_diameterHeaderAns_dummy(STR_STA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                result_Code := p_resultCode,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm
+            }
+
+        }
+        group Rxbasic_answer_templates_receive {
+
+            template AAA_MSG mw_AAA_basic(template (present) Session_Id_AVP p_sessionId,
+                                          template (present) Origin_Host_AVP p_originHost,
+                                          template (present) Origin_Realm_AVP p_originRealm)
+                modifies mw_AAA_dummy :=
+            {
+                    header := mw_diameterHeaderAns_dummy(AAR_AAA_E, c_applIdRx),
+                    session_Id := p_sessionId,
+                    origin_Host := p_originHost,
+                    origin_Realm := p_originRealm
+            }
+
+            template STA_MSG mw_STA_basic(template (present) Session_Id_AVP p_sessionId,
+                                         template Result_Code_AVP p_resultCode,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm)
+                modifies mw_STA_dummy :=
+            {
+                header := mw_diameterHeaderAns_dummy(STR_STA_E, c_applIdRx),
+                session_Id := p_sessionId,
+                result_Code := p_resultCode,
+                origin_Host := p_originHost,
+                origin_Realm := p_originRealm
+            }
+
+        }
+
+      } //end group Rxbase_templates
+      group Rxmodified_templates {
+
+          group Rxmodified_request_templates_send {
+
+              template AAR_MSG m_AAR_FIP_Media1(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template (present) Media_Component_Description_AVP p_mediaComponentDescription)
+                  modifies m_AAR_basic :=
+              {
+                                media_Component_Description := {p_mediaComponentDescription},
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address
+
+              }
+
+              template
+              AAR_MSG m_AAR_FIP_SA_Media1(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template /*Setof_Specific_Action_AVP*/ AAR_MSG.specific_Action p_specificAction,
+                                        template (present) Media_Component_Description_AVP p_mediaComponentDescription)
+                  modifies m_AAR_basic :=
+              {
+                  media_Component_Description := {p_mediaComponentDescription},
+                  specific_Action := p_specificAction,
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address
+
+
+              }
+
+
+              template
+              AAR_MSG m_AAR_FIP_Media1_AFAid_AFCid_sURN_MPSid_SIS_SC_SA(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template AF_Application_Identifier_AVP p_afApplicationId,
+                                        template AF_Charging_Identifier_AVP p_afChargingIdentifier,
+                                        template Service_URN_AVP p_serviceURN,
+                                        template (present) Media_Component_Description_AVP p_mediaComponentDescription,
+                                        template MPS_Identifier_AVP p_mpsIdentifier,
+                                        template Service_Info_Status_AVP p_serviceInfoStatus,
+                                        template Sponsored_Connectivity_Data_AVP p_sponsored_Connectivity_Data,
+                                        template AAR_MSG.specific_Action /*Setof_Specific_Action_AVP*/ p_specificAction
+                                        )
+                  modifies m_AAR_basic :=
+              {
+              
+                  af_Application_Id := p_afApplicationId,
+                  media_Component_Description := {p_mediaComponentDescription},
+                  service_Info_Status := p_serviceInfoStatus,
+                  af_Charging_Identifier := p_afChargingIdentifier,
+                  specific_Action := p_specificAction,
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address,
+                  service_URN := p_serviceURN,
+                  sponsored_Connectivity_Data := p_sponsored_Connectivity_Data,
+                  mps_Identifier := p_mpsIdentifier
+
+              }
+
+              template
+              AAR_MSG m_AAR_Priority(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template MPS_Identifier_AVP p_mps_Identifier,
+                                        template Reservation_Priority_AVP p_reservation_Priority
+                                        )
+                  modifies m_AAR_basic :=
+              {
+                
+                  reservation_Priority := p_reservation_Priority,
+                  mps_Identifier := p_mps_Identifier
+              }
+
+
+              template
+              AAR_MSG m_AAR_SC(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template Sponsored_Connectivity_Data_AVP p_sponsored_Connectivity_Data
+                                        )
+                  modifies m_AAR_basic :=
+              {
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address,
+                  sponsored_Connectivity_Data := p_sponsored_Connectivity_Data
+              }
+
+              template RAR_MSG m_RAR_SpecificAction(template (present) Session_Id_AVP p_sessionId,
+                                           template (present) Origin_Host_AVP p_originHost,
+                                           template (present) Origin_Realm_AVP p_originRealm,
+                                           template (present) Destination_Realm_AVP p_destinationRealm,
+                                           template (present) Destination_Host_AVP p_destinationHost,
+                                           template Specific_Action_AVP p_specificAction)
+                  modifies m_RAR_basic :=
+              {
+                  specific_action := p_specificAction
+              }
+
+
+              template RAR_MSG m_RAR_SessionRelease(template (present) Session_Id_AVP p_sessionId,
+                                           template (present) Origin_Host_AVP p_originHost,
+                                           template (present) Origin_Realm_AVP p_originRealm,
+                                           template (present) Destination_Realm_AVP p_destinationRealm,
+                                           template (present) Destination_Host_AVP p_destinationHost,
+                                           template Session_Release_Cause_AVP p_sessionReleaseCause)
+                  modifies m_RAR_basic :=
+              {
+                  session_Release_Cause := p_sessionReleaseCause
+              }
+
+
+          } //     end group Rxmodified_request_templates_send
+
+          group Rxmodified_request_templates_receive {
+
+              template AAR_MSG mw_AAR_FIP_Media1(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template (present) Media_Component_Description_AVP p_mediaComponentDescription)
+                  modifies mw_AAR_basic :=
+              {
+                               media_Component_Description := {p_mediaComponentDescription},
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address
+ 
+              }
+
+              template AAR_MSG mw_AAR_FIP_supSA_supMedia(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Framed_IP_Address_AVP p_framedIpAddress,
+                                        template Framed_IPv6_Prefix_AVP p_framedIp6Address,
+                                        template Specific_Action_AVP p_specificAction,
+                                        template Media_Component_Description_AVP p_mediaComponentDescription)
+                  modifies mw_AAR_basic :=
+              {
+                  media_Component_Description := superset(p_mediaComponentDescription),
+                  specific_Action := superset(p_specificAction),
+                  framed_IP_Address := p_framedIpAddress,
+                  framed_IPv6_Address := p_framedIp6Address
+
+
+              }
+
+              template AAR_MSG mw_AAR_SCD(template (present) Session_Id_AVP p_sessionId,
+                                        template (present) Origin_Host_AVP p_originHost,
+                                        template (present) Origin_Realm_AVP p_originRealm,
+                                        template (present) Destination_Realm_AVP p_destinationRealm,
+                                        template Destination_Host_AVP p_destinationHost,
+                                        template Sponsored_Connectivity_Data_AVP p_sponsoredConnectivityData)
+                  modifies mw_AAR_basic :=
+              {
+                  sponsored_Connectivity_Data := p_sponsoredConnectivityData
+              }
+
+
+            template ASR_MSG mw_ASR_abortCause(template (present) Abort_Cause_Type p_avpData) modifies mw_ASR_dummy := {
+              abort_cause := mw_abortCause(p_avpData)
+            }
+
+
+            template RAR_MSG mw_RAR_specificAction(template (present) Specific_Action_Type p_avpData) modifies mw_RAR_dummy := {
+            
+                 specific_action := mw_specificAction(p_avpData),
+              re_Auth_Request_Type := * //at that time not required  within ETSI TS 129 214 or 3GPP 29 214
+         
+            }
+
+          } //     end group Rxmodified_request_templates_receive
+
+          group Rxmodified_answer_templates_send {
+
+              template AAA_MSG m_AAA_modified_ResultCode_ANCA
+              (template (present) Session_Id_AVP p_sessionId,
+               template (present) Origin_Host_AVP p_originHost,
+               template (present) Origin_Realm_AVP p_originRealm,
+               template Result_Code_AVP p_resultCode,
+               template Access_Network_Charging_Address_AVP p_accessNetworkChargingAddress)
+                       modifies m_AAA_basic :=
+               {
+                  result_Code := p_resultCode,
+                  access_network_charging_address := p_accessNetworkChargingAddress
+               }
+
+          } //     end group Rxmodified_answer_templates_send
+
+          group Rxmodified_answer_templates_receive {
+
+              template AAA_MSG mw_AAA_modified_ResultCode_ANCA
+              (template (present) Session_Id_AVP p_sessionId,
+               template (present) Origin_Host_AVP p_originHost,
+               template (present) Origin_Realm_AVP p_originRealm,
+               template Result_Code_AVP p_resultCode,
+               template Access_Network_Charging_Address_AVP p_accessNetworkChargingAddress)
+                modifies mw_AAA_basic :=
+              {
+                  result_Code := p_resultCode,
+                  access_network_charging_address := p_accessNetworkChargingAddress
+              }
+
+             template AAA_MSG mw_AAA_modified_Experimental_Result
+              (template (present) Session_Id_AVP p_sessionId,
+               template (present) Origin_Host_AVP p_originHost,
+               template (present) Origin_Realm_AVP p_originRealm,
+               template Experimental_Result_AVP p_ExperimentalResult)
+                modifies mw_AAA_basic :=
+              {
+                  experimental_result := p_ExperimentalResult
+              }
+
+
+            template STA_MSG mw_STA_modified_SCD(template (present) Session_Id_AVP p_sessionId,
+                                         template Result_Code_AVP p_resultCode,
+                                         template (present) Origin_Host_AVP p_originHost,
+                                         template (present) Origin_Realm_AVP p_originRealm,
+                                         template Sponsored_Connectivity_Data_AVP p_sponsoredConnectivityData)
+                modifies mw_STA_basic :=
+            {
+                sponsored_Connectivity_Data := p_sponsoredConnectivityData
+            }
+
+          } // end group Rxmodified_answer_templates_receive
+
+      } //end group Rxmodified_templates
+    } //end group RxMessageTemplates
+
+
+}//end module DiameterRx_Templates

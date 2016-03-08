@@ -1,0 +1,1340 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_Rx_TCFunctions.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc		This module provides RX test functions used by the test cases
+ *              for IMS-DIAMETER tests.
+ */
+ 
+ //compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_Rx_TCFunctions {
+    // LibCommon
+    import from LibCommon_Sync {function f_selfOrClientSyncAndVerdict;
+                                const c_prDone, c_tbDone, c_poDone;}
+
+    // LibDiameter
+    import from LibDiameter_TypesAndValues all;
+    import from LibDiameter_Templates all;
+    import from LibDiameter_Interface all;
+    import from LibDiameter_Steps all;
+
+    //DiameterRx
+    import from DiameterRx_PIXITS all;
+    import from DiameterRx_PICS all;
+    import from DiameterRx_Templates all;
+    import from DiameterRx_Steps all;
+
+
+function f_awaitSTR_sendSTA() {
+//dummy
+}
+
+    group TP_AFRole{
+
+        /*
+        *  @desc	This is the test case function TC_AF_IPS_01
+        *  @param
+        */
+        function f_TC_AF_IPS_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_Media1(?,?,?,?,*,
+                                            f_framedIpAddress4(PX_UE2_framedIpAddress), // indicating UE
+                                            f_framedIpAddress6(PX_UE2_framedIp6Address), // indicationg UE (IPv6)
+                                            mw_mediaComponentDescription_flowStatus(?))); // should be present
+
+            //AF session for UE1
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_awaiting_AAR(mw_AAR_FIP_Media1(?,?,?,?,*,
+                f_framedIpAddress4(PX_UE1_framedIpAddress), // indicating UE
+                f_framedIpAddress6(PX_UE1_framedIp6Address), // indicationg UE (IPv6)
+                mw_mediaComponentDescription_flowStatus(?))); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_IPS_01
+
+        /*
+        *  @desc	This is the test case function TC_AF_IPS_02
+        *  @param
+        */
+        function f_TC_AF_IPS_02()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_basic(?,?,?,?,*));
+
+            f_send_AAA(m_AAA_modified_ResultCode_ANCA(vc_sessionId,
+                                                      vc_originHost,
+                                                      vc_originRealm,
+                                                      m_resultCode(m_resultCode_diameterSuccess),
+                                                      m_accessNetworkChargingAddress(f_IPAdress(PX_ANCA_ipv4, PX_ANCA_ipv6))));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_basic(?,?,?,?,*));
+
+            f_send_AAA(m_AAA_modified_ResultCode_ANCA(vc_sessionId,
+                                                      vc_originHost,
+                                                      vc_originRealm,
+                                                      m_resultCode(m_resultCode_diameterSuccess),
+                                                      m_accessNetworkChargingAddress(f_IPAdress(PX_ANCA_ipv4, PX_ANCA_ipv6))));
+
+            f_wait(3.0);//NOTE: wait for checking (no rejection)
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_IPS_02
+
+        /*
+        *  @desc	This is the test case function TC_AF_IPS_03
+        *  @param
+        */
+        function f_TC_AF_IPS_03()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_SCD(?,?,?,?,*,
+            mw_sponsoredConnectivityData(?,?,*,*))); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_SCD(?,?,?,?,*,
+            mw_sponsoredConnectivityData(?,?,*,*))); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_IPS_03
+
+          /*
+        *  @desc	This is the test case function TC_AF_MSI
+        *  @param
+        */
+        function f_TC_AF_MSI_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync of UEs
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync1 before modification starts
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_Media1(?,?,?,?,*,
+                f_framedIpAddress4(PX_UE2_framedIpAddress), // indicating UE
+                f_framedIpAddress6(PX_UE2_framedIp6Address), // indicationg UE (IPv6)
+                mw_mediaComponentDescription)); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_Media1(?,?,?,?,*,
+                f_framedIpAddress4(PX_UE1_framedIpAddress), // indicating UE
+                f_framedIpAddress6(PX_UE1_framedIp6Address), // indicationg UE (IPv6)
+                mw_mediaComponentDescription)); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_MSI_01
+
+          /*
+        *  @desc	This is the test case function TC_AF_MSI
+        *  @param
+        */
+        function f_TC_AF_MSI_02()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync of SIP UEs
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync1 before modification starts
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_basic(?,?,?,?,*)); // should be present
+
+            f_send_AAA(m_AAA_modified_ResultCode_ANCA(vc_sessionId,
+                                                      vc_originHost,
+                                                      vc_originRealm,
+                                                      m_resultCode(m_resultCode_diameterSuccess),
+                                                      m_accessNetworkChargingAddress(f_IPAdress(PX_ANCA_ipv4, PX_ANCA_ipv6))));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_basic(?,?,?,?,*)); // should be present
+
+            f_send_AAA(m_AAA_modified_ResultCode_ANCA(vc_sessionId,
+                                                      vc_originHost,
+                                                      vc_originRealm,
+                                                      m_resultCode(m_resultCode_diameterSuccess),
+                                                      m_accessNetworkChargingAddress(f_IPAdress(PX_ANCA_ipv4, PX_ANCA_ipv6))));
+
+            f_wait(3.0);//NOTE: wait for checking (no rejection)
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_MSI_02
+
+        /*
+        *  @desc	This is the test case function TC_AF_MSI_03
+        *  @param
+        */
+        function f_TC_AF_MSI_03()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_SCD(?,?,?,?,*,
+            mw_sponsoredConnectivityData(?,?,*,*))); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_SCD(?,?,?,?,*,
+            mw_sponsoredConnectivityData(?,?,*,*))); // should be present
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_MSI_03
+
+        /*
+        *  @desc	This is the test case function TC_AF_GPR
+        *  @param
+        */
+        function f_TC_AF_GRP_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //AF session for UE2 and UE2
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_send_RAR(m_RAR_SpecificAction
+                       (vc_sessionId, vc_originHost, vc_originRealm,
+                        vc_destinationRealm, vc_destinationHost,
+                        m_specificAction
+                        (INDICATION_OF_FAILED_RESOURCES_ALLOCATION_E)));
+
+            f_awaiting_RAA(mw_RAA_dummy);
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_GRP_01
+
+        /*
+        *  @desc	This is the test case function TC_AF_ST
+        *  @param
+        */
+        function f_TC_AF_ST_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //registration of 2 UEs
+            f_awaitAAR_sendAAAandSaveSessionIds();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //AF session for UE2 and UE2
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync before SIP termination
+
+            //Session Termination for AF
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_ST_01
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_01
+        *  @param
+        */
+        function f_TC_AF_SN_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE1_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE1_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_01
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_02
+        *  @param
+        */
+        function f_TC_AF_SN_02()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_basic(
+                                mw_mediaComponentNr(0),
+                                {mw_mediaSubComponent_basic(mw_flowNumber(0),omit,omit,mw_flowUsage(AF_SIGNALLING_E),omit,omit,omit,omit)},
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                                 )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE1_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE1_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_basic(
+                                mw_mediaComponentNr(0),
+                                {mw_mediaSubComponent_basic(mw_flowNumber(0),omit,omit,mw_flowUsage(AF_SIGNALLING_E),omit,omit,omit,omit)},
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                                )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_02
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_03
+        *  @param
+        */
+        function f_TC_AF_SN_03()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                            (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                             INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE1_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE1_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_03
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_04
+        *  @param
+        */
+        function f_TC_AF_SN_04()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_basic(
+                                mw_mediaComponentNr(0),
+                                {mw_mediaSubComponent_basic(mw_flowNumber(0),omit,omit,mw_flowUsage(AF_SIGNALLING_E),omit,omit,omit,omit)},
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                                )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE1_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE1_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_basic(
+                                mw_mediaComponentNr(0),
+                                {mw_mediaSubComponent_basic(mw_flowNumber(0),omit,omit,mw_flowUsage(AF_SIGNALLING_E),omit,omit,omit,omit)},
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                                )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_04
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_05
+        *  @param
+        */
+        function f_TC_AF_SN_05()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            *,
+                            mw_mediaComponentDescription_basic(
+                               mw_mediaComponentNr(0),
+                                superset(mw_mediaSubComponent_basic
+                                    (mw_flowNumber(?),
+                                     (?,*),
+                                     mw_flowStatus(ENABLED_E),
+                                     mw_flowUsage(AF_SIGNALLING_E),
+                                     omit,
+                                     omit,
+                                     mw_afSignallingProtocolSIP,
+                                     omit)) length(1..infinity),
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                            )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            *,
+                            mw_mediaComponentDescription_basic(
+                                mw_mediaComponentNr(0),
+                                superset(mw_mediaSubComponent_basic
+                                    (mw_flowNumber(?),
+                                     (?,*),
+                                     mw_flowStatus(ENABLED_E),
+                                     mw_flowUsage(AF_SIGNALLING_E),
+                                     omit,
+                                     omit,
+                                     mw_afSignallingProtocolSIP,
+                                     omit)) length(1..infinity),
+                                omit,omit,omit,omit,omit,omit,omit,omit,omit
+                                )
+                           ));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync - UEs deregistration done
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_05
+
+        /*
+        *  @desc	This is the test case function TC_AF_SN_06
+        *  @param
+        */
+        function f_TC_AF_SN_06()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //Subscribe to notification - Registration procedure for two users
+            //AF session for UE2
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE2_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE2_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            //AF session for UE1
+            f_awaiting_AAR(mw_AAR_FIP_supSA_supMedia
+                           (?, ?, ?, ?, *, f_framedIpAddress4(PX_UE1_framedIpAddress),
+                            //     indicating UE
+                            f_framedIpAddress6(PX_UE1_framedIp6Address),
+                            //     indicationg UE (IPv6)
+                            mw_specificAction
+                            ((INDICATION_OF_RELEASE_OF_BEARER_E,
+                              INDICATION_OF_LOSS_OF_BEARER_E)),
+                            mw_mediaComponentDescription_mediaSubComponent1
+                            (mw_mediaSubComponent_basic
+                             (?,*,*,mw_flowUsage(AF_SIGNALLING_E),*,*,*,*))));
+
+            f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+            //Cancelation of subscription
+            f_awaitSTR_sendSTA();
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //Cancelation of subscription
+                f_awaitSTR_sendSTA();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_SN_06
+
+        /*
+        *  @desc	This is the test case function TC_AF_TPE
+        *  @param
+        */
+        function f_TC_AF_TPE_01()
+        runs on DiameterComponent {
+
+            f_preamble_PCRF();
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED)
+            {
+                //registration of 2 UEs
+                f_awaitAAR_sendAAAandSaveSessionIds();
+            }
+
+            f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+            //AF session for UE2 and UE2
+            f_IUT_session_establishment(); // IUT esthablishes the session
+
+            f_send_ASR(m_ASR_basic(vc_sessionId, vc_originHost,
+            vc_originRealm, vc_destinationRealm, vc_destinationHost));
+
+            f_awaiting_ASA(mw_ASA_dummy);
+
+            f_awaiting_STR(mw_STR_dummy);
+
+            f_send_STA(m_STA_basic(vc_sessionId, m_resultCode(m_resultCode_diameterSuccess), vc_originHost,
+                                   vc_originRealm));
+
+            f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+            f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+            f_postamble_PCRF();
+
+        } // end function f_TC_AF_TPE_01
+
+    } //end group TP_AFRole
+
+    group TP_PCRFRole {
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_IPS_01
+        *  @param
+        */
+                function f_TC_PCRF_IPS_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_Media1(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                m_mediaComponentDescription_flowStatus(m_flowStatus(ENABLED_E))));
+
+                    f_awaiting_AAA(mw_AAA_modified_ResultCode_ANCA(?, ?, ?,
+                                                                   mw_resultCode
+                                                                   (mw_resultCode_diameterSuccess)
+                                                                   , ?)); // ANCA-AVP present
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_IPS_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_IPS_02
+        *  @param
+        */
+                function f_TC_PCRF_IPS_02()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_Media1_AFAid_AFCid_sURN_MPSid_SIS_SC_SA(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                m_afApplicationIdentifier, // AF_Application_Identifier_AVP
+                                                m_afChargingIdentifier, // AF_Charging_Identifier_AVP
+                                                m_serviceURN, // Service_URN_AVP
+                                                m_mediaComponentDescription_flowStatus(m_flowStatus(ENABLED_E)),
+                                                m_mspIdentifier, // MPS_Identifier_AVP
+                                                m_serviceInfoStatus(FINAL_SERVICE_INFORMATION_E), // Service_Info_Status_AVP
+                                                m_sponsoredConnectivityData_SI_ASPI_GSU(m_sponsorIdentity(PX_SPONSOR_ID),m_applicationServiceProviderIdentity(PX_APPLICATION_SERVICE_PROVIDER_ID),m_grantedServiceUnit), // Sponsored_Connectivity_Data_AVP
+                                                {m_specificAction(USAGE_REPORT_E)} // Setof_Specific_Action_AVP
+                                                )
+                               );
+
+                    f_awaiting_AAA(mw_AAA_dummy); // any AAA acceptable
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_IPS_02
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_IPS_03
+        *  @param
+        */
+                function f_TC_PCRF_IPS_03()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_SC(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                m_sponsoredConnectivityData_SI_ASPI(m_sponsorIdentity("1234"),m_applicationServiceProviderIdentity("1234")) // Sponsored_Connectivity_Data_AVP
+                                                )
+                                );
+
+                    f_awaiting_AAA(mw_AAA_modified_Experimental_Result(?, ?, ?,
+                                         mw_experimentalResult(mw_experimentalResultCode(REQUESTED_SERVICE_NOT_AUTHORIZED_E)))); // experimental result present
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_IPS_03
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_MSI_01
+        *  @param
+        */
+                function f_TC_PCRF_MSI_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_Media1(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                m_mediaComponentDescription_flowStatus(m_flowStatus(DISABLED_E))));
+
+                    f_awaiting_AAA(mw_AAA_modified_ResultCode_ANCA(?, ?, ?,
+                                          mw_resultCode(mw_resultCode_diameterSuccess),
+                                          ?)); // ANCA-AVP present
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_MSI_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_MSI_02
+        *  @param
+        */
+                function f_TC_PCRF_MSI_02()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_Media1_AFAid_AFCid_sURN_MPSid_SIS_SC_SA(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                omit, // AF_Application_Identifier_AVP
+                                                omit, // AF_Charging_Identifier_AVP
+                                                omit, // Service_URN_AVP
+                                                m_mediaComponentDescription_flowStatus(m_flowStatus(ENABLED_E)),
+                                                m_mspIdentifier, // MPS_Identifier_AVP
+                                                m_serviceInfoStatus(FINAL_SERVICE_INFORMATION_E), // Service_Info_Status_AVP
+                                                m_sponsoredConnectivityData_SI_ASPI_GSU(m_sponsorIdentity(PX_SPONSOR_ID),m_applicationServiceProviderIdentity(PX_APPLICATION_SERVICE_PROVIDER_ID),m_grantedServiceUnit), // Sponsored_Connectivity_Data_AVP
+                                                {m_specificAction(USAGE_REPORT_E)} // Setof_Specific_Action_AVP
+                                                )
+                               );
+
+                    f_awaiting_AAA(mw_AAA_dummy); // any AAA acceptable
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_MSI_02
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_GRP_01
+        *  @param
+        */
+                function f_TC_PCRF_GRP_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    action("Please force resource allocation failure to trigger RA Request to be sent.");
+
+                    f_awaiting_RAR(mw_RAR_specificAction(INDICATION_OF_FAILED_RESOURCES_ALLOCATION_E));
+
+                    f_send_RAA(m_RAA(vc_sessionId, vc_originHost, vc_originRealm));
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_GRP_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_ST_01
+        *  @param
+        */
+                function f_TC_PCRF_ST_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    f_send_STR(m_STR_basic(vc_sessionId, vc_originHost, // Tester initiates termination
+                                           vc_originRealm, vc_destinationRealm,
+                                           m_terminationCause(DIAMETER_LOGOUT_E)));
+
+                    f_awaiting_STA(mw_STA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_ST_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_ST_02
+        *  @param
+        */
+                function f_TC_PCRF_ST_02()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_SC(vc_sessionId, vc_originHost,
+                                                vc_originRealm,
+                                                vc_destinationRealm,
+                                                vc_destinationHost,
+                                                f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                m_sponsoredConnectivityData_SI_ASPI(m_sponsorIdentity(PX_SPONSOR_ID),m_applicationServiceProviderIdentity(PX_APPLICATION_SERVICE_PROVIDER_ID)) // Sponsored_Connectivity_Data_AVP
+                                                )
+                                );
+
+                    f_awaiting_AAA(mw_AAA_modified_ResultCode_ANCA(?, ?, ?,
+                                                                   mw_resultCode
+                                                                   (mw_resultCode_diameterSuccess)
+                                                                   , *)); // ANCA-AVP present
+
+                    f_send_STR(m_STR_basic(vc_sessionId, vc_originHost, // Tester initiates termination
+                                           vc_originRealm, vc_destinationRealm,
+                                           m_terminationCause(DIAMETER_LOGOUT_E)));
+
+                    f_awaiting_STA(mw_STA_modified_SCD(?,*,?,?,mw_sponsoredConnectivityData(*,*,*,?)));
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_ST_02
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_SN_01
+        *  @param
+        */
+                function f_TC_PCRF_SN_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_SA_Media1(vc_sessionId, vc_originHost,
+                                                   vc_originRealm,
+                                                   vc_destinationRealm,
+                                                   vc_destinationHost,
+                                                   f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                   f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                   m_specificActionsList,
+                                                   m_mediaComponentDescription_subComponentFlow_componentNr
+                                                   (m_mediaSubComponentUN
+                                                    (0, AF_SIGNALLING_E),
+                                                    m_mediaComponentNr(0))));
+
+                    f_awaiting_AAA(mw_AAA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_SN_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_SN_02
+        *  @param
+        */
+                function f_TC_PCRF_SN_02()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_SA_Media1(vc_sessionId, vc_originHost,
+                                                   vc_originRealm,
+                                                   vc_destinationRealm,
+                                                   vc_destinationHost,
+                                                   f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                   f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                   m_specificActionsList,
+                                                   m_mediaComponentDescription_subComponentFlow_componentNr
+                                                   (m_mediaSubComponentN
+                                                    (0),
+                                                    m_mediaComponentNr(0))));
+
+                    f_awaiting_AAA(mw_AAA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_SN_02
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_SN_03
+        *  @param
+        */
+                function f_TC_PCRF_SN_03()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_send_AAR(m_AAR_FIP_SA_Media1(vc_sessionId, vc_originHost,
+                                                   vc_originRealm,
+                                                   vc_destinationRealm,
+                                                   vc_destinationHost,
+                                                   f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                   f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                   m_specificActionsList,
+                                                   m_mediaComponentDescription_subComponentFlow_componentNr
+                                                   (m_mediaSubComponentN
+                                                    (0),
+                                                    m_mediaComponentNr(0))));
+
+                    f_awaiting_AAA(mw_AAA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_STR(m_STR_basic(vc_sessionId, vc_originHost, // Tester initiates termination
+                                           vc_originRealm, vc_destinationRealm,
+                                           m_terminationCause(DIAMETER_LOGOUT_E)));
+
+                    f_awaiting_STA(mw_STA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_SN_03
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_SN_04
+        *  @param
+        */
+                function f_TC_PCRF_SN_04()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_AAR(m_AAR_FIP_SA_Media1(vc_sessionId, vc_originHost,
+                                                   vc_originRealm,
+                                                   vc_destinationRealm,
+                                                   vc_destinationHost,
+                                                   f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                   f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                   m_specificActionsList,
+                                                   m_mediaComponentDescription_subComponentFlow_componentNr
+                                                   (m_mediaSubComponentUND2SP
+                                                    (0,AF_SIGNALLING_E,
+                                                           m_flowDescription("permit","out","ip","1.2.3.4","1.2.3.4",
+                                                      /*  {addr := "1.2.3.4", mask := omit, ports := omit},
+                                                        {addr := "1.2.3.4", mask := omit, ports := omit}, */
+                                                        ""),
+                                                          m_flowDescription("permit","out","ip","1.2.3.4","1.2.3.4",
+                                                      /*  {addr := "1.2.3.4", mask := omit, ports := omit},
+                                                        {addr := "1.2.3.4", mask := omit, ports := omit}, */
+                                                        ""),
+                                                    m_flowStatus(ENABLED_E),
+                                                    m_afSignallingProtocolSIP
+                                                    ),
+                                                    m_mediaComponentNr(0))));
+
+                    f_awaiting_AAA(mw_AAA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_SN_04
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_SN_05
+        *  @param
+        */
+                function f_TC_PCRF_SN_05()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_send_AAR(m_AAR_FIP_SA_Media1(vc_sessionId, vc_originHost,
+                                                   vc_originRealm,
+                                                   vc_destinationRealm,
+                                                   vc_destinationHost,
+                                                   f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                   f_framedIpAddress6_send(PX_UE1_framedIp6Address),
+                                                   m_specificActionsList,
+                                                   m_mediaComponentDescription_subComponentFlow_componentNr
+                                                   (m_mediaSubComponentUND2SP
+                                                    (0,AF_SIGNALLING_E,
+                                                    m_flowDescription("permit","out","ip","1.2.3.4","1.2.3.4",
+                                                      /*  {addr := "1.2.3.4", mask := omit, ports := omit},
+                                                        {addr := "1.2.3.4", mask := omit, ports := omit}, */
+                                                        ""),
+                                                     m_flowDescription("permit","out","ip","1.2.3.4","1.2.3.4",
+                                                      /*  {addr := "1.2.3.4", mask := omit, ports := omit},
+                                                        {addr := "1.2.3.4", mask := omit, ports := omit}, */
+                                                        ""),
+                                                    m_flowStatus(ENABLED_E),
+                                                    m_afSignallingProtocolSIP
+                                                    ),
+                                                    m_mediaComponentNr(0))));
+
+                    f_awaiting_AAA(mw_AAA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_send_STR(m_STR_basic(vc_sessionId, vc_originHost, // Tester initiates termination
+                       vc_originRealm, vc_destinationRealm,
+                       m_terminationCause(DIAMETER_LOGOUT_E)));
+
+                    f_awaiting_STA(mw_STA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_SN_05
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_TPE_01
+        *  @param
+        */
+                function f_TC_PCRF_TPE_01()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    action("Please force termination of an IP-CAN session to trigger AS Request to be sent.");
+
+                    f_awaiting_ASR(mw_ASR_abortCause(?));
+
+                    f_send_ASA(m_ASA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_TPE_01
+
+        /*
+        *  @desc	This is the test case function TC_PCRF_TPE_02
+        *  @param
+        */
+                function f_TC_PCRF_TPE_02()
+                runs on DiameterComponent {
+
+                    f_preamble_AF();
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+                    f_ETS_session_establishment(f_framedIpAddress4_send(PX_UE1_framedIpAddress),
+                                                f_framedIpAddress6_send(PX_UE1_framedIp6Address)); // ETS esthablishes the session
+
+                    action("Please force termination of an IP-CAN session to trigger AS Request to be sent.");
+
+                    f_awaiting_ASR(mw_ASR_abortCause(?));
+
+                    f_send_ASA(m_ASA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+
+                    f_send_STR(m_STR_basic(vc_sessionId, vc_originHost, // Tester initiates termination
+                                           vc_originRealm, vc_destinationRealm,
+                                           m_terminationCause(DIAMETER_LOGOUT_E)));
+
+                    f_awaiting_STA(mw_STA_dummy);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    f_postamble_AF();
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                } // end function f_TC_PCRF_TPE_02
+
+    } //end group TP_PCRFRole
+
+} // end module DiameterRx_Rx_TCFunctions

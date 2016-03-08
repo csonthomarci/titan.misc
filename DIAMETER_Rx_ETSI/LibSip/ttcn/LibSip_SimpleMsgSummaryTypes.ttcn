@@ -1,0 +1,71 @@
+/**
+*	@author 	STF 406
+*  @version    $Id: LibSip_SimpleMsgSummaryTypes.ttcn 488 2010-11-08 10:17:19Z pintar $
+*	@desc		This module provides the SMS type system for SIP tests.
+*/
+
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibSip_SimpleMsgSummaryTypes { // RFC 3842
+
+
+
+external function enc_SMS(in SimpleMsgSummary pdu) return charstring
+with { extension "prototype(convert) encode(TEXT)" };
+external function dec_SMS(in charstring stream) return SimpleMsgSummary
+with { extension "prototype(convert) decode(TEXT)" };
+
+//FIXME -emcoding variants  
+
+group SMSConstants{
+  
+  // IMS ETSI name MWI application
+  const charstring c_imsEtsiMwiApplication := "application/simple-message-summary";
+  
+  // msg_status line	:= "Message-Waiting"
+  const charstring c_messageWaiting	:= "Message-Waiting";
+  
+  // msg_status line	:= "Message-Account"
+  const charstring c_messageAccount	:= "Message-Account";
+  
+  // msg_summary line	:= "Voice-Message"
+  const charstring c_voiceMessage	:= "Voice-Message";
+  
+}
+
+group SMSTypes{
+  //TODO add (SMS sms) into type union MessageBody{ in module LibSIPTypesAndValues
+  
+  type record SimpleMsgSummary { //Simple_message_summary
+    Msg_status_line msg_status_line,
+    Msg_account msg_account optional,
+    Msg_summary_line_list msg_summary_line_list optional,
+    Opt_msg_headers opt_msg_headers optional	    
+  } with {variant "TEXT_CODING()"}
+  
+  type record Msg_status_line {
+    charstring msg_type,
+    charstring msg_status
+  }with {variant ""}
+  
+  type record Msg_account {
+    charstring msg_type_account,
+    charstring account_URI
+  }with {variant ""}
+  
+  type set of Msg_summary_line Msg_summary_line_list
+  with {variant ""}
+  
+  type record Msg_summary_line {
+    charstring msg_context_class,
+    charstring msgs,
+    charstring urgent_msgs optional
+  }with {variant ""}
+  
+  type set of charstring Opt_msg_headers with {variant ""}
+  
+  //type integer msgcount length(1); //msgs and urgent_msgs can be dividet into subtypes
+}
+
+
+} with { encode "TEXT"}
+

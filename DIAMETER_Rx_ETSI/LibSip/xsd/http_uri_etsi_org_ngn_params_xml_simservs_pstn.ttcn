@@ -1,0 +1,689 @@
+/*******************************************************************************
+* Copyright (c) 2000-2016 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R4D                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          http_uri_etsi_org_ngn_params_xml_simservs_pstn.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Fri Mar  4 09:23:30 2016
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- PSTN.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/pstn" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module http_uri_etsi_org_ngn_params_xml_simservs_pstn {
+
+
+import from XSD all;
+
+
+/* XML Schema definition for mapping of some PSTN into SIP MIME Bodies */
+
+
+/* Definition of simple types */
+
+
+type XSD.String OneBitType (pattern "[0-1]");
+
+
+type XSD.String TwoBitType (pattern "[0-1][0-1]");
+
+
+type XSD.String ThreeBitType (pattern "[0-1][0-1][0-1]");
+
+
+type XSD.String FourBitType (pattern "[0-1][0-1][0-1][0-1]");
+
+
+type XSD.String FiveBitType (pattern "[0-1][0-1][0-1][0-1][0-1]");
+
+
+type XSD.String SixBitType (pattern "[0-1][0-1][0-1][0-1][0-1][0-1]");
+
+
+type XSD.String SevenBitType (pattern "[0-1][0-1][0-1][0-1][0-1][0-1][0-1]");
+
+
+/* Definition of complex types */
+
+
+/* Definition of BearerCapability Octets */
+
+
+type record BCOctet3Type
+{
+	TwoBitType codingStandard,
+	FiveBitType informationTransferCabability
+}
+with {
+  variant (codingStandard) "name as capitalized";
+  variant (informationTransferCabability) "name as capitalized";
+};
+
+
+type record BCOctet4Type
+{
+	TwoBitType transferMode,
+	FiveBitType informationTransferRate
+}
+with {
+  variant (transferMode) "name as capitalized";
+  variant (informationTransferRate) "name as capitalized";
+};
+
+
+type record BCOctet4_1Type
+{
+	SevenBitType rateMultiplier
+}
+with {
+  variant "name as 'BCOctet4-1Type'";
+  variant (rateMultiplier) "name as capitalized";
+};
+
+
+type record BCOctet5Type
+{
+	TwoBitType layer1Identification,
+	FiveBitType userInfoLayer1Protocol
+}
+with {
+  variant (layer1Identification) "name as capitalized";
+  variant (userInfoLayer1Protocol) "name as capitalized";
+};
+
+
+type record BCOctet5aType
+{
+	OneBitType synchronousAsynchronous,
+	OneBitType negotiation,
+	FiveBitType userRate
+}
+with {
+  variant (synchronousAsynchronous) "name as capitalized";
+  variant (negotiation) "name as capitalized";
+  variant (userRate) "name as capitalized";
+};
+
+
+type record BCOctet5bV110Type
+{
+	TwoBitType intermediateRate,
+	OneBitType nIConTX,
+	OneBitType nIConRX,
+	OneBitType flowControlOnTX,
+	OneBitType flowControlOnRX
+}
+with {
+  variant (intermediateRate) "name as capitalized";
+  variant (nIConTX) "name as capitalized";
+  variant (nIConRX) "name as capitalized";
+  variant (flowControlOnTX) "name as capitalized";
+  variant (flowControlOnRX) "name as capitalized";
+};
+
+
+type record BCOctet5bV120Type
+{
+	OneBitType rateAdaptionHeader,
+	OneBitType multipleFrameEstablishmentSupport,
+	OneBitType modeOfOperation,
+	OneBitType logicalLinkIdentifier,
+	OneBitType assignor,
+	OneBitType inbandOutbandNegotiation
+}
+with {
+  variant (rateAdaptionHeader) "name as capitalized";
+  variant (multipleFrameEstablishmentSupport) "name as capitalized";
+  variant (modeOfOperation) "name as capitalized";
+  variant (logicalLinkIdentifier) "name as capitalized";
+  variant (assignor) "name as capitalized";
+  variant (inbandOutbandNegotiation) "name as capitalized";
+};
+
+
+type record BCOctet5cType
+{
+	TwoBitType numberOfStopBits,
+	TwoBitType numberOfDataBits,
+	ThreeBitType parity
+}
+with {
+  variant (numberOfStopBits) "name as capitalized";
+  variant (numberOfDataBits) "name as capitalized";
+  variant (parity) "name as capitalized";
+};
+
+
+type record BCOctet5dType
+{
+	OneBitType duplexMode,
+	SixBitType modemType
+}
+with {
+  variant (duplexMode) "name as capitalized";
+  variant (modemType) "name as capitalized";
+};
+
+
+type record BCOctet6Type
+{
+	TwoBitType layer2Identification,
+	FiveBitType userInfoLayer2Protocol
+}
+with {
+  variant (layer2Identification) "name as capitalized";
+  variant (userInfoLayer2Protocol) "name as capitalized";
+};
+
+
+type record BCOctet7Type
+{
+	TwoBitType layer3Identification,
+	FiveBitType userInfoLayer3Protocol
+}
+with {
+  variant (layer3Identification) "name as capitalized";
+  variant (userInfoLayer3Protocol) "name as capitalized";
+};
+
+
+type record BCOctet7aType
+{
+	FourBitType additionalLayer3Info
+}
+with {
+  variant (additionalLayer3Info) "name as capitalized";
+};
+
+
+type record BCOctet7bType
+{
+	FourBitType additionalLayer3Info
+}
+with {
+  variant (additionalLayer3Info) "name as capitalized";
+};
+
+
+/* Definition of High Layer Compatibility Octets */
+
+
+type record HLOctet3Type
+{
+	TwoBitType codingStandard,
+	ThreeBitType interpretation,
+	TwoBitType presentationMethod
+}
+with {
+  variant (codingStandard) "name as capitalized";
+  variant (interpretation) "name as capitalized";
+  variant (presentationMethod) "name as capitalized";
+};
+
+
+type record HLOctet4Type
+{
+	SevenBitType highLayerCharacteristics
+}
+with {
+  variant (highLayerCharacteristics) "name as capitalized";
+};
+
+
+type record HLOctet4aMaintenanceType
+{
+	SevenBitType highLayerCharacteristics
+}
+with {
+  variant (highLayerCharacteristics) "name as capitalized";
+};
+
+
+type record HLOctet4aAudioType
+{
+	SevenBitType videoTelephonyCharacteristics
+}
+with {
+  variant (videoTelephonyCharacteristics) "name as capitalized";
+};
+
+
+/* Definition of Low Layer Compatibility Octets */
+
+
+type record LLOctet3Type
+{
+	TwoBitType codingStandard,
+	FiveBitType informationTransferCapability
+}
+with {
+  variant (codingStandard) "name as capitalized";
+  variant (informationTransferCapability) "name as capitalized";
+};
+
+
+type record LLOctet3aType
+{
+	OneBitType negotiationIndicator
+}
+with {
+  variant (negotiationIndicator) "name as capitalized";
+};
+
+
+type record LLOctet4Type
+{
+	TwoBitType transferMode,
+	FiveBitType informationTransferRate
+}
+with {
+  variant (transferMode) "name as capitalized";
+  variant (informationTransferRate) "name as capitalized";
+};
+
+
+type record LLOctet4_1Type
+{
+	SevenBitType rateMultiplier
+}
+with {
+  variant "name as 'LLOctet4-1Type'";
+  variant (rateMultiplier) "name as capitalized";
+};
+
+
+type record LLOctet5Type
+{
+	TwoBitType layer1Identification,
+	FiveBitType userInfoLayer1Protocol
+}
+with {
+  variant (layer1Identification) "name as capitalized";
+  variant (userInfoLayer1Protocol) "name as capitalized";
+};
+
+
+type record LLOctet5aType
+{
+	OneBitType synchronousAsynchronous,
+	OneBitType negotiation,
+	FiveBitType userRate
+}
+with {
+  variant (synchronousAsynchronous) "name as capitalized";
+  variant (negotiation) "name as capitalized";
+  variant (userRate) "name as capitalized";
+};
+
+
+type record LLOctet5bV110Type
+{
+	TwoBitType intermediateRate,
+	OneBitType nIConTX,
+	OneBitType nIConRX,
+	OneBitType flowControlOnTX,
+	OneBitType flowControlOnRX
+}
+with {
+  variant (intermediateRate) "name as capitalized";
+  variant (nIConTX) "name as capitalized";
+  variant (nIConRX) "name as capitalized";
+  variant (flowControlOnTX) "name as capitalized";
+  variant (flowControlOnRX) "name as capitalized";
+};
+
+
+type record LLOctet5bV120Type
+{
+	OneBitType rateAdaptionHeader,
+	OneBitType multipleFrameEstablishmentSupport,
+	OneBitType modeOfOperation,
+	OneBitType logicalLinkIdentifier,
+	OneBitType assignor,
+	OneBitType inbandOutbandNegotiation
+}
+with {
+  variant (rateAdaptionHeader) "name as capitalized";
+  variant (multipleFrameEstablishmentSupport) "name as capitalized";
+  variant (modeOfOperation) "name as capitalized";
+  variant (logicalLinkIdentifier) "name as capitalized";
+  variant (assignor) "name as capitalized";
+  variant (inbandOutbandNegotiation) "name as capitalized";
+};
+
+
+type record LLOctet5cType
+{
+	TwoBitType numberOfStopBits,
+	TwoBitType numberOfDataBits,
+	ThreeBitType parity
+}
+with {
+  variant (numberOfStopBits) "name as capitalized";
+  variant (numberOfDataBits) "name as capitalized";
+  variant (parity) "name as capitalized";
+};
+
+
+type record LLOctet5dType
+{
+	OneBitType duplexMode,
+	SixBitType modemType
+}
+with {
+  variant (duplexMode) "name as capitalized";
+  variant (modemType) "name as capitalized";
+};
+
+
+type record LLOctet6Type
+{
+	TwoBitType layer2Identification,
+	FiveBitType userInfoLayer2Protocol
+}
+with {
+  variant (layer2Identification) "name as capitalized";
+  variant (userInfoLayer2Protocol) "name as capitalized";
+};
+
+
+type record LLOctet6aHDLCType
+{
+	TwoBitType mode
+}
+with {
+  variant (mode) "name as capitalized";
+};
+
+
+type record LLOctet6aUserSpecificType
+{
+	SevenBitType userSpecificLayer2Information
+}
+with {
+  variant (userSpecificLayer2Information) "name as capitalized";
+};
+
+
+type record LLOctet6bType
+{
+	SevenBitType windowSize
+}
+with {
+  variant (windowSize) "name as capitalized";
+};
+
+
+type record LLOctet7Type
+{
+	TwoBitType layer3Identification,
+	FiveBitType userInfoLayer3Protocol
+}
+with {
+  variant (layer3Identification) "name as capitalized";
+  variant (userInfoLayer3Protocol) "name as capitalized";
+};
+
+
+type record LLOctet7aUserSpecificType
+{
+	SevenBitType optionalLayer3Information
+}
+with {
+  variant (optionalLayer3Information) "name as capitalized";
+};
+
+
+type record LLOctet7aX25Type
+{
+	TwoBitType mode
+}
+with {
+  variant (mode) "name as capitalized";
+};
+
+
+type record LLOctet7bX25Type
+{
+	FourBitType defaultPacketSize
+}
+with {
+  variant (defaultPacketSize) "name as capitalized";
+};
+
+
+type record LLOctet7cType
+{
+	SevenBitType packetWindowSize
+}
+with {
+  variant (packetWindowSize) "name as capitalized";
+};
+
+
+type record LLOctet7aTR9577Type
+{
+	FourBitType additionalLayer3Info
+}
+with {
+  variant (additionalLayer3Info) "name as capitalized";
+};
+
+
+type record LLOctet7bTR9577Type
+{
+	FourBitType additionalLayer3Info
+}
+with {
+  variant (additionalLayer3Info) "name as capitalized";
+};
+
+
+type record DispOctet3Type
+{
+	SevenBitType displayInformation
+}
+with {
+  variant (displayInformation) "name as capitalized";
+};
+
+
+/* Definition of the information elements */
+
+
+type record BearerCapabilityType
+{
+	BCOctet3Type bCoctet3,
+	BCOctet4Type bCoctet4,
+	BCOctet4_1Type bCoctet4_1 optional,
+	BCOctet5Type bCoctet5 optional,
+	BCOctet5aType bCoctet5a optional,
+	BCOctet5bV110Type bCoctet5bV110 optional,
+	BCOctet5bV120Type bCoctet5bV120 optional,
+	BCOctet5cType bCoctet5c optional,
+	BCOctet5dType bCoctet5d optional,
+	BCOctet6Type bCoctet6 optional,
+	BCOctet7Type bCoctet7 optional,
+	BCOctet7aType bCoctet7a optional,
+	BCOctet7bType bCoctet7b optional
+}
+with {
+  variant (bCoctet3) "name as capitalized";
+  variant (bCoctet4) "name as capitalized";
+  variant (bCoctet4_1) "name as 'BCoctet4-1'";
+  variant (bCoctet5) "name as capitalized";
+  variant (bCoctet5a) "name as capitalized";
+  variant (bCoctet5bV110) "name as capitalized";
+  variant (bCoctet5bV120) "name as capitalized";
+  variant (bCoctet5c) "name as capitalized";
+  variant (bCoctet5d) "name as capitalized";
+  variant (bCoctet6) "name as capitalized";
+  variant (bCoctet7) "name as capitalized";
+  variant (bCoctet7a) "name as capitalized";
+  variant (bCoctet7b) "name as capitalized";
+};
+
+
+type record HighLayerCompatibilityType
+{
+	HLOctet3Type hLOctet3,
+	HLOctet4Type hLOctet4,
+	HLOctet4aMaintenanceType hLOctet4aMaintenance optional,
+	HLOctet4aAudioType hLOctet4Audio optional
+}
+with {
+  variant (hLOctet3) "name as capitalized";
+  variant (hLOctet4) "name as capitalized";
+  variant (hLOctet4aMaintenance) "name as capitalized";
+  variant (hLOctet4Audio) "name as capitalized";
+};
+
+
+type record LowLayerCompatibilityType
+{
+	LLOctet3Type lLOctet3,
+	LLOctet3aType lLOctet3a optional,
+	LLOctet4Type lLOctet4,
+	LLOctet4_1Type lLOctet4_1 optional,
+	LLOctet5Type lLOctet5 optional,
+	LLOctet5aType lLOctet5a optional,
+	LLOctet5bV110Type lLOctet5bV110 optional,
+	LLOctet5bV120Type lLOctet5bV120 optional,
+	LLOctet5cType lLOctet5c optional,
+	LLOctet5dType lLOctet5d optional,
+	LLOctet6Type lLOctet6 optional,
+	LLOctet6aHDLCType lLOctet6aHDLC optional,
+	LLOctet6aUserSpecificType lLOctet6aUserSpecific optional,
+	LLOctet6bType lLOctet6b optional,
+	LLOctet7Type lLOctet7,
+	LLOctet7aUserSpecificType lLOctet7aUserSpecific optional,
+	LLOctet7aX25Type lLOctet7aX25 optional,
+	LLOctet7bX25Type lLOctet7bX25 optional,
+	LLOctet7cType lLOctet7c optional,
+	LLOctet7aTR9577Type lLOctet7aTR9577 optional,
+	LLOctet7bTR9577Type lLOctet7bTR9577 optional
+}
+with {
+  variant (lLOctet3) "name as capitalized";
+  variant (lLOctet3a) "name as capitalized";
+  variant (lLOctet4) "name as capitalized";
+  variant (lLOctet4_1) "name as 'LLOctet4-1'";
+  variant (lLOctet5) "name as capitalized";
+  variant (lLOctet5a) "name as capitalized";
+  variant (lLOctet5bV110) "name as capitalized";
+  variant (lLOctet5bV120) "name as capitalized";
+  variant (lLOctet5c) "name as capitalized";
+  variant (lLOctet5d) "name as capitalized";
+  variant (lLOctet6) "name as capitalized";
+  variant (lLOctet6aHDLC) "name as capitalized";
+  variant (lLOctet6aUserSpecific) "name as capitalized";
+  variant (lLOctet6b) "name as capitalized";
+  variant (lLOctet7) "name as capitalized";
+  variant (lLOctet7aUserSpecific) "name as capitalized";
+  variant (lLOctet7aX25) "name as capitalized";
+  variant (lLOctet7bX25) "name as capitalized";
+  variant (lLOctet7c) "name as capitalized";
+  variant (lLOctet7aTR9577) "name as capitalized";
+  variant (lLOctet7bTR9577) "name as capitalized";
+};
+
+
+type record DisplayType
+{
+	DispOctet3Type dispOctet3
+}
+with {
+  variant (dispOctet3) "name as capitalized";
+};
+
+
+/* Definition of progress indicator */
+
+
+type record ProgressOctet3Type
+{
+	TwoBitType codingStandard,
+	FourBitType location
+}
+with {
+  variant (codingStandard) "name as capitalized";
+  variant (location) "name as capitalized";
+};
+
+
+type record ProgressOctet4Type
+{
+	SevenBitType progressDescription
+}
+with {
+  variant (progressDescription) "name as capitalized";
+};
+
+
+type record ProgressIndicatorType
+{
+	ProgressOctet3Type progressOctet3,
+	ProgressOctet4Type progressOctet4
+}
+with {
+  variant (progressOctet3) "name as capitalized";
+  variant (progressOctet4) "name as capitalized";
+};
+
+
+/* Definition of document structure */
+
+
+type record PSTN_transit
+{
+	record length(1 .. 2) of BearerCapabilityType bearerInfomationElement_list,
+	record length(0 .. 2) of HighLayerCompatibilityType highLayerCompatibility_list,
+	LowLayerCompatibilityType lowLayerCompatibility optional,
+	record of ProgressIndicatorType progressIndicator_list,
+	record of DisplayType display_list
+}
+with {
+  variant "name as 'PSTN-transit'";
+  variant "element";
+  variant (bearerInfomationElement_list) "untagged";
+  variant (bearerInfomationElement_list[-]) "name as 'BearerInfomationElement'";
+  variant (highLayerCompatibility_list) "untagged";
+  variant (highLayerCompatibility_list[-]) "name as 'HighLayerCompatibility'";
+  variant (lowLayerCompatibility) "name as capitalized";
+  variant (progressIndicator_list) "untagged";
+  variant (progressIndicator_list[-]) "name as 'ProgressIndicator'";
+  variant (display_list) "untagged";
+  variant (display_list[-]) "name as 'Display'";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'http://uri.etsi.org/ngn/params/xml/simservs/pstn'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
+}

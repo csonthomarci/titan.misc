@@ -1,0 +1,733 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_ImsGm_TCFunctions.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc		This module provides GM/UE test functions used by the test cases
+ *              for IMS-DIAMETER tests.
+ */
+ //compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_ImsGm_TCFunctions {
+	// LibCommon
+	import from LibCommon_Sync {function f_selfOrClientSyncAndVerdict;
+	    						const c_prDone, c_tbDone, c_poDone;}
+	    						
+		import from SIPmsg_Types all;
+			import from SDP_Types all;    						
+	// LibSip
+	import from LibSip_Templates all;
+	import from LibSip_Steps all;
+	import from LibSip_SIPTypesAndValues all;
+    import from LibSip_SDPTypes all;
+    import from LibSip_PIXITS all;
+	// LibIms
+	import from LibIms_Templates all;
+	import from LibIms_Steps all;
+	import from LibIms_SIPTypesAndValues all;
+	import from LibIms_Interface all;
+
+	group TP_BasicCall{
+
+        /*
+        *  @desc	This is the test case function (SIP originating side - UE1) for test cases where only REGISTRATION procedure is Reqired
+        *  @param	p_cSeq_s
+        */
+                function f_TC_IMST2_GM_REG_01_UE1(in CSeq p_cSeq_s)
+                runs on ImsComponent {
+
+                    var template REGISTER_Request v_register;
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+                    v_register :=
+                        valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+                                                        p_cSeq_s, vc_from, vc_to,
+                                                        vc_via_REG, vc_contact,
+                                                        vc_authorization));
+
+                    // preamble with send REGISTER, await 401, send REGISTER, await
+                    // 200 OK and user profile setting
+                    f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+                                                    p_cSeq_s, v_register);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    // send REGISTER, await 401, send REGISTER, await 200 OK
+                    f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                    f_SIP_postamble_UE1_withoutRegistration();
+                } // end function f_Sip_TC_IMST2_GM_REG_01_UE1
+
+        /*
+        *  @desc	This is the test case function (SIP terminating side - UE2) for test cases where only REGISTRATION procedure is Reqired
+        *  @param	loc_CSeq_s
+        */
+                function f_TC_IMST2_GM_REG_01_UE2(in CSeq p_cSeq_s)
+                runs on ImsComponent {
+
+                    var template REGISTER_Request v_register;
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+                    v_register :=
+                        valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+                                                        p_cSeq_s, vc_from, vc_to,
+                                                        vc_via_REG, vc_contact,
+                                                        vc_authorization));
+
+                    // IMS1 component interface initialization
+                    f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+                    // preamble with send REGISTER, await 401, send REGISTER, await
+                    // 200 OK and user profile setting
+                    f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+                                                    p_cSeq_s, v_register);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+
+                    // POSTAMBLE
+                    // send REGISTER, await 401, send REGISTER, await 200 OK
+                    f_RemoveRegistration(vc_cSeq);
+
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                    f_SIP_postamble_UE2_withoutRegistration();
+                } // end function f_Sip_TC_IMST2_GM_REG_01_UE2
+
+        /*
+        *  @desc	This is the test case function (SIP originating side - UE1) for test cases where only REGISTRATION procedure is Reqired
+        *  @param	p_cSeq_s
+        */
+                function f_TC_IMST2_GM_REG_02_UE1(in CSeq p_cSeq_s)
+                runs on ImsComponent {
+
+                    var template REGISTER_Request v_register;
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+                    v_register :=
+                        valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+                                                        p_cSeq_s, vc_from, vc_to,
+                                                        vc_via_REG, vc_contact,
+                                                        vc_authorization));
+
+                    // preamble with send REGISTER, await 401, send REGISTER, await
+                    // 200 OK and user profile setting
+                    f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+                                                    p_cSeq_s, v_register);
+
+                    f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+                    // send REGISTER, await 401, send REGISTER, await 200 OK
+                    f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                    f_SIP_postamble_UE1_withoutRegistration();
+                } // end function f_Sip_TC_IMST2_GM_REG_02_UE1
+
+        /*
+        *  @desc	This is the test case function (SIP terminating side - UE2) for test cases where only REGISTRATION procedure is Reqired
+        *  @param	loc_CSeq_s
+        */
+                function f_TC_IMST2_GM_REG_02_UE2(in CSeq p_cSeq_s)
+                runs on ImsComponent {
+
+                    var template REGISTER_Request v_register;
+
+                    f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+                    v_register :=
+                        valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+                                                        p_cSeq_s, vc_from, vc_to,
+                                                        vc_via_REG, vc_contact,
+                                                        vc_authorization));
+
+                    // IMS1 component interface initialization
+                    f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+                    // preamble with send REGISTER, await 401, send REGISTER, await
+                    // 200 OK and user profile setting
+                    f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+                                                    p_cSeq_s, v_register);
+
+                    f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync
+
+                    // POSTAMBLE
+                    // send REGISTER, await 401, send REGISTER, await 200 OK
+                    f_RemoveRegistration(vc_cSeq);
+
+                    f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+                    f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+
+                    f_SIP_postamble_UE2_withoutRegistration();
+                } // end function f_Sip_TC_IMST2_GM_REG_02_UE2
+
+	/*
+	*  @desc	This is the test case function (SIP originating side - UE1) for TC_IMST2_GM_INI_04_UE1
+	*  @param	p_cSeq_s
+	*/
+			function f_TC_IMST2_GM_INI_04_UE1(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+												p_cSeq_s, v_register);
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync point preamble done
+
+				// TESTBODY
+				// prepare and send INVITE UE2
+				// @SUT
+				LibIms_Steps
+				.f_setHeadersINVITE(p_cSeq_s, c_userProfile_UE2atSUThome);
+				f_SendINVITE(m_INVITE_Request_UE_Diameter(vc_requestUri, vc_callId,
+												 p_cSeq_s, vc_from, vc_to,
+												 vc_via, vc_contact, omit,
+												 vc_route_REG, omit,
+												 m_MBody_SDP(vc_sdp_local)));
+
+				// await response - 200 ...
+				f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callId,
+													vc_cSeq));
+				// send ACK
+				LibSip_Steps.f_setHeadersACK();
+				f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq,
+											 vc_from, vc_to, vc_via));
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// SendBYE and await response
+				f_terminateCall_UE(vc_requestUri, vc_callId, vc_cSeq,
+								   vc_caller_From, vc_caller_To);
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE1_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_INI_04_UE1
+
+	/*
+	*  @desc	This is the test case function (SIP terminating side - UE2) for TC_IMST2_GM_INI_04_UE2
+	*  @param	loc_CSeq_s
+	*/
+			function f_TC_IMST2_GM_INI_04_UE2(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+
+				// IMS1 component interface initialization
+				f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+												p_cSeq_s, v_register);
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync point preamble done
+
+				// TESTBODY
+				// Awaiting INVITE
+				f_awaitingINVITE(mw_INVITE_Request_Base);
+				f_sendResponse(m_Response_2xxonINVITE_UE(c_statusLine200,
+														 vc_callId, vc_cSeq,
+														 vc_caller_From,
+														 vc_caller_To, vc_via,
+														 vc_contact, f_recordroute(),
+														 valueof(m_MBody_SDP(
+																	 vc_sdp_local
+																 ))));
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// await BYE and send 200OK
+				f_awaitingBYE_sendReply(mw_BYE_Request_Base(vc_callId));
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq);
+
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE2_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_INI_04_UE2
+
+	/*
+	*  @desc	This is the test case function (SIP originating side - UE1) for TC_IMST2_GM_INI_04_UE1 addopted to case where SUT release both UEs with BYE
+	*  @param	p_cSeq_s
+	*/
+			function f_TC_IMST2_GM_REL_04_UE1(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+												p_cSeq_s, v_register);
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync point preamble done
+
+				// TESTBODY
+				// prepare and send INVITE UE2
+				// @SUT
+				LibIms_Steps
+				.f_setHeadersINVITE(p_cSeq_s, c_userProfile_UE2atSUThome);
+				f_SendINVITE(m_INVITE_Request_UE_Diameter(vc_requestUri, vc_callId,
+												 p_cSeq_s, vc_from, vc_to,
+												 vc_via, vc_contact, omit,
+												 vc_route_REG, omit,
+												 m_MBody_SDP(vc_sdp_local)));
+
+				// await response - 200 ...
+				f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callId,
+													vc_cSeq));
+				// send ACK
+				LibSip_Steps.f_setHeadersACK();
+				f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq,
+											 vc_from, vc_to, vc_via));
+                // await BYE and send 200OK
+                f_awaitingBYE_sendReply(mw_BYE_Request_Base(vc_callId));
+
+                f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+                // point
+                // test
+                // body
+                // done
+                // POSTAMBLE
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE1_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_REL_04_UE1
+
+	/*
+	*  @desc	This is the test case function (SIP terminating side - UE2) for TC_IMST2_GM_INI_04_UE2 addopted to case where SUT release both UEs with BYE
+	*  @param	loc_CSeq_s
+	*/
+			function f_TC_IMST2_GM_REL_04_UE2(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+
+				// IMS1 component interface initialization
+				f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+												p_cSeq_s, v_register);
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync point preamble done
+
+				// TESTBODY
+				// Awaiting INVITE
+				f_awaitingINVITE(mw_INVITE_Request_Base);
+				f_sendResponse(m_Response_2xxonINVITE_UE(c_statusLine200,
+														 vc_callId, vc_cSeq,
+														 vc_caller_From,
+														 vc_caller_To, vc_via,
+														 vc_contact, f_recordroute(),
+														 valueof(m_MBody_SDP(
+																	 vc_sdp_local
+																 ))));
+
+                f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync before STR
+
+				// await BYE and send 200OK
+				f_awaitingBYE_sendReply(mw_BYE_Request_Base(vc_callId));
+
+                f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+                // point
+                // test
+                // body
+                // done
+                // POSTAMBLE
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq);
+
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE2_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_REG_04_UE2
+
+	} //end group TP_BasicCall
+
+	// source from AtsIms_Gm_TCFunctions (STF346)
+	group TP_Termination {
+
+	/*
+	*  @desc	This is the test case function (SIP originating side - UE1) for TC_IMST2_GM_SUB_06_UE1
+	*  @param	p_cSeq_s
+	*/
+			function f_TC_IMST2_GM_SUB_06_UE1(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+												p_cSeq_s, v_register);
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+				// point
+				// preamble
+				// done
+				// TESTBODY
+				// prepare and send INVITE UE2
+				// @SUT
+				LibIms_Steps
+				.f_setHeadersINVITE(p_cSeq_s, c_userProfile_UE2atSUThome);
+				f_SendINVITE(m_INVITE_Request_UE_Diameter(vc_requestUri, vc_callId,
+												 p_cSeq_s, vc_from, vc_to,
+												 vc_via, vc_contact, omit,
+												 vc_route_REG, omit,
+												 m_MBody_SDP(vc_sdp_local)));
+
+				// await response - 200 ...
+				f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callId,
+													vc_cSeq));
+				// send ACK
+				LibSip_Steps.f_setHeadersACK();
+				f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq,
+											 vc_from, vc_to, vc_via));
+
+				f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync before STR
+
+				// SendBYE and await response
+				f_terminateCall_UE(vc_requestUri, vc_callId, vc_cSeq,
+								   vc_caller_From, vc_caller_To);
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE1_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_SUB_06_UE1
+
+			/*
+	*  @desc	This is the test case function (SIP terminating side - UE2) for TC_IMST2_GM_SUB_06_UE2
+	*  @param	loc_CSeq_s
+	*/
+			function f_TC_IMST2_GM_SUB_06_UE2(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+
+				// IMS1 component interface initialization
+				f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+												p_cSeq_s, v_register);
+
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+				// point
+				// preamble
+				// done
+				// TESTBODY
+				// Awaiting INVITE
+				f_awaitingINVITE(mw_INVITE_Request_Base);
+				f_sendResponse(m_Response_2xxonINVITE_UE(c_statusLine200,
+														 vc_callId, vc_cSeq,
+														 vc_caller_From,
+														 vc_caller_To, vc_via,
+														 vc_contact, f_recordroute(),
+														 valueof(m_MBody_SDP(
+																	 vc_sdp_local
+																 ))));
+
+				f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync before STR
+
+				// await BYE and send 200OK
+				f_awaitingBYE_sendReply(mw_BYE_Request_Base(vc_callId));
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq);
+
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE2_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_SUB_06_UE2
+
+	} // end TP_Termination
+
+	// source from AtsIms_Gm_TCFunctions (STF346)
+	group TP_TargetRefresh {
+
+	/*
+	*  @desc	This is the test case function (SIP originating side - UE1) for TC_IMST2_GM_TAR_07_UE1
+	*  @param	p_cSeq_s
+	*/
+			function f_TC_IMST2_GM_TAR_07_UE1(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+				var SipUrl v_requestUri_INVITE;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+													
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE1atSUThome,
+												p_cSeq_s, v_register);
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+				// point
+				// preamble
+				// done
+				// TESTBODY
+				// prepare and send INVITE UE2
+				// @SUT
+				LibIms_Steps
+				.f_setHeadersINVITE(p_cSeq_s, c_userProfile_UE2atSUThome);
+				f_SendINVITE(m_INVITE_Request_UE_Diameter(vc_requestUri, vc_callId,
+												 p_cSeq_s, vc_from, vc_to,
+												 vc_via, vc_contact, omit,
+												 vc_route_REG, omit,
+												 m_MBody_SDP(vc_sdp_local)));
+
+                v_requestUri_INVITE := vc_requestUri;
+
+				// await response - 200 ...
+				f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callId,
+													vc_cSeq));
+				// send ACK
+				LibSip_Steps.f_setHeadersACK();
+				f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq,
+											 vc_from, vc_to, vc_via));
+
+				f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync1 before modification starts
+
+				// ReINVITE ...
+				// prepare and send RE-INVITE UE2
+				// @SUT
+				// Check function to set headers for reinvite on
+				// originating side
+                vc_sdp_local := valueof(m_SDP_modified(valueof(m_media_dynPT("8", "PCMA/8000")), vc_userprofile));
+				LibIms_Steps.f_setHeadersReINVITE(p_cSeq_s, true);
+				f_SendINVITE(m_INVITE_Request_UE_Diameter(v_requestUri_INVITE, vc_callId,
+												 p_cSeq_s, vc_from, vc_to,
+												 vc_via, vc_contact, omit,
+												 vc_route, omit,
+												 m_MBody_SDP(vc_sdp_local)));
+
+				// await response - 200 ...
+				f_awaitingResponse(mw_Response_Base(c_statusLine200, vc_callId,
+													vc_cSeq));
+				// send ACK
+				LibSip_Steps.f_setHeadersACK();
+				f_SendACK(m_ACK_Request_Base(vc_requestUri, vc_callId, vc_cSeq,
+											 vc_from, vc_to, vc_via));
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// SendBYE and await response
+				f_terminateCall_UE(vc_requestUri, vc_callId, vc_cSeq,
+								   vc_caller_From, vc_caller_To);
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq); // deregistration in SUT
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE1_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_TAR_07_UE1
+
+			/*
+	*  @desc	This is the test case function (SIP terminating side - UE2) for TC_IMST2_GM_TAR_07_UE2
+	*  @param	loc_CSeq_s
+	*/
+			function f_TC_IMST2_GM_TAR_07_UE2(in CSeq p_cSeq_s)
+			runs on ImsComponent {
+
+				var template REGISTER_Request v_register;
+
+                f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict());
+
+				v_register :=
+					valueof(m_REGISTER_Request_Base(vc_requestUri, vc_callId,
+													p_cSeq_s, vc_from, vc_to,
+													vc_via_REG, vc_contact,
+													vc_authorization));
+
+				// IMS1 component interface initialization
+				f_init_interfaceprofile(c_interfaceProfile_IMS_SUT_PCSCF2);
+				// preamble with send REGISTER, await 401, send REGISTER, await
+				// 200 OK and user profile setting
+				f_IMS_preamble_withRegistration(c_userProfile_UE2atSUThome,
+												p_cSeq_s, v_register);
+
+				f_selfOrClientSyncAndVerdict(c_prDone, f_getVerdict()); // sync
+
+				// point
+				// preamble
+				// done
+				// TESTBODY
+				// Awaiting INVITE
+				f_awaitingINVITE(mw_INVITE_Request_Base);
+				f_sendResponse(m_Response_2xxonINVITE_UE(c_statusLine200,
+														 vc_callId, vc_cSeq,
+														 vc_caller_From,
+														 vc_caller_To, vc_via,
+														 vc_contact, f_recordroute(),
+														 valueof(m_MBody_SDP(
+																	 vc_sdp_local
+																 ))));
+
+				f_selfOrClientSyncAndVerdict(c_sync1, f_getVerdict()); // sync1 before modification starts
+
+				// Awaiting RE-INVITE
+				f_awaitingINVITE(mw_INVITE_Request_Base);
+				f_sendResponse(m_Response_2xxonINVITE_UE(c_statusLine200,
+														 vc_callId, vc_cSeq,
+														 vc_caller_From,
+														 vc_caller_To, vc_via,
+														 vc_contact, f_recordroute(),
+														 valueof(m_MBody_SDP(
+																	 vc_sdp_local
+																 ))));
+
+				f_selfOrClientSyncAndVerdict(c_tbDone, f_getVerdict()); // sync
+				// point
+				// test
+				// body
+				// done
+				// POSTAMBLE
+				// await BYE and send 200OK
+				f_awaitingBYE_sendReply(mw_BYE_Request_Base(vc_callId));
+
+				// send REGISTER, await 401, send REGISTER, await 200 OK
+				f_RemoveRegistration(vc_cSeq);
+
+				f_selfOrClientSyncAndVerdict(c_poDone, f_getVerdict()); // sync
+				// point
+				// postamble
+				// done
+				f_SIP_postamble_UE2_withoutRegistration();
+			} // end function f_Sip_TC_IMST2_GM_TAR_07_UE2
+
+	} //end group TP_TargetRefresh
+
+	group IMSTemplates {
+
+        template INVITE_Request m_INVITE_Request_UE_Diameter
+        (SipUrl p_requestUri, CallId p_callId, CSeq p_cSeq, From p_from, To p_to,
+          Via p_via, Contact p_contact, template Require p_require,
+        template Route p_route,  template Supported p_supported, template MessageBody p_mb )
+        modifies m_INVITE_Request_Base
+        :=
+        {
+          msgHeader :=
+          {
+            contentLength	:= {fieldName := CONTENT_LENGTH_E, len:= lengthof(p_mb)},//f_MessageBodyLength(valueof(p_mb))},
+            contentType := {fieldName := CONTENT_TYPE_E, mediaType :=  c_sdpAplication},
+            require := p_require,
+            route := p_route,
+            supported := p_supported
+          },
+          messageBody := p_mb
+        }
+        
+      group SDPTemplates{
+          
+          template SDP_Message m_SDP_modified(SDP_media_desc p_media, in SipUserProfile p_userprofile) 
+                  modifies m_SDP
+                  := {origin := {
+                      session_id := "30001",
+                      session_version := "30001"
+                      },
+                      //attributes := {m_attribute_sendonly},
+                      bandwidth := {{PX_SIP_SDP_b_modifier, PX_SIP_SDP_b_bandwidth}}
+                  };
+      }
+
+	}
+
+} // end module DiameterRx_ImsGm_TCFunctions

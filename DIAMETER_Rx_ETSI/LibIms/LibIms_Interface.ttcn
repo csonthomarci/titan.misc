@@ -1,0 +1,44 @@
+/*
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibIms_Interface.ttcn 368 2009-06-08 07:06:42Z schmitting $
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-IMS tests. Module become from STF306 and STF334-336
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module LibIms_Interface
+{	
+	//LibCommon
+	import from LibCommon_Sync all;
+	import from LibCommon_AbstractData all;
+	import from LibCommon_BasicTypesAndValues all;
+	import from LibCommon_DataStrings all;
+	//LibSip
+	import from LibSip_SIPTypesAndValues all;
+	import from LibSip_SDPTypes all;
+	import from LibSip_Templates all;
+	import from LibSip_PIXITS all;
+	import from LibSip_Interface all; 
+	//LibIms
+	import from LibIms_SIPTypesAndValues all;
+
+	group AdressTypes
+	{
+
+		//Solution for building error problem. (Important for validation)
+		//type component ImsComponent extends SipComponent need to be located in LibIms_Interface and not in LibSip_Interface module
+		//With this solution TAU compiler error.
+		type component ImsComponent extends SipComponent
+		{
+		  // general variables
+		  var ImsInterfaceProfile vc_interfaceprofile 
+		} 
+		
+		// end ImsComponent
+
+//	  type address WorkaroundAddress; //Remove it later
+	}// end group AdressTypes
+
+
+
+  
+} // end module LibIms_TestSystem

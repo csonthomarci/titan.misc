@@ -1,0 +1,15 @@
+
+<xs:schema targetNamespace="http://uri.etsi.org/ngn/params/xml/simservs/xcap"
+                  xmlns:ss="http://uri.etsi.org/ngn/params/xml/simservs/xcap" 
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+                  elementFormDefault="qualified" 
+                  attributeFormDefault="unqualified">
+
+	<xs:include schemaLocation="simservs.xsd"/>
+	<xs:include schemaLocation="TIP-TIR.xsd"/>
+	<xs:include schemaLocation="OIP-OIR.xsd"/>
+	<xs:include schemaLocation="CDIV.xsd"/>
+	<xs:include schemaLocation="ACR_CB.xsd"/>
+	<xs:include schemaLocation="cug.xsd"/>
+	
+</xs:schema>

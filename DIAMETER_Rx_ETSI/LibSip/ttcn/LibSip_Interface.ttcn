@@ -1,0 +1,201 @@
+/*
+*	@author 	STF 346, STF366, STF368, STF369
+*  @version    $Id: LibSip_Interface.ttcn 512 2011-10-24 14:27:33Z schmitting $
+*	@desc		This module provides the types used by the test component 
+*              for SIP-IMS tests. Module become from STF306 and STF334-336
+*/
+//compiled with Titan 02.03.2106 Elemer Lelik
+
+module LibSip_Interface
+{	
+//LibCommon
+import from LibCommon_Sync all;
+import from LibCommon_AbstractData all;
+import from LibCommon_BasicTypesAndValues all;
+import from LibCommon_DataStrings all;
+//LibSip
+import from LibSip_SIPTypesAndValues all;
+import from SIPmsg_PortType all;	
+import from SIPmsg_Types all;	
+import from LibSip_SDPTypes all;
+import from SDP_Types all;
+import from LibSip_XMLTypes all;
+
+import from LibSip_PIXITS all;
+
+group AdressTypes
+{
+  /*  type record address4SIP
+  {
+  //HostPort
+  charstring 	        host optional,        // hostname, IPv4 or IPv6
+  integer             portField optional    // represented as an integer
+  } with { encode "SIPCodec" }
+  */
+  type SIP_address_type address;
+  
+  
+}// end group AdressTypes
+
+//type port SipPort message {
+//	  inout Request
+/*, 
+REGISTER_Request, 
+INVITE_Request,
+OPTIONS_Request,
+BYE_Request,
+CANCEL_Request, 
+ACK_Request, 
+PRACK_Request, 
+NOTIFY_Request, 
+SUBSCRIBE_Request, 
+PUBLISH_Request, 
+UPDATE_Request,
+REFER_Request,
+MESSAGE_Request,
+INFO_Request*/
+//,
+//		  		Response, 
+//		  		Raw } with { extension "address" };
+
+
+type  SIPmsg_PT  SipPort;
+
+signature s_SIP_conversation (in charstring text, out boolean answer);
+signature s_SIP_ringing (in charstring text, out boolean answer);
+signature s_SIP_announcementA (in charstring text, out boolean answer);
+signature s_SIP_announcementB (in charstring text, out boolean answer);
+signature s_SIP_announcement (in charstring text, out boolean answer);
+signature s_SIP_voiceMessage (in charstring text, out boolean answer);
+signature s_SIP_mediastopped (in charstring text, out boolean answer);
+
+type port operatorPort procedure {inout s_SIP_conversation; inout s_SIP_ringing; inout s_SIP_announcementA; inout s_SIP_announcementB; inout s_SIP_announcement; inout s_SIP_voiceMessage; inout s_SIP_mediastopped} with { extension "internal" };
+
+//	Solution for building error problem. (Important for validation)
+//type component ImsComponent extends SipComponent need to be located in LibIms_Interface and not in LibSip_Interface module
+//With this solution TAU compiler error.
+//	type component ImsComponent extends SipComponent
+//	{
+//		// general variables
+//		var ImsInterfaceProfile vc_interfaceprofile 
+//	 } // end ImsComponent
+
+type component SipComponent extends SelfSyncComp
+{
+  //port
+  port 	SipPort SIPP;
+  // used for communication with the operator
+  port operatorPort opPort;
+  
+  // current address to send TCP/UDP messages
+  var SipUserProfile vc_userprofile; 		// PIXIT userinformation
+  var address		 vc_sent_label;//removed because this value is predefined and used to open socket  := {host := PX_SIP_SUT_IPADDR, portField := PX_SIP_SUT_PORT};
+  
+  // last incoming message
+  var Response 	vc_response;	// last incoming response message
+  var boolean	vc_boo_response := false; // to check if response received or not
+  var Request 	vc_request;		// last incoming request message					
+  var boolean	vc_boo_request := false; // to check if request received or not
+  var Request 	vc_requestFor407;	// last INVITE request to be authorized if 407/401 received from Proxy  
+  
+  var SipUrl	vc_requestUri 	:= c_empty_RequestUri;
+  var SipUrl	vc_requestUri2 	:= c_empty_RequestUri;//MRO
+  var charstring vc_branch		:= "";
+  var charstring vc_branch_ICSCF	:= "";
+  var charstring vc_branch_SCSCF	:= "";
+  
+  // SIP message header fields (for building next message)
+  var CallId	vc_callId    	:= c_empty_CallId;
+  var CallId	vc_callIdReg 	:= c_empty_CallId;
+  var From		vc_from      	:= c_empty_From;
+  var To		vc_to        	:= c_empty_To;
+  var To		vc_cancel_To 	:= c_empty_To;	// used for next CANCEL
+  var Via 		vc_via       	:= c_empty_Via;
+  var Via 		vc_via_REG		:= c_empty_Via; // via used in last REGISTER
+  var ContentType vc_contentType:= c_empty_ContentType;//MRO
+  
+  var template RecordRoute vc_recordRoute; 			 // value of RecordRoute header
+  var boolean  vc_boo_recordRoute := false; // boolean indicates valid recordRoute
+  var template Route		vc_route; 					 // value of Route header
+  var template Route		vc_route_REG;				 // value of Route header from registration ServiceRoute header for initial Requests
+  var boolean  vc_boo_route 	:= false; 	 // boolean indicates valid Route
+  
+  var Contact	vc_contact; 			// value of Contact header
+  var CSeq		vc_cSeq 		:= c_empty_cSeq;	// value of CSeq header
+  var RAck 		vc_rAck 		:= { fieldName := RACK_E, /*responseNum*/ response_num:= 1, seqNumber := 1, method := "INVITE"}; // value of RAck header
+  var HostPort 	vc_reqHostPort 	:= {host:=PX_SIP_SUT_IPADDR, portField:=PX_SIP_SUT_PORT}; // address to send request
+  var Privacy 	vc_privacy;
+  //  var HistoryInfo_List vc_historyInfoList := {}; // value of history list according to RFC4244
+  var Hi_Entry_list vc_historyInfoList := {}; // value of history list according to RFC4244
+  
+  var SipUrl 	  vc_confURI; 	 // conference URI according to TS124147 ch. 5.3.1.3.2
+  var SDP_Message vc_sdp_remote; // incoming SDP offers
+  var SDP_Message vc_sdp_local;  // SDP values to be sent
+  var XmlBody 	vc_xml_remote;	 // incoming XML value
+  var template XmlBody 	vc_xml_local;	 //SDP values to be sent
+  
+  var CSeq		vc_iut_CSeq 	:= c_empty_cSeq;	// value of last CSeq header used by the IUT in request
+  // To/From header-fields to be used if the callee will release the session
+  var To 		vc_callee_To 	:= c_empty_To; 
+  var From 		vc_callee_From 	:= c_empty_From;
+  // To/From header-fields to be used if the caller will release the session
+  var To 		vc_caller_To 	:= c_empty_To;
+  var From 		vc_caller_From	:= c_empty_From;
+  var Authorization vc_authorization;
+  
+  // variables for storing default references
+  var default 	vc_default;
+  var default 	vc_def_catchSyncStop;
+  
+  // general timers
+  timer tc_T1  	 := PX_SIP_T1;
+  timer tc_Tf    := PX_SIP_TF;
+  timer tc_wait  := PX_SIP_TWAIT;
+  timer tc_ack   := PX_SIP_TACK;
+  timer tc_resp  := PX_SIP_TRESP;
+  timer tc_noAct := PX_SIP_TNOACT; // time for SUT to get idle state
+  //	  timer TRept;
+  //	  timer TSync	 := PX_SIP_TSYNC;
+  timer tc_guard   := PX_SIP_TGUARD;//MRO
+  timer tc_tDelay   := 32.0;
+  
+  var float 		vc_tcRESP 				:= PX_SIP_TRESP; // standard value for TRESP (may be modified in particular tests)
+  
+  // indicators set/used parameter status or state handling in default
+  var boolean 		vc_sdp_remote_is_valid 	:= false; 	// true if there is a value in v_SDP_remote
+  var boolean 		vc_history_is_valid 	:= false; 	// true if there is a HistoryList in response message
+  var boolean 		vc_send_SDP 			:= false; 	// send SDP in the next outgoing message
+  var boolean 		vc_ignore_bye			:= false; 	// enable ignore of repeated bye in default
+  var boolean 		vc_ignore_invite		:= false; 	// enable ignore invite in default
+  var boolean 		vc_ignore_subscribe		:= false; 	// enable ignore subscribe in default
+  var boolean 		vc_ignore181			:= false; 	// enable ignore of 181 in default
+  var boolean 		vc_ignore484			:= false; 	// enable ignore of 484 in default
+  var boolean 		vc_ignore4xx			:= false; 	// enable ignore of 4xx in default
+  var boolean 		vc_ignore200OKinv		:= false; 	// enable ignore of 200OKinv in default
+  var boolean 		vc_supported_100rel		:= false; 	// true if the received invite contains 100rel
+  var boolean 		vc_supported_precondition:= false; 	// true if the received invite contains precondition
+  var boolean 		vc_MESSAGEreceived 		:= false; 	// true if MESSAGE received during altstep
+  var boolean 		vc_first_recv			:= false; 	// true after receipt of first incomming SIP message
+  var boolean 		vc_firstREGISTER_sent	:= false; 	// true after sent of first REGISTER message
+  var boolean		vc_DeregDone 			:= false;	// true after first DeREGISTRATION trail (avoid loop)
+  var boolean		vc_interface_isc		:= false;	// true if isc interface is in use
+  var boolean v_white_space := false;//MRO
+  
+  // ETS address
+  var address v_ets_label := { host := PX_SIP_TS1_IPADDR, portField := PX_SIP_TS1_PORT};
+  
+  // parts needed for Client/SelfSyncComp type compatibility
+  /*	  var 	StringStack v_stateStack := c_initStringStack;
+  port 	SyncPort 	syncSendPort;
+  port 	SyncPort 	syncPort;
+  timer tc_sync 	:= PX_TSYNC_TIME_LIMIT;
+  */
+  //	  // used for communication with the operator
+  //	  port operatorPort_SIP opPort;
+  
+  
+  
+  
+}   // end SipComponent
+
+} // end module LibSip_Interface

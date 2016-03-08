@@ -1,0 +1,236 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_Steps.ttcn3 646 2013-06-07 10:28:26Z schmitting $
+ *	@desc		This module provides ATS specific templates used by the test cases
+ *              for IMS-DIAMETER tests.
+ */
+ //compiled with Titan 02.03.2106 Elemer Lelik
+ module DiameterRx_Steps {
+
+	//LibCommon    
+    import from LibCommon_DataStrings {type Bit1, Bit4, Bit5, Bit8;}//all;
+    import from LibCommon_BasicTypesAndValues {type UInt8;};//LibCommon 
+	import from LibCommon_Sync all ;
+	import from LibCommon_VerdictControl all ;
+    
+    //LibDiameter
+    import from LibDiameter_TypesAndValues all;
+    import from LibDiameter_Templates all;
+    import from LibDiameter_Steps  all;
+    import from LibDiameter_PIXITS all;
+    import from LibDiameter_Interface all;
+    
+    //DiameterRx
+    import from DiameterRx_Templates all;
+    import from DiameterRx_PIXITS all;	
+    
+    group GlobalSteps {
+
+        /*
+        *  @desc	This is a test step that init global variables
+        *  @param	
+        */
+        function f_DiameterRx_init()
+        runs on DiameterComponent {
+            
+            //Defaults
+    		vc_def_catchSyncStop_diameter := activate(a_diameter_catchSyncStop());
+    		vc_default_diameter := activate (a_diameter_default());
+    		
+    		//Base LibDiameter init function if there will be any base initialisation
+    		f_Diameter_Init_Component();
+    		
+    		vc_ETS_address := PX_DIAMETER_RX_ETS_IPADDR;
+            vc_ETS_port		:= PX_DIAMETER_RX_ETS_PORT;
+			vc_SUT_address := PX_DIAMETER_RX_SUT_IPADDR;
+			vc_SUT_port 		:= PX_DIAMETER_RX_SUT_PORT;
+            
+            vc_sessionId := m_sessionId(PX_SessionID);
+            
+            vc_originHost := m_originHost(PX_OriginHost);
+            vc_originRealm := m_originRealm(PX_OriginRealm); // realm of the originator (TS)
+            
+            vc_destinationHost := m_destinationHost(PX_DestinationHost);
+            vc_destinationRealm := m_destinationRealm(PX_DestinationRealm);
+            
+            vc_hostIPAddress := valueof(f_IPV4or6_String2Address (PX_DIAMETER_RX_ETS_IPADDR)); 
+            
+            vc_send_hopid:=hex2int('00000100'H);
+            vc_send_endid:=hex2int('01000000'H);
+            
+        } // end function f_DiameterRx_init
+        
+        /*
+        *  @desc	This is a test step that awaits session establishment by the IUT
+        *  @param	
+        */
+        function f_IUT_session_establishment()
+        runs on DiameterComponent {
+    		
+            f_awaiting_AAR(mw_AAR_dummy); // IUT esthablish Diameter session
+                
+            f_send_AAA(m_AAA_modified_ResultCode_ANCA(vc_sessionId,
+													  vc_originHost,
+													  vc_originRealm,
+													  m_resultCode(m_resultCode_diameterSuccess),
+													  omit));
+    
+        } // end function f_IUT_session_establishment
+        
+        /*
+        *  @desc	This is a test step that initiate session establishment by the ETS
+        *  @param	
+        */
+        function f_ETS_session_establishment(template Framed_IP_Address_AVP p_framedIpAddress4, template Framed_IPv6_Prefix_AVP p_framedIpAddress6)
+        runs on DiameterComponent {
+            f_send_AAR(m_AAR_FIP_Media1(vc_sessionId, vc_originHost,
+                                        vc_originRealm,
+                                        vc_destinationRealm,
+                                           vc_destinationHost,
+                                        p_framedIpAddress4,
+                                        p_framedIpAddress6, 
+                                        m_mediaComponentDescription_flowStatus(m_flowStatus(ENABLED_E))));
+            
+            f_awaiting_AAA(mw_AAA_modified_ResultCode_ANCA(?, ?, ?,
+                                                           mw_resultCode
+                                                           (mw_resultCode_diameterSuccess)
+                                                           , ?)); // ANCA-AVP present
+        } // end function f_ETS_session_establishment
+        
+    } // end group GlobalSteps
+    
+    group Preambles{
+        
+        function f_preamble_AF() runs on DiameterComponent
+        {
+            vc_isAF := true;
+            
+            if(PX_DIAM_LLP_ENABLED)
+            {
+                f_preambleClient();
+            }
+            
+            f_DiameterRx_init();
+            f_preambleDiameterBaseClient(c_applIdRx);
+        }
+       
+        function f_preamble_PCRF() runs on DiameterComponent
+        {
+            vc_isAF := false;
+            
+            if(PX_DIAM_LLP_ENABLED)
+            {
+                f_preambleServer();
+            }
+            f_DiameterRx_init();
+            f_preambleDiameterBaseServer(c_applIdRx);
+        }
+    }// end group Preambles
+    
+    group AVPOperations {
+    
+        function f_framedIpAddress4 (template octetstring p_framedIpAddress)
+            return template Framed_IP_Address_AVP
+        {
+            if (PX_IPv6)
+                {return(omit)}
+            else {return(mw_framedIpAddress(p_framedIpAddress))}
+        }
+        
+        function f_framedIpAddress6 (template octetstring p_framedIpAddress)
+            return template Framed_IPv6_Prefix_AVP
+        {
+            if (PX_IPv6)
+                {return(mw_framedIp6Address(p_framedIpAddress))}
+            else {return(omit)}
+        }
+                
+        function f_framedIpAddress4_send (octetstring p_framedIpAddress)
+             return template Framed_IP_Address_AVP
+        {
+        	if (PX_IPv6)
+                 {return(omit)}
+        	else {return(m_framedIpAddress(p_framedIpAddress))}
+        }
+        
+        function f_framedIpAddress6_send (octetstring p_framedIpAddress)
+             return template Framed_IPv6_Prefix_AVP
+        {
+        	if (PX_IPv6)
+        		{return(m_framedIp6Address(p_framedIpAddress))}
+         	else {return(omit)}
+        }
+    }//end group AVPOperations
+    
+    group twoSessionRelatedFunctions{
+	
+
+        function f_awaitAAR_sendAAAandSaveSessionIds() runs on DiameterComponent
+        {
+            var DIAMETER_MSG v_MSG;
+        
+            if (PX_DIAM_LLP_ENABLED and f_gtZero(vc_ETS_conn))
+            {                
+                tc_wait.start(2.0);
+                interleave
+                {
+                    []DIAMP.receive	(DIAMETER_MSG:{aAR_MSG:=mw_AAR_basic(?,?,?,?,*)}) -> value v_MSG
+                      {
+                        tc_wait.stop;
+                        vc_recvDiamMsg := v_MSG;
+                        // store specific parameter for AAR if needed
+                        vc_recv_hopid:= vc_recvDiamMsg.aAR_MSG.header.hopid;
+                        vc_recv_endid:= vc_recvDiamMsg.aAR_MSG.header.endid;
+                        vc_sessionId := vc_recvDiamMsg.aAR_MSG.session_Id;
+                        //TODO store session1
+                        f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+                      }
+                      
+                    []DIAMP.receive	(DIAMETER_MSG:{aAR_MSG:=mw_AAR_basic(?,?,?,?,*)}) -> value v_MSG
+                      {
+                        tc_wait.stop;
+                        vc_recvDiamMsg := v_MSG;
+                        // store specific parameter for AAR if needed
+                        vc_recv_hopid:= vc_recvDiamMsg.aAR_MSG.header.hopid;
+                        vc_recv_endid:= vc_recvDiamMsg.aAR_MSG.header.endid;
+                        vc_sessionId := vc_recvDiamMsg.aAR_MSG.session_Id;
+                        //TODO store session2
+                        f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+                      }
+                }
+            }
+            else
+            {
+                tc_wait.start;
+                interleave
+                {
+                    []DIAMP.receive	(DIAMETER_MSG:{aAR_MSG:=mw_AAR_basic(?,?,?,?,*)}) -> value v_MSG
+                      {
+                        tc_wait.stop;
+                        vc_recvDiamMsg := v_MSG;
+                        // store specific parameter for AAR if needed
+                        vc_recv_hopid:= vc_recvDiamMsg.aAR_MSG.header.hopid;
+                        vc_recv_endid:= vc_recvDiamMsg.aAR_MSG.header.endid;
+                        vc_sessionId := vc_recvDiamMsg.aAR_MSG.session_Id;
+                        //TODO store session1
+                        f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+                      }
+                      
+                    []DIAMP.receive	(DIAMETER_MSG:{aAR_MSG:=mw_AAR_basic(?,?,?,?,*)}) -> value v_MSG
+                      {
+                        tc_wait.stop;
+                        vc_recvDiamMsg := v_MSG;
+                        // store specific parameter for AAR if needed
+                        vc_recv_hopid:= vc_recvDiamMsg.aAR_MSG.header.hopid;
+                        vc_recv_endid:= vc_recvDiamMsg.aAR_MSG.header.endid;
+                        vc_sessionId := vc_recvDiamMsg.aAR_MSG.session_Id;
+                        //TODO store session2
+                        f_send_AAA(m_AAA_basic(vc_sessionId, vc_originHost, vc_originRealm));
+                      }
+                }
+            }
+        } //end function f_awaitAAR_sendAAAandSaveSessionIds()
+    
+    } //end group twoSessionRelatedFunctions
+             
+} // end module DiameterRx_Steps

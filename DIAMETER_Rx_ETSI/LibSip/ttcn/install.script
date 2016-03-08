@@ -1,0 +1,70 @@
+#!/bin/sh
+
+ln -s ../xsd/http_uri_etsi_org_ngn_params_xml_comm_div_info.ttcn     .
+ln -s ../xsd/http_uri_etsi_org_ngn_params_xml_simservs_mcid.ttcn     .
+ln -s ../xsd/http_uri_etsi_org_ngn_params_xml_simservs_pstn.ttcn     .
+ln -s ../xsd/http_uri_etsi_org_ngn_params_xml_simservs_xcap.ttcn     .
+ln -s ../xsd/http_www_w3_org_XML_1998_namespace.ttcn     .
+ln -s ../xsd/NoTargetNamespace.ttcn     .
+ln -s ../xsd/urn_3gpp_ns_cw_1_0.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_common_policy.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_conference_info.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_pidf_geopriv10_basicPolicy.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_pidf_geopriv10.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_pidf.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_reginfo.ttcn     .
+ln -s ../xsd/urn_ietf_params_xml_ns_resource_lists.ttcn     .
+ln -s ../xsd/urn_oma_xml_xdm_common_policy.ttcn     .
+ln -s ../xsd/UsefulTtcn3Types.ttcn     .
+ln -s ../xsd/XSD.ttcn     .
+
+
+
+ln -s ../../LibCommon/LibCommon_AbstractData.ttcn     .
+ln -s ../../LibCommon/LibCommon_BasicTypesAndValues.ttcn     .
+ln -s ../../LibCommon/LibCommon_DataStrings.ttcn     .
+ln -s ../../LibCommon/LibCommon_Sync.ttcn     .
+ln -s ../../LibCommon/LibCommon_TextStrings.ttcn     .
+ln -s ../../LibCommon/LibCommon_Time.ttcn     .
+ln -s ../../LibCommon/LibCommon_VerdictControl.ttcn     .
+
+ln -s ../../titan.ProtocolModules.SDP/src/lex.SDP_parse_.c .
+ln -s ../../titan.ProtocolModules.SDP/src/SDP_EncDec.cc    .
+ln -s ../../titan.ProtocolModules.SDP/src/SDP_parse_parser.h .
+ln -s ../../titan.ProtocolModules.SDP/src/SDP_parse_.tab.c  .
+ln -s ../../titan.ProtocolModules.SDP/src/SDP_parse_.tab.h  .
+ln -s ../../titan.ProtocolModules.SDP/src/SDP_Types.ttcn  .
+
+
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_EncDec.cc  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_Types.ttcn  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_parse.h  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_parse.l  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_parse.y  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_parse_.tab.c  .
+ln -s ../../titan.ProtocolModules.MIME/src/MIME_parse_.tab.h  .
+ln -s ../../titan.ProtocolModules.MIME/src/lex.MIME_parse_.c  .
+
+
+ln -s ../../titan.TestPorts.SIPmsg/src/lex.SIP_parse_.c .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIPmsg_PortType.ttcn .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIPmsg_PT.cc    .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIPmsg_PT.hh    .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIPmsg_Types.ttcn  .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIP_parse.h  .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIP_parse_.tab.h  .
+ln -s ../../titan.TestPorts.SIPmsg/src/SIP_parse_.tab.c  .
+
+
+
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCDateTime.cc .
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCDateTime_Functions.ttcn
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCConversion.cc .
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCConversion_Functions.ttcn
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCInterface.cc .
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCInterface_Functions.ttcn
+ln -s   ../../titan.Libraries.TCCUsefulFunctions/src/TCCInterface_ip.h
+
+
+
+

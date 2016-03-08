@@ -1,0 +1,621 @@
+/*******************************************************************************
+* Copyright (c) 2000-2016 Ericsson Telecom AB
+*
+* XSD to TTCN-3 Translator version: CRL 113 200/5 R4D                       
+*
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*******************************************************************************/
+//
+//  File:          http_uri_etsi_org_ngn_params_xml_simservs_xcap.ttcn
+//  Description:
+//  References:
+//  Rev:
+//  Prodnr:
+//  Updated:       Fri Mar  4 09:23:30 2016
+//  Contact:       http://ttcn.ericsson.se
+//
+////////////////////////////////////////////////////////////////////////////////
+//	Generated from file(s):
+//	- ACR_CB.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- CDIV.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- OIP-OIR.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- SupplementaryServices.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- TIP-TIR.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- cug.xsd
+//			/* xml version = "1.0" encoding = "UTF-8" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+//	- simservs.xsd
+//			/* xml version = "1.0" */
+//			/* targetnamespace = "http://uri.etsi.org/ngn/params/xml/simservs/xcap" */
+////////////////////////////////////////////////////////////////////////////////
+//     Modification header(s):
+//-----------------------------------------------------------------------------
+//  Modified by:
+//  Modification date:
+//  Description:
+//  Modification contact:
+//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+
+module http_uri_etsi_org_ngn_params_xml_simservs_xcap {
+
+
+import from XSD all;
+
+
+import from urn_ietf_params_xml_ns_common_policy all;
+
+
+import from urn_oma_xml_xdm_common_policy all;
+
+
+/* import common policy definitions */
+
+
+/* import OMA common policy extensions */
+
+
+/* incoming communication barring rule set based on the common policy rule set. */
+
+
+/* This is the incoming communication barring configuration */
+/* document. */
+/* add service specific elements here */
+/* service specific attributes can be defined here */
+type record Incoming_communication_barring
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	Ruleset ruleset optional
+}
+with {
+  variant "name as 'incoming-communication-barring'";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+  variant (ruleset) "namespace as 'urn:ietf:params:xml:ns:common-policy' prefix 'cp'";
+};
+
+
+/* outgoing communication barring rule set based on the common policy rule set. */
+
+
+/* This is the outgoing communication barring configuration */
+/* document. */
+/* add service specific elements here */
+/* service specific attributes can be defined here */
+type record Outgoing_communication_barring
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	Ruleset ruleset optional
+}
+with {
+  variant "name as 'outgoing-communication-barring'";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+  variant (ruleset) "namespace as 'urn:ietf:params:xml:ns:common-policy' prefix 'cp'";
+};
+
+
+/* communication barring specific extensions to IETF common policy actions */
+
+
+type Allow_action_type Allow
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+/* communication barring specific type declarations */
+
+
+/* <xs:simpleType name="allow-action-type" final="list restriction"> */
+
+
+type XSD.Boolean Allow_action_type
+with {
+  variant "name as 'allow-action-type'";
+  //variant "text 'true' as '1'";
+  //variant "text 'false' as '0'";
+};
+
+
+/* import common policy definitions */
+
+
+/* import OMA common policy extensions */
+
+
+/* communication diversion specific extensions to IETF common policy conditions. The
+cp:conditionsType is expanded with the elements: ss:not-registered, ss:busy, ss:no-answer, ss:notreachable,
+ss:media as optional elements */
+
+
+/* communication diversion rule set based on the common policy rule set. */
+
+
+/* This is the communication diversion configuration */
+/* document. */
+/* add service specific elements here */
+/* service specific attributes can be defined here */
+type record Communication_diversion
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	Ruleset ruleset optional
+}
+with {
+  variant "name as 'communication-diversion'";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+  variant (ruleset) "namespace as 'urn:ietf:params:xml:ns:common-policy' prefix 'cp'";
+};
+
+
+/* communication diversion specific extensions to IETF common policy actions */
+
+
+type Forward_to_type Forward_to
+with {
+  variant "name as 'forward-to'";
+  variant "element";
+};
+
+
+type enumerated Reveal_URIoptions_type
+{
+	false_,
+	not_reveal_GRUU,
+	true_
+}
+with {
+  variant "text 'false_' as 'false'";
+  variant "text 'not_reveal_GRUU' as 'not-reveal-GRUU'";
+  variant "text 'true_' as 'true'";
+  variant "name as 'reveal-URIoptions-type'";
+};
+
+
+/* communication diversion specific type declarations */
+
+
+type record Forward_to_type
+{
+	XSD.AnyURI target,
+	XSD.Boolean notify_caller optional,
+	Reveal_URIoptions_type reveal_identity_to_caller optional,
+	Reveal_URIoptions_type reveal_served_user_identity_to_caller optional,
+	XSD.Boolean notify_served_user optional,
+	XSD.Boolean notify_served_user_on_outbound_call optional,
+	Reveal_URIoptions_type reveal_identity_to_target optional,
+	NoReplyTimer noReplyTimer optional
+}
+with {
+  variant "name as 'forward-to-type'";
+  variant (notify_caller) "name as 'notify-caller'";
+  variant (notify_caller) "defaultForEmpty as 'true'";
+  //variant (notify_caller) "text 'true' as '1'";
+  //variant (notify_caller) "text 'false' as '0'";
+  variant (reveal_identity_to_caller) "name as 'reveal-identity-to-caller'";
+  variant (reveal_identity_to_caller) "defaultForEmpty as 'true'";
+  variant (reveal_served_user_identity_to_caller) "name as 'reveal-served-user-identity-to-caller'";
+  variant (reveal_served_user_identity_to_caller) "defaultForEmpty as 'true'";
+  variant (notify_served_user) "name as 'notify-served-user'";
+  variant (notify_served_user) "defaultForEmpty as 'false'";
+  //variant (notify_served_user) "text 'true' as '1'";
+  //variant (notify_served_user) "text 'false' as '0'";
+  variant (notify_served_user_on_outbound_call) "name as 'notify-served-user-on-outbound-call'";
+  variant (notify_served_user_on_outbound_call) "defaultForEmpty as 'false'";
+  //variant (notify_served_user_on_outbound_call) "text 'true' as '1'";
+  //variant (notify_served_user_on_outbound_call) "text 'false' as '0'";
+  variant (reveal_identity_to_target) "name as 'reveal-identity-to-target'";
+  variant (reveal_identity_to_target) "defaultForEmpty as 'true'";
+  variant (noReplyTimer) "name as capitalized";
+};
+
+
+type XSD.PositiveInteger NoReplyTimer (5 .. 180)
+with {
+  variant "element";
+};
+
+
+/* Originating Identity presentation Restriction */
+type record Originating_identity_presentation_restriction
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	enumerated {
+		presentation_restricted,
+		presentation_not_restricted
+	} default_behaviour optional
+}
+with {
+  variant "name as 'originating--identity--presentation--restriction'";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+  variant (default_behaviour) "name as 'default--behaviour'";
+  variant (default_behaviour) "defaultForEmpty as 'presentation--restricted'";
+  variant (default_behaviour) "text 'presentation_not_restricted' as 'presentation--not--restricted'";
+  variant (default_behaviour) "text 'presentation_restricted' as 'presentation--restricted'";
+};
+
+
+/* Originating Identity Presentation */
+type SimservType Originating_identity_presentation
+with {
+  variant "name as 'originating--identity--presentation'";
+  variant "element";
+};
+
+
+/* Terminating Identity presentation Restriction */
+type record Terminating_identity_presentation_restriction
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	enumerated {
+		presentation_restricted,
+		presentation_not_restricted
+	} default_behaviour optional
+}
+with {
+  variant "name as 'terminating-identity-presentation-restriction'";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+  variant (default_behaviour) "name as 'default-behaviour'";
+  variant (default_behaviour) "defaultForEmpty as 'presentation-restricted'";
+  variant (default_behaviour) "text 'presentation_not_restricted' as 'presentation-not-restricted'";
+  variant (default_behaviour) "text 'presentation_restricted' as 'presentation-restricted'";
+};
+
+
+/* Terminating Identity Presentation */
+type SimservType Terminating_identity_presentation
+with {
+  variant "name as 'terminating-identity-presentation'";
+  variant "element";
+};
+
+
+/* XML Schema Definition for the closed user group */
+/* parameter */
+
+
+/* Definition of simple types */
+
+
+type XSD.String TwobitType (pattern "[0-1][0-1]")
+with {
+  variant "name as uncapitalized";
+};
+
+
+type XSD.HexBinary NetworkIdentityType length(1)
+with {
+  variant "name as uncapitalized";
+};
+
+
+type XSD.HexBinary SixteenbitType length(2)
+with {
+  variant "name as uncapitalized";
+};
+
+
+type XSD.Integer CugIndexType (0 .. 32767)
+with {
+  variant "name as uncapitalized";
+};
+
+
+/* Definition of complex types */
+
+
+type record CugRequestType
+{
+	XSD.Boolean outgoingAccessRequest,
+	CugIndexType cugIndex
+}
+with {
+  variant "name as uncapitalized";
+  //variant (outgoingAccessRequest) "text 'true' as '1'";
+  //variant (outgoingAccessRequest) "text 'false' as '0'";
+};
+
+
+/* Definition of document structure */
+
+
+type record Cug
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional,
+	CugRequestType cugCallOperation optional,
+	NetworkIdentityType networkIndicator optional,
+	SixteenbitType cugInterlockBinaryCode optional,
+	TwobitType cugCommunicationIndicator optional
+}
+with {
+  variant "name as uncapitalized";
+  variant "element";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+};
+
+
+/* The element "simservs" maps to the Common Parts of an NGN PSTN/ISDN	Simulation services document */
+
+
+/* XML Schema for data manipulation of ETSI */
+/* NGN PSTN/ISDN Simulation Services */
+/* xs:group ref="ss:absServiceGroup" minOccurs="0" maxOccurs="unbounded" / */
+type record Simservs
+{
+	record of XSD.String attr optional,
+	record of AbsService_group absService_list,
+	record {
+		record of XSD.String elem_list
+	} extensions optional
+}
+with {
+  variant "name as uncapitalized";
+  variant "element";
+  variant (attr) "anyAttributes";
+  variant (absService_list) "untagged";
+  variant (extensions.elem_list) "untagged";
+  variant (extensions.elem_list[-]) "anyElement except unqualified, 'http://uri.etsi.org/ngn/params/xml/simservs/xcap'";
+};
+
+
+type record SimservType
+{
+	XSD.Boolean active optional,
+	record of XSD.String attr optional
+}
+with {
+  variant "name as uncapitalized";
+  variant (active) "defaultForEmpty as 'true'";
+  variant (active) "attribute";
+  //variant (active) "text 'true' as '1'";
+  //variant (active) "text 'false' as '0'";
+  variant (attr) "anyAttributes";
+};
+
+
+/* service specific IETF common policy condition elements */
+
+
+type Empty_element_type Anonymous
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type Presence_status_activity_type Presence_status
+with {
+  variant "name as 'presence-status'";
+  variant "element";
+};
+
+
+type Media_type1 Media
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type Empty_element_type Communication_diverted
+with {
+  variant "name as 'communication-diverted'";
+  variant "element";
+};
+
+
+type Empty_element_type Rule_deactivated
+with {
+  variant "name as 'rule-deactivated'";
+  variant "element";
+};
+
+
+type Empty_element_type Not_registered
+with {
+  variant "name as 'not-registered'";
+  variant "element";
+};
+
+
+type Empty_element_type Busy
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+type Empty_element_type No_answer
+with {
+  variant "name as 'no-answer'";
+  variant "element";
+};
+
+
+type Empty_element_type Not_reachable
+with {
+  variant "name as 'not-reachable'";
+  variant "element";
+};
+
+
+type Empty_element_type Roaming
+with {
+  variant "name as uncapitalized";
+  variant "element";
+};
+
+
+/* service specific type declarations */
+
+
+type XSD.String Media_type1
+with {
+  variant "name as 'media-type1'";
+};
+
+
+type XSD.String Presence_status_activity_type
+with {
+  variant "name as 'presence-status-activity-type'";
+};
+
+
+type record Empty_element_type
+{
+
+}
+with {
+  variant "name as 'empty-element-type'";
+};
+
+
+/* ETSI substitutionGroup workaround, because TTCN-3 does not support mapping of substitutionGroup */
+
+
+/* xs:group name="absServiceGroup">
+		<xs:choice */
+
+
+/* default */
+
+
+/* xs:element ref="ss:absService"/ */
+
+
+/* TIP-TRI */
+
+
+/* xs:element ref="ss:terminating-identity-presentation-restriction"/>
+		 <xs:element ref="ss:terminating-identity-presentation"/ FIXME */
+
+
+/* OIP-OIR */
+
+
+/* xs:element ref="ss:originating-identity-presentation-restriction"/>
+		 <xs:element ref="ss:originating-identity-presentation"/ FIXME */
+
+
+/* CDIV */
+
+
+/* xs:element ref="ss:communication-diversion"/ FIXME */
+
+
+/* ACR-CB */
+
+
+/* xs:element ref="ss:incoming-communication-barring"/>
+		 <xs:element ref="ss:outgoing-communication-barring"/ FIXME */
+
+
+/* CUG */
+
+
+/* <xs:element ref="cug"/> */
+
+
+/* /xs:choice */
+
+
+/* /xs:group */
+
+
+type union AbsService_group
+{
+	SimservType absService,
+	/* This is the communication diversion configuration */
+	/* document. */
+	/* add service specific elements here */
+	/* service specific attributes can be defined here */
+	Communication_diversion communication_diversion,
+	Cug cug,
+	/* This is the incoming communication barring configuration */
+	/* document. */
+	/* add service specific elements here */
+	/* service specific attributes can be defined here */
+	Incoming_communication_barring incoming_communication_barring,
+	/* Originating Identity Presentation */
+	Originating_identity_presentation originating_identity_presentation,
+	/* Originating Identity presentation Restriction */
+	Originating_identity_presentation_restriction originating_identity_presentation_restriction,
+	/* This is the outgoing communication barring configuration */
+	/* document. */
+	/* add service specific elements here */
+	/* service specific attributes can be defined here */
+	Outgoing_communication_barring outgoing_communication_barring,
+	/* Terminating Identity Presentation */
+	Terminating_identity_presentation terminating_identity_presentation,
+	/* Terminating Identity presentation Restriction */
+	Terminating_identity_presentation_restriction terminating_identity_presentation_restriction
+}
+with {
+  variant "untagged";
+  variant (absService) "form as qualified";
+  variant (absService) "abstract";
+  variant (communication_diversion) "name as 'communication-diversion'";
+  variant (incoming_communication_barring) "name as 'incoming-communication-barring'";
+  variant (originating_identity_presentation) "name as 'originating--identity--presentation'";
+  variant (originating_identity_presentation_restriction) "name as 'originating--identity--presentation--restriction'";
+  variant (outgoing_communication_barring) "name as 'outgoing-communication-barring'";
+  variant (terminating_identity_presentation) "name as 'terminating-identity-presentation'";
+  variant (terminating_identity_presentation_restriction) "name as 'terminating-identity-presentation-restriction'";
+};
+
+
+}
+with {
+  encode "XML";
+  variant "namespace as 'http://uri.etsi.org/ngn/params/xml/simservs/xcap' prefix 'ss'";
+  variant "controlNamespace 'http://www.w3.org/2001/XMLSchema-instance' prefix 'xsi'";
+  variant "elementFormQualified";
+}

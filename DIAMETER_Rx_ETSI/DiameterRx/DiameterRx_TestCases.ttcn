@@ -1,0 +1,945 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: DiameterRx_TestCases.ttcn 662 2013-09-27 09:23:27Z pintar $
+ *	@desc		This module provides test cases
+ *              for SIP-IMS-RX-DIAMETER tests.
+ */
+//compiled with Titan 02.03.2106 Elemer Lelik
+module DiameterRx_TestCases
+{
+	import from DIAMETER_Mapping  all;
+	import from SIPmsg_Types all;
+		import from SDP_Types all;
+
+    //LibCommon
+    import from LibCommon_Sync all ;
+    import from LibCommon_VerdictControl all;
+    //LibSip
+    import from LibSip_Interface all;
+    import from LibSip_SIPTypesAndValues all;
+    //LibIms
+    import from LibIms_SIPTypesAndValues all;
+    import from LibIms_Interface all;
+    //LibDiameter
+    import from LibDiameter_Interface all;
+    //AtsIms
+    import from DiameterRx_TestConfiguration all;
+    import from DiameterRx_TestSystem all;
+    import from DiameterRx_ImsGm_TCFunctions all;
+    import from DiameterRx_Rx_TCFunctions all;
+    import from DiameterRx_PICS all;
+    import from DiameterRx_PIXITS all;
+
+    group TP_IMSBasicCallFromUe1ToUe2 {
+
+            /*
+            * @desc TC_IMST2_GM_INI_04
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_IMST2_GM_INI_04(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                f_cf_2GmUp(v_imsComponent_ue1, v_imsComponent_ue2);
+
+                //Start
+                f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_INI_04_UE1(p_cSeq_s));
+                f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_INI_04_UE2(p_cSeq_s));
+
+                // synchronize both PTCs on 3 sychronization points
+                f_serverSyncNClients(2, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_2GmDown(v_imsComponent_ue1, v_imsComponent_ue2);
+
+            } // end TC_IMST2_GM_INI_04
+
+            /*
+            * @desc TC_IMST2_GM_INI_04
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_IMST2_GM_TAR_07(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                f_cf_2GmUp(v_imsComponent_ue1, v_imsComponent_ue2);
+
+                //Start
+                f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_TAR_07_UE1(p_cSeq_s));
+                f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_TAR_07_UE2(p_cSeq_s));
+
+                // synchronize both PTCs on 3 sychronization points
+                f_serverSyncNClients(2, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_2GmDown(v_imsComponent_ue1, v_imsComponent_ue2);
+
+            } // end TC_IMST2_GM_TAR_07
+
+    }//end group TP_IMSBasicCallFromUe1ToUe2
+
+    group TP_AFRole {
+
+            /*
+            * @desc TC_AF_IPS_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_IPS_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                //Start
+                if (PX_SIPsupport) {
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_INI_04_UE1(p_cSeq_s));
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_INI_04_UE2(p_cSeq_s));
+                }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_pcrf.start(f_TC_AF_IPS_01());
+
+                // synchronize PTCs on 4 sychronization points
+                f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+            } // end TC_AF_IPS_01
+
+            /*
+            * @desc TC_AF_IPS_02
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_IPS_02(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                //Start
+                if (PX_SIPsupport) {
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_INI_04_UE1(p_cSeq_s));
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_INI_04_UE2(p_cSeq_s));
+                }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_pcrf.start(f_TC_AF_IPS_02());
+
+                // synchronize PTCs on 4 sychronization points
+                f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+            } // end TC_AF_IPS_02
+
+            /*
+            * @desc TC_AF_IPS_03
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_IPS_03(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+    
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_INI_04_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_INI_04_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_IPS_03());
+    
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_tbDone, c_poDone});
+    
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for the sponsored data connectivity feature! Set PICS item PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED to TRUE before running this test!");
+                }
+
+            } // end TC_AF_IPS_03
+
+            /*
+            * @desc TC_AF_MSI_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_MSI_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+    
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_TAR_07_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_TAR_07_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_MSI_01());
+    
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_sync1, c_tbDone, c_poDone});
+    
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for the modification of the session information! Set PICS item PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION to TRUE before running this test!");
+                }
+            } // end TC_AF_MSI_01
+
+            /*
+            * @desc TC_AF_MSI_02
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_MSI_02(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_TAR_07_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_TAR_07_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_MSI_02());
+
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for the modification of the session information! Set PICS item PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION to TRUE before running this test!");
+                }
+            } // end TC_AF_MSI_02
+
+            /*
+            * @desc TC_AF_MSI_03
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_MSI_03(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED and PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_TAR_07_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_TAR_07_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_MSI_03());
+
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for the sponsored data connectivity feature and for the modification of the session information! Set PICS item PC_AF_SPONSORED_DATA_CONNECTIVITY_SUPPORTED and PC_AF_MODIFICATION_OF_THE_SESSION_INFORMATION to TRUE before running this test!");
+                }
+            } // end TC_AF_MSI_03
+
+            /*
+            * @desc TC_AF_GRP_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_GRP_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_GATE_RELATED_PROCEDURE) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REL_04_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REL_04_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_GRP_01());
+
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for the gate related procedures! Set PICS item PC_AF_GATE_RELATED_PROCEDURE to TRUE before running this test!");
+                }
+            } // end TC_AF_GRP_01
+
+            /*
+            * @desc TC_AF_ST_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_ST_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                //Start
+                if (PX_SIPsupport) {
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_SUB_06_UE1(p_cSeq_s));
+                    f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_SUB_06_UE2(p_cSeq_s));
+                }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_pcrf.start(f_TC_AF_ST_01());
+
+                // synchronize PTCs on 5 sychronization points
+                f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+            } // end TC_AF_ST_01
+
+            /*
+            * @desc TC_AF_SN_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_01_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_01_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_01());
+
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED to TRUE before running this test!");
+                }
+            } // end TC_AF_SN_01
+
+            /*
+            * @desc TC_AF_SN_02
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_02(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and not PC_AF_SIGNALLING_IP_FLOWS_INFO) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+    
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_01_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_01_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_02());
+    
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_tbDone, c_poDone});
+    
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path and/or The IUT/AF supports Procedures for the provision of information about AF Signalling IP flows! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED to TRUE and PC_AF_SIGNALLING_IP_FLOWS_INFO to false before running this test!");
+                }
+            } // end TC_AF_SN_02
+
+            /*
+            * @desc TC_AF_SN_03
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_03(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_02_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_02_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_03());
+
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED to TRUE before running this test!");
+                }
+
+            } // end TC_AF_SN_03
+
+            /*
+            * @desc TC_AF_SN_04
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_04(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and not PC_AF_SIGNALLING_IP_FLOWS_INFO) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_02_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_02_UE2(p_cSeq_s));
+                    }
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_04());
+
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path and/or The IUT/AF supports Procedures for the provision of information about AF Signalling IP flows! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED to TRUE and PC_AF_SIGNALLING_IP_FLOWS_INFO to false before running this test!");
+                }
+            } // end TC_AF_SN_04
+
+            /*
+            * @desc TC_AF_SN_05
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_05(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and PC_AF_SIGNALLING_IP_FLOWS_INFO) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_01_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_01_UE2(p_cSeq_s));
+                    }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_05());
+
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path and/or The IUT/AF is NOT configured to supports Procedures for the provision of information about AF Signalling IP flows! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and PC_AF_SIGNALLING_IP_FLOWS_INFO to true before running this test!");
+                }
+            } // end TC_AF_SN_05
+
+            /*
+            * @desc TC_AF_SN_06
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_SN_06(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and PC_AF_SIGNALLING_IP_FLOWS_INFO) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REG_02_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REG_02_UE2(p_cSeq_s));
+                    }
+                    v_diameterComponent_pcrf.start(f_TC_AF_SN_06());
+
+                    // synchronize PTCs on 5 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_sync1, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured for subscription to notification of the status of the AF Signalling transmition path and/or The IUT/AF is NOT configured to supports Procedures for the provision of information about AF Signalling IP flows! Set PICS item PC_AF_SUBSCRIBE_TO_NOTIFICATION_SUPPORTED and PC_AF_SIGNALLING_IP_FLOWS_INFO to true before running this test!");
+                }
+            } // end TC_AF_SN_06
+
+            /*
+            * @desc TC_AF_TPE_01
+            * @param p_cSeq_s Transaction Id
+            */
+            testcase TC_AF_TPE_01(inout CSeq p_cSeq_s)
+            runs on ServerSyncComp
+            system TestAdapter {
+                if(PC_AF_HANDLING_TRAFFIC_PLANE_EVENT) {
+                    //Variables
+                    var ImsComponent v_imsComponent_ue1, v_imsComponent_ue2;
+                    var DiameterComponent v_diameterComponent_pcrf;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1Rx2GmUp(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+
+                    //Start
+                    if (PX_SIPsupport) {
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue1.start(f_TC_IMST2_GM_REL_04_UE1(p_cSeq_s));
+                        f_IncCSeq(p_cSeq_s); v_imsComponent_ue2.start(f_TC_IMST2_GM_REL_04_UE2(p_cSeq_s));
+                    }
+                    v_diameterComponent_pcrf.start(f_TC_AF_TPE_01());
+
+                    // synchronize PTCs on 4 sychronization points
+                    f_serverSyncNClients(f_NrofComps(), {c_prDone, c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1Rx2GmDown(v_imsComponent_ue1, v_imsComponent_ue2, v_diameterComponent_pcrf, v_diameterMappingComponent);
+                }
+                else
+                {
+                    log("The IUT/AF is NOT configured to support Procedures for the handling of traffic plane events! Set PICS item PC_AF_HANDLING_TRAFFIC_PLANE_EVENT to true before running this test!");
+                }
+            } // end TC_AF_TPE_01
+
+    }//end group TP_AFRole
+
+    group TP_PCRFRole {
+
+            /*
+            * @desc TC_PCRF_IPS_01
+            * @param 
+            */
+            testcase TC_PCRF_IPS_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_IPS_01());
+
+
+ 
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_IPS_01
+
+            /*
+            * @desc TC_AF_PCRF_02
+            * @param 
+            */
+            testcase TC_PCRF_IPS_02()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_IPS_02());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_IPS_02
+
+            /*
+            * @desc TC_PCRF_IPS_03
+            * @param 
+            */
+            testcase TC_PCRF_IPS_03()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_IPS_03());
+
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_IPS_03
+
+            /*
+            * @desc TC_PCRF_MSI_01
+            * @param 
+            */
+            testcase TC_PCRF_MSI_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_MSI_01());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_MSI_01
+
+            /*
+            * @desc TC_PCRF_MSI_02
+            * @param 
+            */
+            testcase TC_PCRF_MSI_02()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_MSI_02());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_MSI_02
+
+            /*
+            * @desc TC_PCRF_ST_01
+            * @param 
+            */
+            testcase TC_PCRF_ST_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_ST_01());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_ST_01
+
+            /*
+            * @desc TC_PCRF_GRP_01
+            * @param 
+            */
+            testcase TC_PCRF_GRP_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_GRP_01());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_ST_01
+
+            /*
+            * @desc TC_PCRF_ST_02
+            * @param 
+            */
+            testcase TC_PCRF_ST_02()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_ST_02());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_ST_02
+
+            /*
+            * @desc TC_PCRF_SN_01
+            * @param 
+            */
+            testcase TC_PCRF_SN_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_SN_01());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_SN_01
+
+            /*
+            * @desc TC_PCRF_SN_02
+            * @param 
+            */
+            testcase TC_PCRF_SN_02()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_SN_02());
+
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_SN_02
+
+            /*
+            * @desc TC_PCRF_SN_03
+            * @param 
+            */
+            testcase TC_PCRF_SN_03()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_SN_03());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_SN_03
+
+            /*
+            * @desc TC_PCRF_SN_04
+            * @param 
+            */
+            testcase TC_PCRF_SN_04()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_SN_04());
+
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_SN_04
+
+            /*
+            * @desc TC_PCRF_SN_05
+            * @param 
+            */
+            testcase TC_PCRF_SN_05()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_SN_05());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_SN_05
+
+            /*
+            * @desc TC_PCRF_TPE_01
+            * @param 
+            */
+            testcase TC_PCRF_TPE_01()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_TPE_01());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_TPE_01
+
+            /*
+            * @desc TC_PCRF_TPE_02
+            * @param 
+            */
+            testcase TC_PCRF_TPE_02()
+            runs on ServerSyncComp
+            system TestAdapter {
+                //Variables
+                var DiameterComponent v_diameterComponent_ims;
+                var DIAMETER_Mapping_CT v_diameterMappingComponent;
+                f_cf_1RxUp(v_diameterComponent_ims,v_diameterMappingComponent);
+
+                //Start
+               if (tsp_transport==TCP){ v_diameterMappingComponent.start(f_DIA_TCP_Mapping_Client())}
+               else { v_diameterMappingComponent.start(f_DIA_SCTP_Mapping_Client()) }
+                v_diameterComponent_ims.start(f_TC_PCRF_TPE_02());
+
+                // synchronize PTC on 3 sychronization points
+                f_serverSyncNClients(1, {c_prDone, c_tbDone, c_poDone});
+
+                f_cf_1RxDown(v_diameterComponent_ims,v_diameterMappingComponent);
+
+            } // end TC_PCRF_TPE_02
+
+    } //end group TP_PCRFRole
+	
+} // end module DiameterRx_TestCases

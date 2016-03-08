@@ -1,0 +1,1091 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: LibDiameter_Steps.ttcn 664 2013-10-08 14:39:08Z pintar $
+ *	@desc		This module provides functions used in DIAMETER
+ */
+
+module LibDiameter_Steps
+{
+    //LibCommon
+    import from LibCommon_Sync all ;
+    import from LibCommon_VerdictControl all ;
+    import from LibCommon_BasicTypesAndValues all;
+    //LibDiameter
+    import from LibDiameter_TypesAndValues all;
+    import from LibDiameter_Templates all;
+    import from LibDiameter_Interface all;
+    import from LibDiameter_PIXITS all;
+
+group CommonFunctions{
+
+    /**
+    *
+    * @desc  f_gtZero, return true if value of p_int greater than 0
+    * @param p_int - integer value
+    */
+    function f_gtZero(integer p_int)
+    return boolean
+    {
+        if (p_int > 0){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    /**
+    *
+    * @desc  f_Inc, return incremented value of p_int 0
+    * @param p_int - integer value
+    */
+    function f_inc( inout UInt32 p_int)
+    return UInt32
+    {
+        p_int:=p_int+1;
+        return p_int;
+    }
+
+}//end group CommonFunctions
+
+group AwaitingMessage {
+
+    /**
+    *
+    * @desc receive DIAMETER message
+    * @param p_diameterMSG template of the message to be received
+    */
+    function f_awaitingDiameterMsg(in template DIAMETER_MSG p_diameterMSG) runs on DiameterComponent
+    {
+        //var Lower_Layer_Primitive v_MSG;
+        var DIAMETER_MSG v_MSG;
+
+        if (PX_DIAM_LLP_ENABLED and f_gtZero(vc_ETS_conn))
+        {
+            tc_wait.start;
+            alt
+            {
+                []DIAMP.receive(p_diameterMSG) -> value v_MSG
+                  {
+                    tc_wait.stop;
+                    vc_recvDiamMsg := v_MSG;
+                  }
+            }
+        }
+        else
+        {
+            tc_wait.start;
+            alt
+            {
+                []DIAMP.receive(p_diameterMSG) -> value v_MSG
+                  {
+                    tc_wait.stop;
+                    vc_recvDiamMsg := v_MSG;
+                  }
+            }
+        }
+    } // end f_awaitingDiameterMsg
+
+     function f_awaiting_CER(template (present)CER_MSG p_CER) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({cER_MSG:=p_CER});
+        //store specific parameter for CER if needed
+        vc_recv_hopid:= vc_recvDiamMsg.cER_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.cER_MSG.header.endid;
+    }
+
+    function f_awaiting_CEA(template (present)CEA_MSG p_CEA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({cEA_MSG:=p_CEA});
+        //store specific parameter for CER if needed
+    }
+
+    function f_awaiting_DWR(template (present)DWR_MSG p_DWR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({dWR_MSG:=p_DWR});
+        //store specific parameter for DWR if needed
+        vc_recv_hopid:= vc_recvDiamMsg.dWR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.dWR_MSG.header.endid;
+    }
+
+    function f_awaiting_DWA(template (present)DWA_MSG p_DWA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({dWA_MSG:=p_DWA});
+        //store specific parameter for DWA if needed
+    }
+
+    function f_awaiting_DPR(template (present)DPR_MSG p_DPR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({dPR_MSG:=p_DPR});
+        //store specific parameter for DPR if needed
+        vc_recv_hopid:= vc_recvDiamMsg.dPR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.dPR_MSG.header.endid;
+    }
+
+    function f_awaiting_DPA(template (present)DPA_MSG p_DPA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({dPA_MSG:=p_DPA});
+        //store specific parameter for DPA if needed
+    }
+
+    function f_awaiting_AAR(template (present)AAR_MSG p_AAR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aAR_MSG:=p_AAR});
+        //store specific parameter for AAR if needed
+        vc_recv_hopid:= vc_recvDiamMsg.aAR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.aAR_MSG.header.endid;
+        vc_sessionId := vc_recvDiamMsg.aAR_MSG.session_Id;
+//        vc_originHost := vc_recvDiamMsg.aAR_MSG.origin_Host;  //Origin host has to be Destination host and it is set at preamble of TC within init function
+//        vc_originRealm := vc_recvDiamMsg.aAR_MSG.origin_Realm; //Origin realm has to be Destination realm and it is set at preamble of TC within init function
+
+    }
+
+    function f_awaiting_AAA(template (present)AAA_MSG p_AAA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aAA_MSG:=p_AAA});
+        //store specific parameter for AAA if needed
+    }
+
+    function f_awaiting_STR(template (present)STR_MSG p_STR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({sTR_MSG:=p_STR});
+        //store specific parameter for STR if needed
+        vc_recv_hopid:= vc_recvDiamMsg.sTR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.sTR_MSG.header.endid;
+        vc_sessionId := vc_recvDiamMsg.sTR_MSG.session_Id;
+    }
+
+    function f_awaiting_STA(template (present)STA_MSG p_STA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({sTA_MSG:=p_STA});
+        //store specific parameter for STA if needed
+    }
+
+    function f_awaiting_ASR(template (present)ASR_MSG p_ASR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aSR_MSG:=p_ASR});
+        //store specific parameter for ASR if needed
+        vc_recv_hopid:= vc_recvDiamMsg.aSR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.aSR_MSG.header.endid;
+        vc_sessionId := vc_recvDiamMsg.aSR_MSG.session_Id;
+    }
+
+    function f_awaiting_ASA(template (present)ASA_MSG p_ASA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aSA_MSG:=p_ASA});
+        //store specific parameter for ASA if needed
+    }
+
+
+    function f_awaiting_RAR(template (present)RAR_MSG p_RAR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({rAR_MSG:=p_RAR});
+        //store specific parameter for RAR if needed
+        vc_sessionId := vc_recvDiamMsg.rAR_MSG.session_Id;
+        vc_recv_hopid:= vc_recvDiamMsg.rAR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.rAR_MSG.header.endid;
+    }
+
+
+    function f_awaiting_RAA(template (present)RAA_MSG p_RAA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({rAA_MSG:=p_RAA});
+        //store specific parameter for RAA if needed
+    }
+
+    function f_awaiting_CCR(template (present)CCR_MSG p_CCR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({cCR_MSG:=p_CCR});
+        //store specific parameter for CCR if needed
+        vc_sessionId := vc_recvDiamMsg.cCR_MSG.session_Id;
+        vc_recv_hopid:= vc_recvDiamMsg.cCR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.cCR_MSG.header.endid;
+    }
+
+    function f_awaiting_CCA(template (present)CCA_MSG p_CCA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({cCA_MSG:=p_CCA});
+        //store specific parameter for CCA if needed
+    }
+
+    function f_awaiting_ACR(template (present)ACR_MSG p_ACR) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aCR_MSG:=p_ACR});
+        //store specific parameter for ACR if needed
+        vc_sessionId := vc_recvDiamMsg.aCR_MSG.session_Id;
+        vc_recv_hopid:= vc_recvDiamMsg.aCR_MSG.header.hopid;
+        vc_recv_endid:= vc_recvDiamMsg.aCR_MSG.header.endid;
+    }
+
+    function f_awaiting_ACA(template (present)ACA_MSG p_ACA) runs on DiameterComponent
+    {
+        f_awaitingDiameterMsg({aCA_MSG:=p_ACA});
+        //store specific parameter for ACA if needed
+    }
+
+} // end AwaitingMessage
+
+group SendMessage {
+
+    /**
+    *
+    * @desc  send DIAMETER message
+    * @param p_diameterMSG template of the message to be sent
+    */
+    function f_sendDiameterMsg(template (value) DIAMETER_MSG p_diameterMSG) runs on DiameterComponent
+    {
+
+        if (PX_DIAM_LLP_ENABLED)
+        {
+            if(f_gtZero(vc_ETS_conn))
+            {
+                f_Diameter_Set_Headers(p_diameterMSG);
+                DIAMP.send( p_diameterMSG);
+            }
+            else
+            {
+                log("Please check configuration!!! Send of DIAMETER message unsucessfull!");
+                f_setVerdict (e_error);
+            }
+        }
+        else
+        {
+            f_Diameter_Set_Headers(p_diameterMSG);
+            DIAMP.send( p_diameterMSG);
+        }
+    }//end f_sendDiameterMsg
+
+    function f_send_CER(template (value) CER_MSG p_CER) runs on DiameterComponent
+    {
+        //set specific parameter for CER if needed
+
+        f_sendDiameterMsg({cER_MSG:=p_CER});
+    }
+
+    function f_send_CEA(template (value) CEA_MSG p_CEA) runs on DiameterComponent
+    {
+        //set specific parameter for CEA if needed
+
+        f_sendDiameterMsg({cEA_MSG:=p_CEA});
+    }
+
+    function f_send_DWR(template (value) DWR_MSG p_DWR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for DWR if needed
+
+        f_sendDiameterMsg({dWR_MSG:=p_DWR});
+    }
+
+    function f_send_DWA(template (value) DWA_MSG p_DWA) runs on DiameterComponent
+    {
+        //set specific parameter for DWA if needed
+
+        f_sendDiameterMsg({dWA_MSG:=p_DWA});
+    }
+
+    function f_send_DPR(template (value) DPR_MSG p_DPR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for DPR if needed
+
+        f_sendDiameterMsg({dPR_MSG:=p_DPR});
+    }
+
+    function f_send_DPA(template (value) DPA_MSG p_DPA) runs on DiameterComponent
+    {
+        //set specific parameter for DPA if needed
+
+        f_sendDiameterMsg({dPA_MSG:=p_DPA});
+    }
+
+    function f_send_AAR(template (value) AAR_MSG p_AAR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for AAR if needed
+
+        f_sendDiameterMsg({aAR_MSG:=p_AAR});
+    }
+
+    function f_send_AAA(template (value) AAA_MSG p_AAA) runs on DiameterComponent
+    {
+        //set specific parameter for AAA if needed
+
+        f_sendDiameterMsg({aAA_MSG:=p_AAA});
+    }
+
+    function f_send_STR(template (value) STR_MSG p_STR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for STR if needed
+
+        f_sendDiameterMsg({sTR_MSG:=p_STR});
+    }
+
+    function f_send_STA(template (value) STA_MSG p_STA) runs on DiameterComponent
+    {
+        //set specific parameter for STA if needed
+
+        f_sendDiameterMsg({sTA_MSG:=p_STA});
+    }
+
+    function f_send_ASR(template (value) ASR_MSG p_ASR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for ASR if needed
+
+        f_sendDiameterMsg({aSR_MSG:=p_ASR});
+    }
+
+    function f_send_ASA(template (value) ASA_MSG p_ASA) runs on DiameterComponent
+    {
+        //set specific parameter for ASA if needed
+
+        f_sendDiameterMsg({aSA_MSG:=p_ASA});
+    }
+
+    function f_send_RAR(template (value) RAR_MSG p_RAR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for RAR if needed
+
+        f_sendDiameterMsg({rAR_MSG:=p_RAR});
+    }
+
+    function f_send_RAA(template (value) RAA_MSG p_RAA) runs on DiameterComponent
+    {
+        //set specific parameter for RAA if needed
+
+        f_sendDiameterMsg({rAA_MSG:=p_RAA});
+    }
+
+    function f_send_CCR(template (value) CCR_MSG p_CCR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for CCR if needed
+
+        f_sendDiameterMsg({cCR_MSG:=p_CCR});
+    }
+
+    function f_send_CCA(template (value) CCA_MSG p_CCA) runs on DiameterComponent
+    {
+        //set specific parameter for CCA if needed
+
+        f_sendDiameterMsg({cCA_MSG:=p_CCA});
+    }
+
+    function f_send_ACR(template (value) ACR_MSG p_ACR) runs on DiameterComponent
+    {
+        tc_delay.start;
+        alt
+        { []tc_delay.timeout
+            {} }
+
+        //set specific parameter for ACR if needed
+
+        f_sendDiameterMsg({aCR_MSG:=p_ACR});
+    }
+
+    function f_send_ACA(template (value) ACA_MSG p_ACA) runs on DiameterComponent
+    {
+        //set specific parameter for ACA if needed
+
+        f_sendDiameterMsg({aCA_MSG:=p_ACA});
+    }
+
+} // end SendMessage
+
+group GlobalSteps {
+
+    /*
+    *  @desc	This is a test step that init Diameter component
+    *  @param
+    */
+            function f_Diameter_Init_Component()
+            runs on DiameterComponent {
+
+            } // end function f_Diameter_Init_Component
+    /*
+    *  @desc	This is a test step that assign common Diameter headers
+    *  @param
+    */
+            function f_Diameter_Set_Headers( inout template (value) DIAMETER_MSG p_diameterMSG)
+            runs on DiameterComponent {
+
+                //insert length of message
+                if (ischosen(p_diameterMSG.cER_MSG)){
+                    p_diameterMSG.cER_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.cER_MSG))/8;
+                    p_diameterMSG.cER_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.cER_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.cEA_MSG)){
+                    p_diameterMSG.cEA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.cEA_MSG))/8;
+                    p_diameterMSG.cEA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.cEA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.rAR_MSG)){
+                    p_diameterMSG.rAR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.rAR_MSG))/8;
+                    p_diameterMSG.rAR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.rAR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.rAA_MSG)){
+                    p_diameterMSG.rAA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.rAA_MSG))/8;
+                    p_diameterMSG.rAA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.rAA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.aCR_MSG)){
+                    p_diameterMSG.aCR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aCR_MSG))/8;
+                    p_diameterMSG.aCR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.aCR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.aCA_MSG)){
+                    p_diameterMSG.aCA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aCA_MSG))/8;
+                    p_diameterMSG.aCA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.aCA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.aSR_MSG)){
+                    p_diameterMSG.aSR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aSR_MSG))/8;
+                    p_diameterMSG.aSR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.aSR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.aSA_MSG)){
+                    p_diameterMSG.aSA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aSA_MSG))/8;
+                    p_diameterMSG.aSA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.aSA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sTR_MSG)){
+                    p_diameterMSG.sTR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sTR_MSG))/8;
+                    p_diameterMSG.sTR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.sTR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sTA_MSG)){
+                    p_diameterMSG.sTA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sTA_MSG))/8;
+                    p_diameterMSG.sTA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.sTA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.dWR_MSG)){
+                    p_diameterMSG.dWR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.dWR_MSG))/8;
+                    p_diameterMSG.dWR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.dWR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.dWA_MSG)){
+                    p_diameterMSG.dWA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.dWA_MSG))/8;
+                    p_diameterMSG.dWA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.dWA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.dPR_MSG)){
+                    p_diameterMSG.dPR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.dPR_MSG))/8;
+                    p_diameterMSG.dPR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.dPR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.dPA_MSG)){
+                    p_diameterMSG.dPA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.dPA_MSG))/8;
+                    p_diameterMSG.dPA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.dPA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                //RFC4740
+                if (ischosen(p_diameterMSG.uAR_MSG)){
+                    p_diameterMSG.uAR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.uAR_MSG))/8;
+                    p_diameterMSG.uAR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.uAR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.uAA_MSG)){
+                    p_diameterMSG.uAA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.uAA_MSG))/8;
+                    p_diameterMSG.uAA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.uAA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sAR_MSG)){
+                    p_diameterMSG.sAR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sAR_MSG))/8;
+                    p_diameterMSG.sAR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.sAR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sAA_MSG)){
+                    p_diameterMSG.sAA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sAA_MSG))/8;
+                    p_diameterMSG.sAA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.sAA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.lIR_MSG)){
+                    p_diameterMSG.lIR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.lIR_MSG))/8;
+                    p_diameterMSG.lIR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.lIR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.lIA_MSG)){
+                    p_diameterMSG.lIA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.lIA_MSG))/8;
+                    p_diameterMSG.lIA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.lIA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.mAR_MSG)){
+                    p_diameterMSG.mAR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.mAR_MSG))/8;
+                    p_diameterMSG.mAR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.mAR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.mAA_MSG)){
+                    p_diameterMSG.mAA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.mAA_MSG))/8;
+                    p_diameterMSG.mAA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.mAA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.rTR_MSG)){
+                    p_diameterMSG.rTR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.rTR_MSG))/8;
+                    p_diameterMSG.rTR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.rTR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.rTA_MSG)){
+                    p_diameterMSG.rTA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.rTA_MSG))/8;
+                    p_diameterMSG.rTA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.rTA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pPR_MSG)){
+                    p_diameterMSG.pPR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pPR_MSG))/8;
+                    p_diameterMSG.pPR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.pPR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pPA_MSG)){
+                    p_diameterMSG.pPA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pPA_MSG))/8;
+                    p_diameterMSG.pPA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.pPA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                //Sh interface
+                if (ischosen(p_diameterMSG.uDR_MSG)){
+                    p_diameterMSG.uDR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.uDR_MSG))/8;
+                    p_diameterMSG.uDR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.uDR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.uDA_MSG)){
+                    p_diameterMSG.uDA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.uDA_MSG))/8;
+                    p_diameterMSG.uDA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.uDA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pUR_MSG)){
+                    p_diameterMSG.pUR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pUR_MSG))/8;
+                    p_diameterMSG.pUR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.pUR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pUA_MSG)){
+                    p_diameterMSG.pUA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pUA_MSG))/8;
+                    p_diameterMSG.pUA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.pUA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sNR_MSG)){
+                    p_diameterMSG.sNR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sNR_MSG))/8;
+                    p_diameterMSG.sNR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.sNR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.sNA_MSG)){
+                    p_diameterMSG.sNA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.sNA_MSG))/8;
+                    p_diameterMSG.sNA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.sNA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pNR_MSG)){
+                    p_diameterMSG.pNR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pNR_MSG))/8;
+                    p_diameterMSG.pNR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.pNR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.pNA_MSG)){
+                    p_diameterMSG.pNA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.pNA_MSG))/8;
+                    p_diameterMSG.pNA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.pNA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                //RFC4006
+                if (ischosen(p_diameterMSG.cCR_MSG)){
+                    p_diameterMSG.cCR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.cCR_MSG))/8;
+                    p_diameterMSG.cCR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.cCR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.cCA_MSG)){
+                    p_diameterMSG.cCA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.cCA_MSG))/8;
+                    p_diameterMSG.cCA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.cCA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                //Rx interface
+                if (ischosen(p_diameterMSG.aAR_MSG)){
+                    p_diameterMSG.aAR_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aAR_MSG))/8;
+                    p_diameterMSG.aAR_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.aAR_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+                if (ischosen(p_diameterMSG.aAA_MSG)){
+                    p_diameterMSG.aAA_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.aAA_MSG))/8;
+                    p_diameterMSG.aAA_MSG.header.hopid:=vc_recv_hopid;
+                    p_diameterMSG.aAA_MSG.header.endid:=vc_recv_endid;
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+
+                if (ischosen(p_diameterMSG.uNKNOWN_MSG)){
+                    p_diameterMSG.uNKNOWN_MSG.header.msglen := lengthof(encvalue(p_diameterMSG.uNKNOWN_MSG))/8;
+                    p_diameterMSG.uNKNOWN_MSG.header.hopid:=f_inc(vc_send_hopid);
+                    p_diameterMSG.uNKNOWN_MSG.header.endid:=f_inc(vc_send_endid);
+                    vc_sendDiamMsg:=valueof(p_diameterMSG);
+                }
+
+            } // end function f_Diameter_Set_Headers
+
+            function f_IPAdress (IPv4Addr p_ipv4,IPv6Addr p_ipv6)
+                return template Address
+                {
+                    var template Address v_ipv4, v_ipv6;
+                    if (PX_IPv6)
+                    {
+                        v_ipv6.addressFamily := c_ipv6AddressFamily;
+                        v_ipv6.ipAddress := {ipv6:= p_ipv6 };
+                        return(v_ipv6)
+                    }
+                    else
+                    {
+                        v_ipv4.addressFamily := c_ipv4AddressFamily;
+                        v_ipv4.ipAddress := {ipv4:= p_ipv4 };
+                        return(v_ipv4)
+                    }
+                }
+
+            function f_IPV4or6_String2Address (charstring p_addr)
+                return template Address
+            {
+               var integer addr_len:=0;
+               var integer i;
+               //var integer addr[8];
+               var integer addr_i;
+               var charstring num:="";
+               var charstring current:="";
+               var template Address v_ip;
+               addr_len:=lengthof(p_addr);
+               addr_i:=0;
+
+               if (PX_IPv6){
+                   v_ip.addressFamily := c_ipv6AddressFamily;
+                   for(i:=0;i<addr_len;i:=i+1){
+                       current:=substr(p_addr,i,1);
+                       if(current==":"){
+                           if ((lengthof(num) mod 2)==1){
+                               num:="0"&num;
+                           }
+                           //addr[addr_i]:=oct2int(str2oct(num));
+                           v_ip.ipAddress.ipv6[addr_i]:=oct2int(str2oct(num));
+                           addr_i:=addr_i+1;
+                           num:="";
+                       }
+                       else{
+                           num:=num&current;
+                       }
+                   }
+
+                   if  (addr_i>7){
+                       log("IPV6 parse ERROR");
+                   }else{
+                       if ((lengthof(num) mod 2)==1){
+                           num:="0"&num;
+                       }
+                       //addr[addr_i]:=oct2int(str2oct(num));
+                       v_ip.ipAddress.ipv6[addr_i]:=oct2int(str2oct(num));
+                       num:="";
+                   }
+
+                   return(v_ip)
+               }
+               else{
+                   v_ip.addressFamily := c_ipv4AddressFamily;
+                   for(i:=0;i<addr_len;i:=i+1){
+                       current:=substr(p_addr,i,1);
+                       if(current=="."){
+                           //addr[addr_i]:=str2int(num);
+                           v_ip.ipAddress.ipv4[addr_i]:=str2int(num);
+                           addr_i:=addr_i+1;
+                           num:="";
+                       }else{
+                       num:=num&current;
+                       }
+                   }
+                   if  (addr_i>3){
+                       log("IPV4 parse ERROR");
+                   }else{
+                       //addr[addr_i]:=str2int(num);
+                       v_ip.ipAddress.ipv4[addr_i]:=str2int(num);
+                       num:="";
+                   }
+
+                   return(v_ip)
+               }
+            }
+
+            /**
+             *
+             * @desc component termination
+             */
+            function f_terminate_diameter_component() runs on DiameterComponent
+            {
+                log("component terminated - forced!");
+                deactivate;
+                stop;
+            }
+
+            /**
+             *
+             * @desc original copied from older LibCommon_VerdictControl
+             */
+                function f_getVerdict()
+                return FncRetCode {
+                    var FncRetCode v_ret := e_error;
+                    if (getverdict == pass or getverdict == none) {
+                        v_ret := e_success;
+                    }
+                    return v_ret;
+                }	
+	
+                /**
+                 * 
+                 * @desc function waits for particular time before next expected message
+                 */	
+                 function f_wait(float p_time) runs on DiameterComponent
+                {
+                 tc_wait.start(p_time);
+                 alt {
+                  [] tc_wait.timeout{}		
+                  }
+                }
+
+}// end group GlobalSteps
+
+
+group Preambles {
+
+    /**
+    *
+    * @desc  preamble for Client(AS - IMS) side
+    * @param
+    */
+    function f_preambleClient() runs on DiameterComponent
+    {
+        var Lower_Layer_Primitive v_MSG;
+
+        //vc_ETS_conn:=1; // init connection ID, or even better random for each component
+
+        LLPP.send(m_llp_connect(vc_ETS_address, vc_ETS_port, vc_SUT_address, vc_SUT_port,vc_ETS_conn));
+        tc_wait.start;
+        alt
+        {
+
+            [] LLPP.receive	(mw_llp_connectConfirm(vc_ETS_address, vc_ETS_port, vc_SUT_address, vc_SUT_port,vc_ETS_conn)) -> value v_MSG
+              {
+                tc_wait.stop;
+                vc_ETS_conn:=v_MSG.ll_header.ETS_conn;
+                log("Connection established");
+              };
+
+            [] LLPP.receive	(mw_llp_disconnectIndication(vc_ETS_conn))
+              {
+                tc_wait.stop;
+                vc_ETS_conn:=0;
+                log("Connection NOT established");
+                f_setVerdict (e_error);
+              };
+            [] tc_wait.timeout
+              {
+                vc_ETS_conn:=0;
+                log("Connection NOT established");
+                f_setVerdict (e_error);
+              }
+        }
+    }
+
+    /**
+    *
+    * @desc  preamble for Server (PCRF) side
+    * @param
+    */
+    function f_preambleServer() runs on DiameterComponent
+    {
+        var Lower_Layer_Primitive v_MSG;
+
+        LLPP.send(m_llp_listen(vc_ETS_address, vc_ETS_port, vc_SUT_address, vc_SUT_port));
+        tc_wait.start;
+        alt
+        {
+            [] LLPP.receive	(mw_llp_connectIndication(*,*,*,*,*)) -> value v_MSG
+              {
+                tc_wait.stop;
+                vc_ETS_conn:=v_MSG.ll_header.ETS_conn;
+                log("Connection established");
+              };
+            [] tc_wait.timeout
+              {
+                log("Connection NOT established");
+                f_setVerdict (e_error);
+              }
+        }
+    }
+
+    group preamble_Diameter{
+
+
+        function f_preambleDiameterBaseClient(UInt32 p_authApplicationId)runs on DiameterComponent
+        {
+
+            f_send_CER(m_CER_AppId(vc_originHost, vc_originRealm, vc_hostIPAddress, p_authApplicationId));
+            f_awaiting_CEA(mw_CEA_dummy);
+            f_send_DWR(m_DWR_basic(vc_originHost, vc_originRealm));
+            f_awaiting_DWA(mw_DWA_dummy);
+        }
+
+        function f_preambleDiameterBaseServer(UInt32 p_authApplicationId)runs on DiameterComponent
+        {
+
+            f_awaiting_CER(mw_CER_dummy);
+            f_send_CEA(m_CEA_AppId(vc_originHost, vc_originRealm, vc_hostIPAddress, p_authApplicationId));
+//            f_send_DWR(m_DWR_basic(vc_originHost, vc_originRealm));
+//            f_awaiting_DWA(mw_DWA_dummy);
+        }
+
+    }//end group preamble_Diameter
+
+}// end group Preambles
+
+group Postambles {
+
+    /**
+    *
+    * @desc  prostamble for Client or Server side
+    * @param
+    */
+    function f_postambleDisconnect() runs on DiameterComponent
+    {
+
+        LLPP.send(m_llp_disconnect(vc_ETS_conn));
+        vc_ETS_conn:=0;
+
+        all timer.stop;
+        //stop;
+
+    }
+    group postamble_Diameter{
+
+
+        function f_postamble_AF() runs on DiameterComponent
+        {
+
+            f_postambleDiameterBase();
+
+            if(PX_DIAM_LLP_ENABLED)
+            {
+                f_postambleDisconnect();
+            }
+
+        }
+
+        function f_postamble_PCRF() runs on DiameterComponent
+        {
+
+            f_postambleDiameterBase();
+
+            if(PX_DIAM_LLP_ENABLED)
+            {
+                f_postambleDisconnect();
+            }
+
+        }
+
+        function f_postambleDiameterBase()runs on DiameterComponent
+        {
+            f_send_DPR(m_DPR_basic(vc_originHost, vc_originRealm));
+            f_awaiting_DPA(mw_DPA_dummy);
+        }
+
+    }//end group postamble_Diameter
+
+} // end group Postambles
+
+group DiameterChecks
+{
+}//end group DiameterChecks
+
+group DefaultsTestStep
+{
+
+    altstep a_llp_default() runs on DiameterComponent
+    {
+        [] any timer.timeout
+         {
+           f_setVerdict(e_error);
+           all timer.stop;
+           //stop
+         }
+
+        [] LLPP.receive	(mw_llp_disconnectIndication(vc_ETS_conn))
+          {
+            tc_wait.stop;
+            vc_ETS_conn:=0;
+            f_setVerdict (e_error);
+          };
+
+    }
+
+    altstep a_diameter_default_withinllp() runs on DiameterComponent
+    {
+        [] any timer.timeout
+         {
+           f_setVerdict(e_error);
+           all timer.stop;
+           //stop
+         }
+        [] LLPP.receive	(mw_llp_dataIndication(vc_ETS_conn, */*DWR*/))
+          {
+            //f_send(/*DWA*/);
+          };
+        [] LLPP.receive	(mw_llp_dataIndication(vc_ETS_conn, */*CER*/))
+          {
+            //f_send(/*CEA*/);
+          };
+
+
+    }
+
+    /**
+    * @desc    This default handles receiving of the sync server
+    *        STOP message and calls the RT HUT postamble. (copy from common lib)
+    */
+    altstep a_diameter_catchSyncStop() runs on DiameterComponent
+    {
+        []    syncPort.receive(m_syncServerStop)
+        {
+            tc_sync.stop ;
+            log("**** a_diameter_catchSyncStop: Test component received STOP signal from MTC - going to IDLE state **** ");
+            syncPort.send(m_syncClientStop);
+            f_terminate_diameter_component();
+            log("**** a_diameter_catchSyncStop: TEST COMPONENT NOW STOPPING ITSELF! **** ") ;
+            f_setVerdict(e_timeout);
+            stop ;
+        }
+    }
+
+    altstep a_diameter_default() runs on DiameterComponent
+    {
+        [] any timer.timeout
+         {
+           all timer.stop;
+           if (vc_serverStop==false) {
+               f_selfOrClientSyncAndVerdict("error", e_timeout);
+           }
+           else {
+               stop;
+           }
+         }
+        [] DIAMP.receive (DIAMETER_MSG:{dWR_MSG := mw_DWR_dummy}) -> value vc_recvDiamMsgDefault
+          {
+            vc_recv_hopid:= vc_recvDiamMsgDefault.dWR_MSG.header.hopid;
+            vc_recv_endid:= vc_recvDiamMsgDefault.dWR_MSG.header.endid;
+            f_send_DWA(m_DWA_basic(vc_originHost, vc_originRealm));
+            repeat;
+          }
+        [] DIAMP.receive (DIAMETER_MSG:{cER_MSG := mw_CER_basic(mw_authApplicationId(c_applIdRx))}) -> value vc_recvDiamMsgDefault
+          {
+            vc_recv_hopid:= vc_recvDiamMsgDefault.cER_MSG.header.hopid;
+            vc_recv_endid:= vc_recvDiamMsgDefault.cER_MSG.header.endid;
+            f_send_CEA(m_CEA_AppId(vc_originHost, vc_originRealm, vc_hostIPAddress, c_applIdRx));
+            repeat;
+          }
+        [] DIAMP.receive (DIAMETER_MSG:{cER_MSG := mw_CER_basic(mw_authApplicationId(c_applIdGx))}) -> value vc_recvDiamMsgDefault
+          {
+            vc_recv_hopid:= vc_recvDiamMsgDefault.cER_MSG.header.hopid;
+            vc_recv_endid:= vc_recvDiamMsgDefault.cER_MSG.header.endid;
+            f_send_CEA(m_CEA_AppId(vc_originHost, vc_originRealm, vc_hostIPAddress, c_applIdGx));
+            repeat;
+          }
+        [] DIAMP.receive (DIAMETER_MSG:?) -> value vc_recvDiamMsgDefault
+          {
+              if (vc_serverStop==false) {
+                  f_selfOrClientSyncAndVerdict("error", e_error);
+              }
+              else {
+                  stop;
+              }
+          }
+        [] DIAMP.receive
+          {
+              if (vc_serverStop==false) {
+                  f_selfOrClientSyncAndVerdict("error", e_error);
+              }
+              else {
+                  stop;
+              }
+          }
+        [] syncPort.receive(m_syncServerStop) {
+            tc_sync.stop;
+            vc_serverStop := true;
+            log("*** Test component received STOP signal from MTC ***");
+            if (vc_isAF) {
+                f_postamble_AF();
+            }
+            else {
+                f_postamble_PCRF();
+            }
+            log("*** " & __SCOPE__ & ": INFO: TEST COMPONENT NOW STOPPING ITSELF! ***");
+            stop
+        }
+    }
+
+
+
+} // end of group DefaultsTestStep
+} // end module LibDiameter_Steps

@@ -1,0 +1,88 @@
+/**
+ *	@author 	STF 434
+ *  @version    $Id: LibDiameter_Interface.ttcn 647 2013-06-12 13:42:00Z schmitting $
+ *	@desc		This module provides the types used by the test component
+ *              for DIAMETER tests.
+ */
+
+module LibDiameter_Interface
+{
+    //LibCommon
+    import from LibCommon_Sync all;
+    import from LibCommon_AbstractData all;
+    import from LibCommon_BasicTypesAndValues all;
+    import from LibCommon_DataStrings all;
+    //LibDiameter
+    import from LibDiameter_TypesAndValues all;
+    import from LibDiameter_PIXITS all;
+
+    type port LowerLayerPPort message {
+          inout Lower_Layer_Primitive}   with { extension "internal"}
+; //LLP
+
+    type port DiameterPort message {
+          inout DIAMETER_MSG}  with { extension "internal"}
+; //DIAMETER_MSG
+
+    type component DiameterComponent extends SelfSyncComp
+    {
+    
+      //port
+      port 	LowerLayerPPort LLPP;
+      port 	DiameterPort DIAMP;
+
+	  //global variables
+	  var charstring vc_ETS_address := ""; 		//defined in init
+      var integer vc_ETS_port		:= 3868;  	//defined in init
+      var charstring vc_SUT_address := ""; 		//defined in init
+      var integer vc_SUT_port 		:= 3868;  	//defined in init
+      var integer vc_ETS_conn		:= 0;  //used if LLP primitives are in use
+      var DIAMETER_MSG vc_sendDiamMsg ;
+      var DIAMETER_MSG vc_recvDiamMsg ;
+      var DIAMETER_MSG vc_recvDiamMsgDefault ; //global variable defined to save Dimeter message received within default altstep
+
+      //init of values at component started
+      var UInt32 vc_send_hopid:=0;// hex2int('00000100'H);
+      var UInt32 vc_send_endid:=0;// hex2int('01000000'H);
+      var UInt32 vc_recv_hopid:=0;
+      var UInt32 vc_recv_endid:=0;
+
+      var template (value) Session_Id_AVP vc_sessionId;
+      // Origin Host of the test system
+      var template (value) Origin_Host_AVP vc_originHost;
+      var template (value) Origin_Realm_AVP vc_originRealm;
+      // Origin Host of the IUT
+      var template (value) Origin_Host_AVP vc_originHost_IUT;
+      var template (value) Origin_Realm_AVP vc_originRealm_IUT;
+      var Address vc_hostIPAddress;		//Address of CER for hostIPAddress AVP
+
+      var template (value) Destination_Host_AVP vc_destinationHost;
+      var template (value) Destination_Realm_AVP vc_destinationRealm;
+
+      var template Termination_Cause_AVP vc_terminationCause;
+      var template Result_Code_AVP vc_resultCode;
+      var template Media_Component_Description_AVP vc_mediaComponentDescription;
+
+      //general timers
+      timer tc_wait  := PX_DIAMETER_TWAIT;
+      timer tc_delay := 1.0;  // delay next Request
+
+      // variables for storing default references
+	  var default 	vc_default_diameter;
+	  var default 	vc_def_catchSyncStop_diameter;
+
+      // parts needed for Client/SelfSyncComp type compatibility
+ /*     var 	StringStack v_stateStack := c_initStringStack;
+      port 	SyncPort 	syncSendPort;
+      port 	SyncPort 	syncPort;
+      timer tc_sync 	:= PX_TSYNC_TIME_LIMIT;
+  */
+      var boolean vc_isAF := false;
+      var boolean vc_serverStop:=false;
+
+  
+  } 
+  
+  // end DiameterComponent
+
+} // end module LibDiameter_Interface
