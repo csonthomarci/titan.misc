@@ -1,0 +1,475 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Wu-Hen Chang, Antal
+ *
+ ******************************************************************************/
+module CoapTestSuite_Etsi
+{
+	import from CoAP_Types all;
+	import from CoapFramework all;
+
+	testcase tc_client_TD_COAP_CORE_01() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_01_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_01_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_01_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := CONFIRMABLE,
+    		code := METHOD_GET,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		}
+		},
+    	payload := omit
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_01_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := ACKNOWLEDGEMENT,
+	        code := RESPONSE_CODE_Content,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	 		{
+	    		content_format := 0
+	        }
+	    },
+    	payload := ?
+	}
+	
+	testcase tc_client_TD_COAP_CORE_02() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_02_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_02_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_02_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := CONFIRMABLE,
+    		code := METHOD_POST,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		},
+	  		{
+	    		content_format := 0
+	        }
+		},
+    	payload := char2oct("Some payload")
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_02_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := ACKNOWLEDGEMENT,
+	        code := RESPONSE_CODE_Created,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	    },
+    	payload := omit
+	}
+	
+	testcase tc_client_TD_COAP_CORE_03() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_03_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_03_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_03_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := CONFIRMABLE,
+    		code := METHOD_PUT,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		},
+	  		{
+	    		content_format := 0
+	        }
+		},
+    	payload := char2oct("Some payload")
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_03_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := ACKNOWLEDGEMENT,
+	        code := RESPONSE_CODE_Changed,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	    },
+    	payload := omit
+	}
+	
+	testcase tc_client_TD_COAP_CORE_04() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_04_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_04_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_04_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := CONFIRMABLE,
+    		code := METHOD_DELETE,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		}
+		},
+    	payload := omit
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_04_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := ACKNOWLEDGEMENT,
+	        code := RESPONSE_CODE_Deleted,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := omit,
+    	payload := omit
+	}
+	
+	testcase tc_client_TD_COAP_CORE_05() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_05_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_05_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_05_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := NON_CONFIRMABLE,
+    		code := METHOD_GET,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		}
+		},
+    	payload := omit
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_05_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := NON_CONFIRMABLE,
+	        code := RESPONSE_CODE_Content,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	 		{
+	    		content_format := 0
+	        }
+	    },
+    	payload := ?
+	}
+	
+	testcase tc_client_TD_COAP_CORE_06() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_06_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_06_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_06_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := NON_CONFIRMABLE,
+    		code := METHOD_POST,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		},
+	  		{
+	    		content_format := 0
+	        }
+		},
+    	payload := char2oct("Some payload")
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_06_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := NON_CONFIRMABLE,
+	        code := RESPONSE_CODE_Created,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	    },
+    	payload := omit
+	}
+	
+	testcase tc_client_TD_COAP_CORE_07() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_07_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_07_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_07_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := NON_CONFIRMABLE,
+    		code := METHOD_PUT,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		},
+	  		{
+	    		content_format := 0
+	        }
+		},
+    	payload := char2oct("Some payload")
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_07_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := NON_CONFIRMABLE,
+	        code := RESPONSE_CODE_Changed,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := 
+	    {
+	    },
+    	payload := omit
+	}
+	
+	testcase tc_client_TD_COAP_CORE_08() runs on COAP_FW_CT
+	{
+	  setverdict(pass);
+	  
+	  var integer client := f_CFW_addCoapPeer("client");
+	  
+	  f_CFW_Peer_setRemote(client, "server");
+	  
+	  f_CFW_init();
+	  
+	  f_CFW_Peer_setMessageToSend(client, valueof(t_client_TD_COAP_CORE_08_req00));
+	  f_CFW_Peer_send(client);
+	  
+	  f_CFW_Peer_receive(client);
+	  if (not f_CFW_Peer_check(client, t_client_TD_COAP_CORE_08_rsp01))
+	  {
+	  	setverdict(fail);
+	  }
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_08_req00 :=
+	{
+	  	header := 
+	  	{
+    		version := 1,
+    		msg_type := NON_CONFIRMABLE,
+    		code := METHOD_DELETE,
+    		message_id := 0
+	  	},
+    	token := ''O,
+    	options := 
+		{
+	  		{
+	  		  uri_path := "test"
+	  		}
+		},
+    	payload := omit
+	}
+	
+	template CoAP_ReqResp t_client_TD_COAP_CORE_08_rsp01 :=
+	{
+		header := 
+		{
+	        version := 1,
+	        msg_type := NON_CONFIRMABLE,
+	        code := RESPONSE_CODE_Deleted,
+	        message_id := ?
+	    },
+	    token := ''O,
+	    options := omit,
+    	payload := omit
+	}
+		
+	control
+	{
+	}
+	
+}

@@ -34,3 +34,15 @@
 [submodule "DIAMETER_Rx_ETSI/titan.TestPorts.Common_Components.Abstract_Socket"]
 	path = DIAMETER_Rx_ETSI/titan.TestPorts.Common_Components.Abstract_Socket
 	url = https://github.com/eclipse/titan.TestPorts.Common_Components.Abstract_Socket
+[submodule "CoAP_Conf/TestPorts/titan.TestPorts.Common_Components.Socket-API"]
+	path = CoAP_Conf/TestPorts/titan.TestPorts.Common_Components.Socket-API
+	url = https://github.com/eclipse/titan.TestPorts.Common_Components.Socket-API
+[submodule "CoAP_Conf/TestPorts/titan.TestPorts.IPL4asp"]
+	path = CoAP_Conf/TestPorts/titan.TestPorts.IPL4asp
+	url = https://github.com/eclipse/titan.TestPorts.IPL4asp
+[submodule "CoAP_Conf/ProtocolModules/titan.ProtocolModules.CoAP"]
+	path = CoAP_Conf/ProtocolModules/titan.ProtocolModules.CoAP
+	url = http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.CoAP
+[submodule "CoAP_Conf/Libraries/titan.Libraries.TCCUsefulFunctions"]
+	path = CoAP_Conf/Libraries/titan.Libraries.TCCUsefulFunctions
+	url = https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions

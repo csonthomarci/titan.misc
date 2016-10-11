@@ -1,0 +1,366 @@
+/******************************************************************************
+ * Copyright (c) 2000-2016 Ericsson Telecom AB
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Wu-Hen Chang, Antal
+ *
+ ******************************************************************************/
+
+module CoapFramework 
+{
+	import from CoAP_Types all;
+	import from CoapPeer all;
+	import from CoapApplication all;
+	import from CoapCommon all;
+	
+	modulepar
+	{
+	  Address_List tsp_addresses := {};
+	}
+
+	type component COAP_FW_CT
+	{
+		var COAP_CT_List coapPeers := {};
+		var COAP_APP_CT_List coapApps := {};
+		
+		var integer mid := 0;
+	}
+	
+	type record of COAP_CT COAP_CT_List;
+	type record of COAP_APP_CT COAP_APP_CT_List;
+	
+	function f_CFW_addCoapPeer(charstring p_addrId := "") runs on COAP_FW_CT
+	return integer
+	{
+		var COAP_CT v_peer := COAP_CT.create alive;
+		var integer v_peerIdx := sizeof(coapPeers);
+		
+		coapPeers[v_peerIdx] := v_peer;
+		
+		var NamedHostPort v_addr;
+		if (f_lookupAddress(p_addrId, v_addr))
+		{
+			var CoapContext v_ctx;
+			f_CFW_Peer_getContext(v_peerIdx, v_ctx);
+			v_ctx.localHost := v_addr.hostName;
+			v_ctx.localPort := v_addr.portNumber;
+			
+			f_CFW_Peer_setContext(v_peerIdx, v_ctx);
+		}
+	  
+		return v_peerIdx;
+	}
+	
+	function f_CFW_addCoapApplication(charstring p_addrId := "") runs on COAP_FW_CT
+	return integer
+	{
+		var COAP_APP_CT v_app := COAP_APP_CT.create alive;
+		var integer v_appIdx := sizeof(coapApps);
+		
+		coapApps[v_appIdx] := v_app;
+		
+		var NamedHostPort v_addr;
+		if (f_lookupAddress(p_addrId, v_addr))
+		{
+			var CoapAppContext v_ctx;
+			f_CFW_App_getContext(v_appIdx, v_ctx);
+			v_ctx.localHost := v_addr.hostName;
+			v_ctx.localPort := v_addr.portNumber;
+			
+			f_CFW_App_setContext(v_appIdx, v_ctx);
+		}
+	  
+		return v_appIdx;
+	}
+	
+	function f_CFW_init() runs on COAP_FW_CT
+	{
+	  mid := float2int(int2float(65000)*rnd());
+	  
+	  for (var integer i:=0; i<sizeof(coapPeers); i:=i+1) {
+	    f_CFW_initPeer(i);
+	  }
+	  
+	  for (var integer j:=0; j<sizeof(coapApps); j:=j+1) {
+	    f_CFW_initApp(j);
+	  }
+	}
+	
+	function f_CFW_initPeer(in integer p_peerIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No coap peer found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_init());
+      v_peer.done;
+      
+	  return true;	  
+	}
+	
+	function f_CFW_Peer_setRemote(in integer p_peerIdx, in charstring p_remoteAddrId) runs on COAP_FW_CT
+	return boolean
+	{
+ 		var NamedHostPort v_addr;
+		if (f_lookupAddress(p_remoteAddrId, v_addr))
+		{
+			var CoapContext v_ctx;
+			f_CFW_Peer_getContext(p_peerIdx, v_ctx);
+			v_ctx.remoteHost := v_addr.hostName;
+			v_ctx.remotePort := v_addr.portNumber;
+			
+			f_CFW_Peer_setContext(p_peerIdx, v_ctx);
+		}
+		return true;
+	}	
+	
+	function f_CFW_Peer_getContext(in integer p_peerIdx, out CoapContext p_coapContext) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_getContext());
+      v_peer.done(CoapContext:?) -> value p_coapContext;
+      
+	  return true;
+	}
+	
+	function f_CFW_Peer_setContext(in integer p_peerIdx, in CoapContext p_coapContext) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_setContext(p_coapContext));
+      v_peer.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_Peer_setMessageToSend(in integer p_peerIdx, CoAP_ReqResp p_msg) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  if (p_msg.header.message_id == 0)
+	  {
+	    p_msg.header.message_id := mid;
+	    mid := mid + 1;
+	  }
+	  
+	  v_peer.start(f_CP_setMessageToSend(p_msg));
+      v_peer.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_Peer_send(in integer p_peerIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_send());
+      v_peer.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_Peer_receive(in integer p_peerIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_receive());
+      v_peer.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_Peer_check(in integer p_peerIdx, template CoAP_ReqResp p_msg) runs on COAP_FW_CT
+	return boolean
+	{
+	  var boolean v_ret;
+	  var COAP_CT v_peer := coapPeers[p_peerIdx];
+	  
+	  if (v_peer == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_peer);
+	  
+	  v_peer.start(f_CP_check(p_msg));
+      v_peer.done(ReturnBoolean:?) -> value v_ret; 
+      
+	  return v_ret;
+	}
+		
+	function f_CFW_initApp(in integer p_appIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No coap app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_init());
+      v_app.done;
+      
+	  return true;	  
+	}
+	
+	function f_CFW_App_setRemote(in integer p_appIdx, in charstring p_remoteAddrId) runs on COAP_FW_CT
+	return boolean
+	{
+ 		var NamedHostPort v_addr;
+		if (f_lookupAddress(p_remoteAddrId, v_addr))
+		{
+			var CoapAppContext v_ctx;
+			f_CFW_App_getContext(p_appIdx, v_ctx);
+			v_ctx.remoteHost := v_addr.hostName;
+			v_ctx.remotePort := v_addr.portNumber;
+			
+			f_CFW_App_setContext(p_appIdx, v_ctx);
+		}
+		return true;
+	}	
+	
+	function f_CFW_App_getContext(in integer p_appIdx, out CoapAppContext p_coapAppContext) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_getContext());
+      v_app.done(CoapAppContext:?) -> value p_coapAppContext;
+      
+	  return true;
+	}
+	
+	function f_CFW_App_setContext(in integer p_appIdx, in CoapAppContext p_coapAppContext) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No user found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_setContext(p_coapAppContext));
+      v_app.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_App_setMessageToSend(in integer p_appIdx, COAP_APP_PDU p_msg) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_setMessageToSend(p_msg));
+      v_app.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_App_send(in integer p_appIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_send());
+      v_app.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_App_receive(in integer p_appIdx) runs on COAP_FW_CT
+	return boolean
+	{
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_receive());
+      v_app.done;
+      
+	  return true;
+	}
+	
+	function f_CFW_App_check(in integer p_appIdx, template COAP_APP_PDU p_msg) runs on COAP_FW_CT
+	return boolean
+	{
+	  var boolean v_ret;
+	  var COAP_APP_CT v_app := coapApps[p_appIdx];
+	  
+	  if (v_app == null) { log("CFW: No app found"); return false; }
+	  
+	  f_isRunningGuard(v_app);
+	  
+	  v_app.start(f_CA_check(p_msg));
+      v_app.done(ReturnBoolean:?) -> value v_ret; 
+      
+	  return v_ret;
+	}
+	
+	function f_lookupAddress(charstring p_id, out NamedHostPort v_addr)
+	return boolean
+	{
+	  
+	  for (var integer i:=0; i<sizeof(tsp_addresses); i:=i+1)
+	  {
+	    if (tsp_addresses[i].id == p_id)
+	    {
+	      v_addr := tsp_addresses[i];
+	      return true;
+	    }
+	  }
+	  return false;
+	}
+	
+	type record of NamedHostPort Address_List;
+	
+	type record NamedHostPort
+	{
+	  charstring id,
+	  charstring hostName,
+	  integer portNumber
+	}
+}
