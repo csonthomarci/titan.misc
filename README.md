@@ -29,7 +29,7 @@ Note: As this repository includes submodules, after cloning it, a 'git submodule
 will have to be issued.
 
 
-#CoAP Conformane test cases 
+#CoAP Conformance test cases 
 based on http://www.etsi.org/plugtests/CoAP/Document/CoAP_TestDescriptions_v015.pdf
 
 Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
