@@ -1,15 +1,15 @@
 /******************************************************************************
- * Copyright (c) 2000-2016 Ericsson Telecom AB
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *   Wu-Hen Chang, Antal
- *
- ******************************************************************************/
-
+* Copyright (c) 2016  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*  Mate Kovacs - initial implementation and initial documentation
+*  Antal Wu-Hen Chang
+*  Naum Spaseski
+******************************************************************************/
 module CoapFramework 
 {
 	import from CoAP_Types all;
@@ -151,7 +151,7 @@ module CoapFramework
 	  return true;
 	}
 	
-	function f_CFW_Peer_setMessageToSend(in integer p_peerIdx, CoAP_ReqResp p_msg) runs on COAP_FW_CT
+	function f_CFW_Peer_setMessageToSend(in integer p_peerIdx, CoAP_ReqResp p_msg, MID_Generation p_genMid := GENERATE_NEW_MID) runs on COAP_FW_CT
 	return boolean
 	{
 	  var COAP_CT v_peer := coapPeers[p_peerIdx];
@@ -160,13 +160,14 @@ module CoapFramework
 	  
 	  f_isRunningGuard(v_peer);
 	  
-	  if (p_msg.header.message_id == 0)
+	  if (p_genMid == GENERATE_NEW_MID)
 	  {
 	    p_msg.header.message_id := mid;
 	    mid := mid + 1;
+	    p_genMid := USE_GIVEN_MID;
 	  }
 	  
-	  v_peer.start(f_CP_setMessageToSend(p_msg));
+	  v_peer.start(f_CP_setMessageToSend(p_msg, p_genMid));
       v_peer.done;
       
 	  return true;
@@ -202,7 +203,7 @@ module CoapFramework
 	  return true;
 	}
 	
-	function f_CFW_Peer_check(in integer p_peerIdx, template CoAP_ReqResp p_msg) runs on COAP_FW_CT
+	function f_CFW_Peer_check(in integer p_peerIdx, template CoAP_ReqResp p_msg, MID_Check p_checkMid := CHECK_MID) runs on COAP_FW_CT
 	return boolean
 	{
 	  var boolean v_ret;
@@ -212,7 +213,7 @@ module CoapFramework
 	  
 	  f_isRunningGuard(v_peer);
 	  
-	  v_peer.start(f_CP_check(p_msg));
+	  v_peer.start(f_CP_check(p_msg, p_checkMid));
       v_peer.done(ReturnBoolean:?) -> value v_ret; 
       
 	  return v_ret;
