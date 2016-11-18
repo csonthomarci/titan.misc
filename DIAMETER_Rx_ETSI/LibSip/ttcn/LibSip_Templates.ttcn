@@ -375,7 +375,7 @@ group SubFields
   {
     scheme := c_sipScheme,  		//*  contains "sip"
     userInfo:= *,
-    hostPort := *,
+    hostPort := ?,
     urlParameters := p_urlParameters,
     headers := *
   };
@@ -998,7 +998,7 @@ group HeaderFieldTemplates {
               addrSpec := {
                 scheme := ?,  
                 userInfo := *,
-                hostPort := *,
+                hostPort := ?,
                 urlParameters := {{"isfocus",*},*},
                 headers := *
               }

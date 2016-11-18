@@ -1882,7 +1882,7 @@ group Templates {
       := {
         msgHeader := { contentLength := ?, contentType := {
             //fieldName := CONTENT_TYPE_E, mediaType := Inc_SDP ifpresent }
-            fieldName := CONTENT_TYPE_E, mediaType := * }
+            fieldName := CONTENT_TYPE_E, mediaType := ? }
         },
         messageBody := ?
       }
@@ -3811,7 +3811,7 @@ group Templates {
       := {
         msgHeader := { contentLength := ?, contentType := {
             //fieldName := CONTENT_TYPE_E, mediaType := Inc_SDP ifpresent }
-            fieldName := CONTENT_TYPE_E, mediaType := * }
+            fieldName := CONTENT_TYPE_E, mediaType := ? }
         },
         messageBody := ?
       }

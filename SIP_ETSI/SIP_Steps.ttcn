@@ -4643,10 +4643,10 @@ group Functions {
           setverdict (inconc);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TGuard.timeout {
@@ -4704,10 +4704,10 @@ group Functions {
           setverdict (inconc);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] SIPP.receive {
@@ -6267,10 +6267,10 @@ group Functions {
           setverdict (inconc);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TGuard.timeout {
@@ -10811,13 +10811,13 @@ group Behaviour {
           vl_Enabled := false;
           repeat;
         }
-        [] SIPP.receive (Response: *) -> value vl_Response {
+        [] SIPP.receive (Response: ?) -> value vl_Response {
           all timer.stop;
           setverdict (fail);
           terminatePRMtcCall(vl_Response, loc_CSeq_s);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           cancelCall(
@@ -10890,7 +10890,7 @@ group Behaviour {
             loc_CSeq_s);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           cancelCall(
@@ -10928,7 +10928,7 @@ group Behaviour {
           all timer.stop;
           setverdict (fail);
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           cancelCall(
@@ -10964,10 +10964,10 @@ group Behaviour {
         [] SIPP.receive (Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
           repeat;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TResp.timeout {
@@ -11003,10 +11003,10 @@ group Behaviour {
           vl_Enabled := false;
           repeat;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TResp.timeout {
@@ -11049,7 +11049,7 @@ group Behaviour {
           terminatePRMtcCall(vl_Response, loc_CSeq_s);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           cancelCall(
@@ -11114,7 +11114,7 @@ group Behaviour {
           terminatePRMtcCall(vl_Response, loc_CSeq_s);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           cancelCall(
@@ -11164,7 +11164,7 @@ group Behaviour {
           setverdict (fail);
           stop;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           TResp.stop;
           setverdict (fail);
           stop;
@@ -11566,10 +11566,10 @@ group Behaviour {
           TAck.stop;
           setverdict (pass);
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] SIPP.receive {
@@ -12012,10 +12012,10 @@ group Behaviour {
       float loc_time_value) runs on SipComponent {
       TRept.start (loc_time_value);
       alt {
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TRept.timeout {}
@@ -12600,7 +12600,7 @@ group Behaviour {
         [] SIPP.receive (INVITE_Request_r_1) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TWait.timeout {
@@ -12614,7 +12614,7 @@ group Behaviour {
         [] SIPP.receive (BYE_Request_r_1(?)) {
           repeat;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
         [] TWait.timeout {
@@ -12891,10 +12891,10 @@ group Behaviour {
           all timer.stop;
           stop;
         }
-        [] SIPP.receive (Response: *) {
+        [] SIPP.receive (Response: ?) {
           repeat;
         }
-        [] SIPP.receive (Request: *) {
+        [] SIPP.receive (Request: ?) {
           repeat;
         }
         [] TGuard.timeout {

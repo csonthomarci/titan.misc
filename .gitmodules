@@ -46,3 +46,6 @@
 [submodule "CoAP_Conf/Libraries/titan.Libraries.TCCUsefulFunctions"]
 	path = CoAP_Conf/Libraries/titan.Libraries.TCCUsefulFunctions
 	url = https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
+[submodule "DIAMETER_Rx_ETSI/titan.ProtocolModules.SDP"]
+	path = DIAMETER_Rx_ETSI/titan.ProtocolModules.SDP
+	url = http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SDP

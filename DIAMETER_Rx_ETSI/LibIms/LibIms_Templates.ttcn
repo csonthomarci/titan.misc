@@ -1276,7 +1276,7 @@ group CONFTemplates {
                          joining_info := *,
                          disconnection_method := *,
                          disconnection_info := *,
-                         media_list := *,
+                         media_list := ?,
                          call_info := *,
                          elem_list := ?
                      }

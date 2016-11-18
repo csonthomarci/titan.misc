@@ -16567,10 +16567,10 @@ group TestPurposesforCallControl {
                 Response_1XX_r_1(v_CallId, loc_CSeq_s)) {
                 repeat;
               }
-              [] SIPP.receive (Request: *) {
+              [] SIPP.receive (Request: ?) {
                 repeat;
               }
-              [] SIPP.receive (Response: *) {
+              [] SIPP.receive (Response: ?) {
                 repeat;
               }
               [] cpA.receive (CM_Check_Done) {
