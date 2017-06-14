@@ -50,7 +50,7 @@
 
 ln -sf ../src/Makefile                                                 ../bin/Makefile
 
-protocolmodulepath=${PROTOCOLMODULE_PATH:-'/home/ntaf/Conformance/ProtocolModules'}
+protocolmodulepath=${PROTOCOLMODULE_PATH:-'../ProtocolModules'}
 
 ln -sf $protocolmodulepath/NTAF_CNL113776/src/http_ntaforum_org_2011_activation.ttcn                       ../bin
 ln -sf $protocolmodulepath/NTAF_CNL113776/src/http_ntaforum_org_2011_harness.ttcn                          ../bin
@@ -121,7 +121,7 @@ ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCConversion.cc    
 
 # Linking test ports
 
-portpath=${PORT_PATH:-'/home/ntaf/Conformance/TestPorts'}
+portpath=${PORT_PATH:-'../TestPorts'}
 
 
 ln -sf $portpath/IPL4asp_CNL113531/src/IPL4asp_Types.ttcn                                                ../bin
