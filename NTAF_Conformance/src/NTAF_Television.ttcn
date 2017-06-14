@@ -1,0 +1,1586 @@
+/******************************************************************************
+* Copyright (c) 2004, 2017  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Elemer Lelik - initial implementation
+*   Endre Kulcsar
+*   Eszter Susanszky
+******************************************************************************/
+//
+//  File:               NTAF_Television.ttcn
+//  Description:        NTAF Conformance Test Suite 
+//  Rev:                 
+//  Prodnr:              
+//  Updated:            2014-01-07
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module:  
+//
+//  Purpose:
+//     
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module NTAF_Television
+{
+	modulepar
+	{
+		charstring tsp_toolName:="television";
+		Entry.harness_list tsp_harness_list;
+		float tsp_Twait := 40.0;
+                boolean tsp_tc_Television:=false;
+
+
+	}
+	
+	import from NTAF_common                                   all;
+	import from NTAF_templates                         all;
+	import from NTAF_RequestorConformance		all;
+
+	import from jabber_client                          all;
+	import from http_jabber_org_protocol_pubsub        all;
+
+	import from http_jabber_org_protocol_pubsub_owner  all; 
+	import from http_ntaforum_org_2011_registry        all; 
+	import from http_jabber_org_protocol_disco_info    all; 
+	import from http_ntaforum_org_2011_activation      all;
+	import from http_ntaforum_org_2011_harness         all;
+
+
+
+
+
+template jabber_client.Iq  ts_Iq_result_close_session2(template universal charstring pl_id,template universal charstring pl_to):=
+
+{
+  from_ := omit,
+  id := pl_id,
+  lang := omit,
+  to_ := pl_to,
+  type_ := result,
+  elem := "<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"televisionSession\"> 
+ <result>pass</result> 
+ </response>",
+  error_ := omit
+}
+
+
+template CompositeClientIq  tr_CompIq_open_session2(template universal charstring par_toolName,template universal charstring pl_harness):=
+
+{
+
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := valueof(par_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := {
+    harness_open := {
+      harness := pl_harness,//"http://Example.org/ttcn/titan",
+      lang := omit,
+      mode := ? ,
+      reportUserActivity := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      activationRef := tsp_activationRef
+    }
+  },
+  error_ := omit
+} 
+
+
+template CompositeClientIq  tr_CompIq_close_session2(template universal charstring par_toolName):=
+
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := valueof(par_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := {
+    harness_close := {
+      session := ?,
+      timestamp := *
+    }
+  },
+  error_ := omit
+}
+
+template jabber_client.Iq  ts_Iq_error2( template universal charstring pl_toolName,
+template universal charstring pl_id,
+template universal charstring pl_to, 
+template universal charstring pl_elem,
+template universal charstring pl_base
+):=
+
+{
+  from_ := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"",
+  id := pl_id,
+  lang := omit,
+  to_ := pl_to,
+  type_ := result,
+  elem := pl_elem,
+  error_ := {
+    by:=omit,
+    type_:=cancel,
+    stanzaErrorGroup:={unexpected_request:=""},
+    text:={lang:=omit,base:= pl_base}
+  }
+}
+
+
+template CompositeClientIq  tr_CompIq_close_session_final2(template universal charstring pl_toolName):=
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := {
+    harness_close := {
+      session := tsp_backdoor,
+      timestamp := *
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq  tr_CompIq_request_status2(
+	template universal charstring pl_toolName,
+	template universal charstring pl_item):=
+{ 
+	from_ := *, 
+	id := ?, 
+	lang := *, 
+	to_ := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"", 
+	type_ := set_, 
+	elem := 
+	{
+	  	harness_request:=
+  		{
+			session := ?,
+			context := *,
+			parameter_list := { },
+			xmlParameter_list := { },
+			file_list := { },
+			group_list := { },
+			timestamp := omit,
+			action_ := 
+			{
+				harness := ?,
+				base := pl_item 
+			}
+		}
+  	},
+  	error_ := omit 
+}
+
+
+template jabber_client.Iq t_Iq_fetch_tool_registry2( template universal charstring pl_toolName):=
+{
+	from_:=omit,
+	id:="q_fetch_tool_reg",
+	lang:=omit,
+	to_:="pubsub."&tsp_fqdn,
+	type_:=get,
+	elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_fetch_tool_registry2(pl_toolName)))),
+	error_:=omit
+}
+
+
+template CompositeClientIq  tr_Iq_request2(
+	template universal charstring pl_toolName,
+	template universal charstring pl_action):=
+{ 
+	from_ := *, 
+	id := ?, 
+	lang := *, 
+	to_ := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"", 
+	type_ := set_, 
+	elem := 
+	{
+		harness_request:=
+		{
+			session := ?,
+			context := *,
+			parameter_list := ?,   //{{name:=?,base:=?},{name:=?,base:=?} },
+			xmlParameter_list := { },
+			file_list := { },
+			group_list := { },
+			timestamp := omit,
+			action_ :=
+			{
+				harness := ?,
+				base := pl_action  
+			}
+		}
+	},
+	error_ := omit 
+}
+
+template CompositeClientIq  tr_Iq_request_param2(
+	template universal charstring pl_toolName,
+	template universal charstring pl_action,
+	template universal charstring pl_parameter_name
+	):=
+{ 
+	from_ := *,
+	id := ?, 
+	lang := *, 
+	to_ := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"", 
+	type_ := set_, 
+	elem := 
+	{
+		harness_request:=
+		{
+			session := ?,
+			context := omit,
+			parameter_list :=
+			{
+				{
+					name:= pl_parameter_name,
+					base:=?
+				}
+			},
+			xmlParameter_list := { },
+			file_list := { },
+			group_list := { },
+			timestamp := omit,
+			action_ :=
+			{
+				harness := ?,
+				base := pl_action  
+			}
+    		}
+    	},
+	error_ := omit 
+}
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_fetch_tool_registry2(template universal charstring pl_toolName):=
+
+{ choice := { choice_list := { { items := { max_items := omit, node := valueof(pl_toolName) & "@"&tsp_fqdn&"/"&tsp_resource&"", subid := omit, item_list := { }
+        }
+      }
+    }
+  }
+}
+	
+function  f_TelevisionProviderBehaviour() runs on Provider_CT
+{
+ var CompositeClientIq  vl_compcIq;
+
+ var jabber_client.Presence  vl_compcPresence;
+ v_provDefault:=activate(as_defaultProviderBehaviour());  
+
+ if(tsp_create_root_coll_node) {
+     f_ProviderSendReceiveIq(valueof(t_Iq_create_root_collection_node)); 
+  }
+
+  f_ProviderSendReceiveIq(valueof(ts_Iq_create_tool_node(t_Pubsub_create_tool_node("television","ntaf.tools")))); 
+
+  f_ProviderSendReceiveIq(valueof(ts_Iq_publish_tool_info((t_Pubsub_publish_tool_info("television",t_Entry2("television"))))))    
+
+  Ctl_PCO.send("go")
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+  // Twait.start(180.0);
+
+  v_run:=true;
+
+  while (v_run)
+  {//startwhile
+
+log("STARTING TELEVISION PROVIDER ALT ")
+    alt {//startalt
+
+
+
+      []InComm_PCO.receive(charstring:?) //-> value vl_rcvdASP_TCP 
+
+        { 
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_query_harness("television","http://Example.org/ttcn/titan_television" ))  -> value vl_compcIq 
+
+        { log("2 QUERY HARNESS ***********************")	 
+          Comm_PCO.send(ts_Iq_query_result_harness_provider_television(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }  
+
+      []InComm_PCO.receive(tr_CompIq_query_harness("television","http://Example.org/ttcn/titan_television_position" ))  -> value vl_compcIq 
+
+        { 	 
+          Comm_PCO.send(ts_Iq_query_result_harness_provider_television_position(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }  	
+
+
+
+      []InComm_PCO.receive(tr_CompIq_disco_info("television")) //-> value vl_rcvdASP_TCP 
+
+        { log("1 DISCO INFO ***********************")
+
+          Comm_PCO.send(ts_Iq_query_result_disco_info_television);
+          repeat;
+        }    
+
+
+      []InComm_PCO.receive(tr_CompIq_request_activate2("television", "http://Example.org/ttcn/titan_television", ?)) -> value vl_compcIq 
+
+        { 
+          log("3 ACTIVATE***********************")	  
+          if (v_TelevisionState==inactive)
+             {v_TelevisionState:=active;
+            Comm_PCO.send(ts_Iq_activation_result2(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.activation_activate.toolId, "http://Example.org/ttcn/titan_television",
+            vl_compcIq.elem.activation_activate.harness_list[0].supportedMode_list[0], tsp_activationRef 
+              ));}
+          else {/* ??????????????? */}
+
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_request_deactivate2("television",tsp_activationRef)) -> value vl_compcIq 
+
+        { 
+          log("16 DEACTIVATE***********************")       	  
+          if (v_TelevisionState==active)
+             { v_TelevisionState:=inactive;
+	     Comm_PCO.send(ts_Iq_deactivation_result(vl_compcIq.id,vl_compcIq.from_));
+	     if(TchannelAssign.running)
+	       {
+	         TchannelAssign.stop;    
+	       }
+	     }
+	  else {/* ??????????????? */}
+
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getCompleteStatus")) -> value vl_compcIq 
+
+        {  log("5 GET COMPLETE STATUS***********************")
+	   if(v_TelevisionState==session_opened)  
+	   {
+	     var universal charstring v_isTurnedOn := "false"	
+	     if(v_TelevisionSettings.isTurnedOn == true)  	  	    
+	       {v_isTurnedOn := "true"}
+
+	     var universal charstring v_modeSetting := "television";
+	     if(v_TelevisionSettings.tV_Mode == teletext) {v_modeSetting := "teletext"};
+	     if(v_TelevisionSettings.tV_Mode == video) {v_modeSetting := "video"};
+
+	     var universal charstring v_languageSetting := "English";
+	     if(v_TelevisionSettings.tV_Language == German) {v_languageSetting := "German"};
+	     if(v_TelevisionSettings.tV_Language == French) {v_languageSetting := "French"};	     
+	     if(v_TelevisionSettings.tV_Language == Russian) {v_languageSetting := "Russian"};
+
+	     var universal charstring v_isMuted := "false"	
+	     if(v_TelevisionSettings.isMuted == true)  	  	    
+	       {v_isMuted := "true"}	     
+
+
+	     Comm_PCO.send(ts_Iq_result_response_getCompleteStatus(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,
+	           v_isTurnedOn,
+		   "television",
+	           int2str(v_TelevisionSettings.channel),
+		   int2str(v_TelevisionSettings.volume),
+		   int2str(v_TelevisionSettings.contrast),
+		   v_modeSetting,
+		   v_languageSetting,
+		   v_isMuted		   
+		   ));
+          }
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"));}
+
+          repeat;
+        }     
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getChannelSetting")) -> value vl_compcIq 
+        {  
+
+	   if(v_TelevisionState==session_opened)  
+	   {	          
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"channelSetting",
+		 int2str(v_TelevisionSettings.channel)))		 
+          }
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"));}
+
+          repeat;
+        }     
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getVolumeSetting")) -> value vl_compcIq 
+        {     
+	   if(v_TelevisionState==session_opened)  
+	   {
+
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"volumeSetting",
+		 int2str(v_TelevisionSettings.volume)))
+          }
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}		 
+
+          repeat;
+        }  
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getContrastSetting")) -> value vl_compcIq 
+        {     
+	   if(v_TelevisionState==session_opened)  
+	   {
+
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"contrastSetting",
+		 int2str(v_TelevisionSettings.contrast)))
+          }
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}			 
+
+          repeat;
+        }  	
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getModeSetting")) -> value vl_compcIq 
+        { 
+	   if(v_TelevisionState==session_opened)  
+	   {	
+
+             var universal charstring v_modeSetting := "television";
+	     if(v_TelevisionSettings.tV_Mode == teletext) {v_modeSetting := "teletext"};
+	     if(v_TelevisionSettings.tV_Mode == video) {v_modeSetting := "video"};
+
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"modeSetting",
+		 v_modeSetting))
+	  }	 
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}			 
+
+          repeat;
+        } 
+
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getMuteSetting")) -> value vl_compcIq 
+        { 
+	   if(v_TelevisionState==session_opened)  
+	   {	
+
+             var universal charstring v_muteSetting := "true";	     
+	     if(v_TelevisionSettings.muteSetting == false) {v_muteSetting := "false"};
+
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"muteSetting",
+		 v_muteSetting))
+	  }	 
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}			 
+
+          repeat;
+        } 
+
+      []InComm_PCO.receive(tr_CompIq_request_status2("television","getLanguageSetting")) -> value vl_compcIq 
+        { 
+	   if(v_TelevisionState==session_opened)  
+	   {	
+
+             var universal charstring v_languageSetting := "English";	     
+	     if(v_TelevisionSettings.tV_Language == German) {v_languageSetting := "German"};
+	     if(v_TelevisionSettings.tV_Language == French) {v_languageSetting := "French"};
+	     if(v_TelevisionSettings.tV_Language == Russian) {v_languageSetting := "Russian"};	     	     
+
+             Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	        vl_compcIq.elem.harness_request.session,
+		"television",
+		"languageSetting",
+		 v_languageSetting))
+	  }	 
+	  else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}			 
+
+          repeat;
+        } 
+
+     []InComm_PCO.receive(tr_CompIq_open_session2("television","http://Example.org/ttcn/titan_television")) -> value vl_compcIq 
+        { log("4 OPEN SESSION***********************")
+          if(v_TelevisionState==active) {
+
+            Comm_PCO.send(ts_Iq_result_open_session3(vl_compcIq.id,vl_compcIq.from_, tsp_sessionId));
+	    v_TelevisionState := session_opened;
+	  }  
+          else if(v_TelevisionState==inactive) {
+              Comm_PCO.send(ts_Iq_error2("television",vl_compcIq.id,vl_compcIq.from_,"","Television not active")); }
+
+	  else{Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}    
+
+         repeat;
+        } 
+
+
+     []InComm_PCO.receive(tr_CompIq_open_session2("television","http://Example.org/ttcn/titan_television_position")) -> value vl_compcIq 
+        { 
+          if(v_TelevisionState==active) {
+
+            Comm_PCO.send(ts_Iq_result_open_session3(vl_compcIq.id,vl_compcIq.from_, tsp_sessionId));
+	    v_TelevisionState := session_opened;
+	  }  
+          else if(v_TelevisionState==inactive) {
+              Comm_PCO.send(ts_Iq_error2("television",vl_compcIq.id,vl_compcIq.from_,"","Television not active")); }
+
+	  else{Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}    
+
+         repeat;
+        } 
+
+
+
+
+
+
+
+      []InComm_PCO.receive(tr_CompIq_close_session_final2("television")) //-> value vl_rcvdASP_TCP 
+
+        { //backdoor
+
+/*
+          
+          
+<iq type='set' to='television@esekilxxen1846.rnd.ericsson.se/1' id='close1'> 
+<close xmlns='http://ntaforum.org/2011/harness' session='lifecycle'/> 
+</iq> 
+
+          
+*/
+
+
+
+          log(" BACKDOOR Shutting down***********************");v_run:=false;
+        }   
+
+     []InComm_PCO.receive(tr_CompIq_close_session2("television")) -> value vl_compcIq 
+
+        {  
+	  log("15 CLOSE SESSION***********************")
+          if(v_TelevisionState==session_opened) {
+             v_TelevisionState:= active;
+	     Comm_PCO.send(ts_Iq_result_close_session2( vl_compcIq.id,vl_compcIq.from_)); 
+
+	    if(TchannelAssign.running)
+	    {
+	       TchannelAssign.stop;    
+	    };  
+
+	  }
+
+          else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}
+
+          repeat;
+        }
+
+     []InComm_PCO.receive(tr_Iq_request2("television","turnOn")) -> value vl_compcIq 
+        {  log("6 TURN ON***********************")
+
+          if(v_TelevisionState==session_opened) {
+	        v_TelevisionSettings.isTurnedOn := true;
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+            }          
+          else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }    
+
+          repeat;
+        }   
+
+     []InComm_PCO.receive(tr_Iq_request2("television","turnOff")) -> value vl_compcIq 
+        { 
+          log("7 TURN OFF***********************")
+          if(v_TelevisionState==session_opened) {
+	        v_TelevisionSettings.isTurnedOn := false;
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+	    if(TchannelAssign.running)
+	    {
+	       TchannelAssign.stop;    
+	    };       
+          }          
+          else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}    
+
+          repeat;
+        }   
+     []InComm_PCO.receive(tr_Iq_request_param2("television","setChannel","channel")) -> value vl_compcIq 
+        {
+          log("8 SET CHANNEL ***********************") 
+          if(v_TelevisionState==session_opened) {
+
+	        if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 2)
+	        {
+	          v_TelevisionSettings.channel := 
+		  10 * unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[0]) 
+		  + unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[1]);
+		}
+		else if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 1) 
+		{
+		  v_TelevisionSettings.channel := unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base);
+		}	  
+
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+            }          
+          else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }    
+
+         repeat;
+        }       
+     []InComm_PCO.receive(tr_Iq_request_param2("television","setVolume","volume")) -> value vl_compcIq 
+        { 
+          log("9 SET VOLUME***********************")
+          if(v_TelevisionState==session_opened) {
+
+	        if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 2)
+	        {
+	          v_TelevisionSettings.volume := 
+		  10 * unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[0]) 
+		  + unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[1]);
+		}
+		else if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 1) 
+		{
+		  v_TelevisionSettings.volume := unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base);
+		}
+
+	       v_TelevisionSettings.isMuted := false;  // turn off mute 
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+            }          
+          else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }    
+
+          repeat;
+        }        
+     []InComm_PCO.receive(tr_Iq_request_param2("television","setContrast","contrast")) -> value vl_compcIq 
+        { log("10 SET CONTRAST***********************")  
+
+          if(v_TelevisionState==session_opened) {
+
+	        if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 2)
+	        {
+	          v_TelevisionSettings.contrast := 
+		  10 * unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[0]) 
+		  + unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base[1]);
+		}
+		else if(lengthof(vl_compcIq.elem.harness_request.parameter_list[0].base) == 1) 
+		{
+		  v_TelevisionSettings.contrast := unichar2int( vl_compcIq.elem.harness_request.parameter_list[0].base);
+		}	  
+
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+            }          
+          else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }    
+
+          repeat;
+        }    
+     []InComm_PCO.receive(tr_Iq_request_param2("television","setMode","mode")) -> value vl_compcIq 
+        { 
+          log("11 SET MODE***********************")
+          if(v_TelevisionState==session_opened) {
+
+	        if(vl_compcIq.elem.harness_request.parameter_list[0].base == "television")
+		{v_TelevisionSettings.tV_Mode := television
+		 Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+		}
+		else if(vl_compcIq.elem.harness_request.parameter_list[0].base == "video")
+		{v_TelevisionSettings.tV_Mode := video
+		 Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+		}
+		else if(vl_compcIq.elem.harness_request.parameter_list[0].base == "teletext")
+		{v_TelevisionSettings.tV_Mode := teletext
+		 Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));
+		}
+	        else{/* ??????????????? */ }
+
+            }          
+          else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))  }    
+
+           repeat;
+        }      
+
+
+     []InComm_PCO.receive(tr_Iq_request2("television","startOrContinueManualTuning")) -> value vl_compcIq 
+        { 
+
+          if(v_TelevisionState==session_opened) {
+
+	     if(TchannelAssign.running) // received another "startOrContinueManualTuning" instead of "assignNumberToTunedChannel"
+	     {
+	       TchannelAssign.stop;
+	     }
+
+               // PENDING TODO
+
+               Comm_PCO.send(ts_Iq_result_response_getSetting(vl_compcIq.id,vl_compcIq.from_,
+	           vl_compcIq.elem.harness_request.session,
+		   "television",
+		   "isTuned",		 
+		    v_ChannelList[v_channelSearchIndex-1].channel_name ))
+
+	        TchannelAssign.start;						 		 		              
+            } 
+
+          else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))  }    
+
+          repeat;
+        }   
+
+
+     []InComm_PCO.receive(tr_Iq_request_param2("television","assignNumberToTunedChannel","channel")) -> value vl_compcIq
+         {
+
+          if(v_TelevisionState==session_opened) {
+
+	       if(TchannelAssign.running)
+	       {
+	         TchannelAssign.stop;
+
+	        // store received channel number with previously returned channel name
+	        v_ChannelList[v_channelSearchIndex-1].channel_number := 
+	        unichar2int(vl_compcIq.elem.harness_request.parameter_list[0].base);
+
+                // increment index which points to next channel in v_ChannelList		
+	        if (v_channelSearchIndex	!= sizeof(v_ChannelList))
+                   { v_channelSearchIndex := v_channelSearchIndex + 1 }
+	        else	  
+                   { v_channelSearchIndex := 1}
+
+	        // send result
+	        Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));   	      
+	      }
+
+	    else { /* ??????????????? */ }  // not received "assignNumberToTunedChannel" within TchannelAssign seconds after "startOrContinueManualTuning"  
+
+	  } 
+	  else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))}                 
+        }
+
+     [] TchannelAssign.timeout   // no assignNumberToTunedChannel received in time, channel not tuned
+        {
+           /* ??????????????? */  
+
+        }
+
+     []InComm_PCO.receive(tr_Iq_request2("television","startAutomaticTuning")) -> value vl_compcIq 
+        { 
+	  log("13 START AUTOMATIC TUNING***********************")
+          if(v_TelevisionState==session_opened) {
+
+	     if(TchannelAssign.running) // received "startAutomaticTuning" after "startOrContinueManualTuning" 
+	     {
+	       TchannelAssign.stop;
+	     }
+
+	    // automatically assign channel numbers to all channels  (starting with 1 and increasing)
+	    for(var integer index:= 0; index < sizeof(v_ChannelList); index := index + 1)
+	    {
+	       v_ChannelList[index].channel_number := index + 1;   	      
+            } 
+            Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session)); 
+	 } 
+	 else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }   
+	 
+	 repeat;    
+    
+       }
+          
+     []InComm_PCO.receive(tr_Iq_request2("television","setMute")) -> value vl_compcIq 
+        { 
+	  log("14 SET MUTE ***********************")
+          if(v_TelevisionState==session_opened) {
+	       
+	       if(not(v_TelevisionSettings.isMuted))
+	       {	  
+	       	  v_TelevisionSettings.isMuted := true;
+	       }	
+	       else
+	       {
+	          v_TelevisionSettings.isMuted := false;	
+	       }							
+               Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session)); 
+	    }          
+          else {Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open"))  }    
+	        	    
+          repeat;
+        }         
+     []InComm_PCO.receive(tr_Iq_request_param2("television","setDisplayLanguage","language")) -> value vl_compcIq 
+        { 
+          log("12 SET LANGUAGE ***********************") 
+          if(v_TelevisionState==session_opened) {
+	  
+               if (vl_compcIq.elem.harness_request.parameter_list[0].base == "English")
+	       {v_TelevisionSettings.tV_Language := English;
+                Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));	       
+	       }
+	       
+               else if (vl_compcIq.elem.harness_request.parameter_list[0].base == "German")
+	       {v_TelevisionSettings.tV_Language := German;
+                Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));	       
+	       }
+	       
+               else if (vl_compcIq.elem.harness_request.parameter_list[0].base == "French")
+	       {v_TelevisionSettings.tV_Language := French;
+                Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));	       
+	       }
+	       
+               else if (vl_compcIq.elem.harness_request.parameter_list[0].base == "Russian")
+	       {v_TelevisionSettings.tV_Language := Russian;
+                Comm_PCO.send(ts_Iq_immediate_response(vl_compcIq.id,vl_compcIq.from_, vl_compcIq.elem.harness_request.session));	       
+	       }
+   		
+               else { /* ??????????????? */ } // unsupported language requested  
+            }          
+          else { Comm_PCO.send(ts_Iq_error2("television", vl_compcIq.id,vl_compcIq.from_,"","Television harness session not open")) }    
+	        	    
+          repeat;
+        }  
+	       
+      []InComm_PCO.receive(jabber_client.Presence:?) -> value vl_compcPresence 
+
+        { 
+          log("received  client Presence:<<<<<<<<<<<<<.>>>>>>>>>>>>>>>:",vl_compcPresence);
+          repeat;
+        }       
+/*	
+      []InComm_PCO.receive(tr_CompIq_ClientPing2("television")) -> value vl_compcIq 
+
+        { 
+          Comm_PCO.send(ts_Iq_result_ping_c2(vl_compcIq.id,vl_compcIq.from_,"television"));
+          repeat;
+        }
+*/         
+      
+     }; //endalt
+
+
+  }//endwhile    
+    
+
+
+ 
+  f_ProviderSendReceiveIq(valueof(ts_Iq_retract_tool_info("television")));
+  
+  f_ProviderSendReceiveIq(valueof(ts_Iq_remove_leaf_node("television")));
+ 
+  if(tsp_create_root_coll_node) {
+    f_ProviderSendReceiveIq(valueof(t_Iq_delete_root_collection_node));
+  }
+
+
+
+  Ctl_PCO.send("halt");
+
+  alt {
+    []Ctl_PCO.receive("halt ack")  {}
+ }
+
+  deactivate(v_provDefault); 
+  Twait.start(4.0);
+  Twait.timeout ;
+
+
+
+}
+
+function f_Preamble_Requestor() runs on Requestor_CT 
+{
+
+  var CompositeClientIq v_CompositeClientIq;
+
+  v_reqDefault:=activate(as_defaultRequestorBehaviour()); 
+  
+   alt {
+
+    []Ctl_PCO.receive("go")    {};
+    []InComm_PCO.receive(jabber_client.Presence:?)    {repeat};
+
+  }
+
+
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_service_support_info)));
+
+
+  Comm_PCO.send(t_Iq_get_service_support_info)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_service_support_info_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)  -> value v_CompositeClientIq  { 
+
+        Twait.stop;
+
+        log (match(v_CompositeClientIq,tr_Iq_get_service_support_info_response))  
+      };
+
+  }
+
+
+
+
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_node_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_ntaf_node_info)));
+
+
+  Comm_PCO.send(t_Iq_get_ntaf_node_info)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_ntaf_node_info_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_list_of_child_nodes_from_collection_node_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_getNodeConfig)));
+
+  Comm_PCO.send(t_Iq_getNodeConfig)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_create_leaf_node_requestor)));
+
+
+
+  Comm_PCO.send(t_Iq_create_leaf_node_requestor)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_result)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+
+    //  []InComm_PCO.receive(tr_Iq_get_nodes_response_1)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_list_of_child_nodes_from_collection_node_response_1)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_tool_registry2("television"))));
+
+  Comm_PCO.send(t_Iq_fetch_tool_registry2("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_tool_registry_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_subscriptions)));
+
+  Comm_PCO.send(t_Iq_get_subscriptions)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_subscriptions_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+}
+
+
+function f_Postamble_Requestor() runs on Requestor_CT 
+{ 
+  var CompositeClientIq  v_CompositeClientIq
+
+  alt {
+
+
+    []Ctl_PCO.receive("halt")    {log("halt received in requestor, terminating")};
+
+
+/*
+    []InComm_PCO.receive(tr_CompIq_ClientPing) -> value v_CompositeClientIq
+
+      {
+
+        Comm_PCO.send(ts_Iq_result_ping_c(v_CompositeClientIq.id,v_CompositeClientIq.from_));
+        repeat;
+
+      };
+*/
+
+  }//endalt
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_subscriptions)));
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_retract_tool_info_toaster)));
+
+  Comm_PCO.send(t_Iq_get_subscriptions)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_remove_leaf_node_requestor)));
+
+  Comm_PCO.send(t_Iq_remove_leaf_node_requestor)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  //     f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cPresence(valueof(t_Presence_unavail)));
+
+
+  Comm_PCO.send(t_Presence_unavail)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(jabber_client.Presence:?)    {Twait.stop};
+
+  }
+
+   deactivate(v_reqDefault);  
+  
+   Ctl_PCO.send("halt ack")
+}
+
+
+//===============================================================    
+function  f_TelevisionRequestorBehaviour() runs on Requestor_CT
+//===============================================================  
+
+{
+
+  // var CompositeServerIq  v_CompositeServerIq
+  var CompositeClientIq  v_CompositeClientIq  
+
+
+  f_Preamble_Requestor()
+ 
+  Twait.start(4.0);  Twait.timeout ;
+
+
+  //   ETHEKR
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_disco_info_toaster)));
+
+  log("1 DISCO INFO ***********************")
+  Comm_PCO.send(ts_Iq_disco_info("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_disco_info_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_query_harness_toaster)));
+
+
+  log("2 QUERY HARNESS ***********************")
+  Comm_PCO.send(ts_Iq_query_harness("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_query_harness_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_activate_always_on_tool2("television"))));
+
+  log("3 ACTIVATE***********************")
+  Comm_PCO.send(ts_Iq_activate_always_on_tool2("television"))
+  
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_activate_always_on_tool_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_open_session)));
+
+  log("4 OPEN SESSION***********************")
+  Comm_PCO.send(ts_Iq_open_session2("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_open_session_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  Twait.start(2.0);  Twait.timeout ;
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_status_toaster)));
+
+  log("5 GET COMPLETE STATUS***********************")
+  Comm_PCO.send(ts_Iq_request_status2("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_request_status_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_set_toast)));
+
+  log("6 TURN ON***********************")
+  Comm_PCO.send(ts_Iq_request_turnOn_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_set_toast)));
+
+  log("7 TURN OFF***********************")
+  Comm_PCO.send(ts_Iq_request_turnOff_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+  Twait.start(2.0);   Twait.timeout ;
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_set_toast_1)));
+
+
+  log("8 SET CHANNEL ***********************")
+  Comm_PCO.send(ts_Iq_request_setChannel_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+  log("9 SET VOLUME***********************")
+  Comm_PCO.send(ts_Iq_request_setVolume_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+  log("10 SET CONTRAST***********************")  
+  Comm_PCO.send(ts_Iq_request_setContrast_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+  log("11 SET MODE***********************")
+  Comm_PCO.send(ts_Iq_request_setMode_video)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+  Twait.start(2.0);   Twait.timeout ; 
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cMessage(valueof(ts_Message_cancel_request_set_toast_1)));
+
+log("12 SET LANGUAGE ***********************")
+  Comm_PCO.send(ts_Iq_request_setLanguage_television)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+  log("13 START AUTOMATIC TUNING***********************")
+  Comm_PCO.send(ts_Iq_request_startAutomaticTuning)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+  log("14 SET MUTE***********************")
+  Comm_PCO.send(ts_Iq_request_setMute)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+  Twait.start(4.0); 
+
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_delayed_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientMessage:?)    {Twait.stop};
+
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_close_session)));
+
+
+  log("15 CLOSE SESSION***********************")
+  Comm_PCO.send(ts_Iq_close_session2("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_deactivate_always_on_tool)));
+
+
+  log("16 DEACTIVATE***********************")
+  Comm_PCO.send(ts_Iq_deactivate_always_on_tool2("television"))
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_deactivate_always_on_tool_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+ 
+ 
+ f_Postamble_Requestor()
+
+}//endfunction
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////
+//
+//
+//    Start television state machine in Provider
+//    Requestor performs 16 actions and waits for results    
+//
+////////////////////////////////////////////////////////////////////////////
+testcase  tc_Television() runs on MTC_CT
+{
+  ConfigurationBuild();
+
+
+    if(tsp_provider) {  
+
+    v_ProviderMapping_CT.start(f_ScanClientPorts(tsp_AuthType_provider,"television","television",tsp_localPortProvider));
+    alt { 
+      []Ctlpm_PCO.receive("ready")    {
+
+        v_TranslatorP_CT.start(f_ScanTranslatorPorts());
+        v_Provider_CT.start(f_TelevisionProviderBehaviour());
+      };   
+
+      []Ctlpm_PCO.receive("abort")    {
+
+          {  
+            log("Provider component could not be started");
+          };   
+        }
+    }//endalt
+  } 
+  
+  
+  //---------------------------------------------------------------------------------------------
+  
+  if(tsp_requestor) {
+
+    v_RequestorMapping_CT.start(f_ScanClientPorts(tsp_AuthType_requestor,"titan0","titan0",tsp_localPortRequestor));
+
+
+    alt { 
+      []Ctlrm_PCO.receive("ready")    {
+
+          v_TranslatorR_CT.start(f_ScanTranslatorPorts());
+          v_Requestor_CT.start(f_TelevisionRequestorBehaviour());
+
+
+        };   
+      []Ctlrm_PCO.receive("abort")    {
+
+          {   
+            log("Requestor component could not be started");
+          };   
+
+        }
+    }//endalt
+
+  }//endif  
+  
+ 
+  
+  if(tsp_provider)  {
+    alt {
+      []Ctlp_PCO.receive("go")    { if(tsp_requestor) {   Ctlr_PCO.send("go")    }};
+    }//endalt
+  }
+  if(tsp_server) {
+    alt {
+
+      []Ctls_PCO.receive("go")    { if(tsp_requestor) {   Ctlr_PCO.send("go")    }};
+    }//endalt
+  }    
+  
+ //---------------------------------------------------------------------------------------------
+
+  if(tsp_provider) {
+
+    alt {
+
+      []Ctlp_PCO.receive("halt")    
+        {   
+
+
+
+          if(tsp_requestor) {
+
+            Ctlr_PCO.send("halt");
+            alt {
+              []Ctlr_PCO.receive("halt ack") {
+                  Ctlrt_PCO.send("halt");
+                  Ctlrm_PCO.send("halt");
+                }
+
+            }//endalt 
+          }//endif
+          Ctlp_PCO.send("halt ack"); 
+          Ctlpt_PCO.send("halt");
+          Ctlpm_PCO.send("halt");
+
+          if(tsp_server) {  
+            Ctlst_PCO.send("halt");
+            Ctlsm_PCO.send("halt");
+          }
+
+        };
+
+    }//endalt
+
+  }  
+  //---------------------------------------------------------------------------------------------  
+  
+
+  all component.done;
+
+  ConfigurationKill();
+}
+
+}

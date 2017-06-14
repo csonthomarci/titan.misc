@@ -1,0 +1,4098 @@
+/******************************************************************************
+* Copyright (c) 2004, 2017  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Elemer Lelik - initial implementation
+*   Endre Kulcsar
+*   Eszter Susanszky
+******************************************************************************/
+//
+//  File:               NTAF_common.ttcn
+//  Description:        NTAF Conformance Test Suite 
+//  Rev:                 
+//  Prodnr:              
+//  Updated:            2013-09-10
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module:  
+//
+//  Purpose:
+//     
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/*
+f_calculateMD5  missing -->  f_calculate_response   --> f_NTAF_Client_SASL_AUTH_DIGEST_MD5_login  not working
+
+
+*/
+
+
+
+module NTAF_common {
+
+
+modulepar {
+
+
+  boolean tsp_debug:=false;
+  boolean tsp_create_root_coll_node:=false;
+  boolean tsp_server:=false;
+  boolean tsp_requestor:=false;
+  boolean tsp_provider:=false;
+  boolean tsp_tc_Toaster:=false;
+
+  AuthType  tsp_AuthType_requestor:=Non_SASL;
+  AuthType  tsp_AuthType_provider:=Non_SASL;
+
+  charstring tsp_destIPAddrServer;
+  integer tsp_destPortServer;
+
+  integer tsp_localPortProvider:=-1;  
+  integer tsp_localPortRequestor:=25000;
+
+  integer tsp_ServerListenerPort:=5222;
+
+}
+
+import from NTAF_templates                                              all;
+
+import from IPL4asp_Types                                               all;
+import from IPL4asp_PortType                                            all;
+
+
+//import from TCCConversion_Functions                                    all;
+
+//import from  TCCOpenSecurity_Functions 	                all;
+import from  TCCEncoding_Functions 	                all; 
+
+import from http_ntaforum_org_2011_harness 		all;
+import from http_ntaforum_org_2011_registry 		all;
+import from http_ntaforum_org_2011_activation 		all;
+
+import from http_jabber_org_protocol_pubsub 		all;
+import from http_jabber_org_protocol_pubsub_errors 	all;
+import from http_jabber_org_protocol_pubsub_event 	all;
+import from http_jabber_org_protocol_pubsub_owner 	all;
+import from http_etherx_jabber_org_streams              all;
+import from http_jabber_org_protocol_disco_items 	all; 
+import from http_jabber_org_protocol_disco_info 	all;
+
+
+
+//import from jabber_server 				all;
+import from jabber_client 				all;
+import from jabber_x_data 				all;
+import from jabber_iq_auth                       	all;
+
+
+import from urn_ietf_params_xml_ns_xmpp_stanzas 	all;
+import from urn_ietf_params_xml_ns_xmpp_bind           	all;
+import from urn_ietf_params_xml_ns_xmpp_sasl            all;
+import from urn_ietf_params_xml_ns_xmpp_tls             all;
+
+
+
+
+import from XSD                             	        all;
+
+import from http_www_w3_org_XML_1998_namespace          all;
+
+import from NTAF_Auth 					all;
+
+//-----------------------------------------------------------------------------
+//External functions
+//-----------------------------------------------------------------------------
+
+external function f_calc_XML_length(  in octetstring data,   in octetstring string_header_name) return integer;
+
+
+
+/*
+
+template  ASP_RecvFrom t_ASP_RecvFrom:= {
+  connId :=  ?,
+  remName := ?,
+  remPort := ?,
+  locName := ?,
+  locPort := ?,
+  proto := {
+    tcp := { }
+  },
+  userData := 0,
+  msg := '15030100020250'O
+}
+
+
+
+*/
+template ASP_Event t_ASP_Event:={
+  connOpened := {
+    connId := ?,
+    remName := ?,
+    remPort := ?,
+    locName := ?,
+    locPort := ?,
+    proto := {
+      tcp := { }
+    },
+    userData := 0
+  }
+}
+//-----------------------------------------------------------------------------
+function f_enc_saslResponse (in charstring p_resp) return octetstring
+//-----------------------------------------------------------------------------
+{//a Titan csak prefixxel hajlando kodolni a response-t
+
+  var charstring vl_resp;
+  vl_resp:="<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"&p_resp&"</response>"
+  return  char2oct(vl_resp);
+} 
+
+
+//-----------------------------------------------------------------------------
+function f_strip_quotes (in charstring p_string) return charstring
+//-----------------------------------------------------------------------------
+{
+
+  var octetstring v_os:=char2oct(p_string);
+
+  v_os:=substr(v_os,1,lengthof(v_os)-2);
+
+  return oct2char(v_os);
+
+} 
+
+//-----------------------------------------------------------------------------
+function f_add_quotes (in charstring p_string) return charstring
+//-----------------------------------------------------------------------------
+{
+  var octetstring v_os:=char2oct(p_string);
+
+  v_os:='22'O&v_os&'22'O;
+
+  return oct2char(v_os);
+
+
+
+} 
+
+//-----------------------------------------------------------------------------
+function f_find_firstEmpty() runs on ServerMapping_CT return integer
+//-----------------------------------------------------------------------------
+{
+
+
+  for (var integer i:=0;i<10;i:=i+1)
+  {
+    if (v_RoutingTable[i].dest=="")   
+    {
+      return i;                                
+    }
+
+
+  }
+
+  return -1;
+
+}                          
+//-----------------------------------------------------------------------------
+function f_write_routingTable (in charstring p_string, in integer p_id) runs on ServerMapping_CT
+//-----------------------------------------------------------------------------
+{
+  var boolean flag:=false;
+
+  for (var integer i:=0;i<sizeof(v_RoutingTable);i:=i+1)
+
+  {
+
+    if(v_RoutingTable[i].dest==p_string){flag:=true;v_RoutingTable[i].routeId:=p_id;}
+
+  }//endfor 
+
+
+
+
+} 
+
+//-----------------------------------------------------------------------------
+function f_read_routingTable (in universal charstring p_string)  runs on ServerMapping_CT return integer
+//-----------------------------------------------------------------------------
+{
+
+
+  for (var integer i:=0;i<sizeof(v_RoutingTable);i:=i+1)
+
+  {
+
+    if(v_RoutingTable[i].dest==p_string){return v_RoutingTable[i].routeId}
+
+  }//endfor 
+
+
+  return 0;
+
+} 
+/*
+//-----------------------------------------------------------------------------
+function f_calculate_response (in charstring p_username,in charstring p_realm, in charstring p_password,in charstring p_nonce,in charstring p_cnonce,
+  in charstring p_authzid,in charstring p_digest_uri,in charstring p_nc,in charstring p_qop) return charstring
+//-----------------------------------------------------------------------------
+//http://wiki.xmpp.org/web/SASLandDIGEST-MD5
+//http://www.ietf.org/rfc/rfc2831.txt
+
+{//startfunction
+
+
+  var charstring string_X, string_Y, string_A1, string_A2,string_HA1,string_HA2,string_KD,string_Z,v_str;
+
+
+  string_X:=p_username&":"&p_realm&":"&p_password;
+  string_Y:=f_calculateMD5(string_X);
+  f_TCCSecurity_hex2char(string_Y, v_str)
+  string_Y:=v_str; 
+  if (p_authzid=="")
+  {
+    string_A1:=string_Y&":"&p_nonce&":"&p_cnonce
+  }
+  else   
+  { 
+    string_A1:=string_Y&":"&p_nonce&":"&p_cnonce&":"&p_authzid;
+  }
+  string_A2:="AUTHENTICATE:"&p_digest_uri;
+  string_HA1:=f_calculateMD5(string_A1);
+  string_HA2:=f_calculateMD5(string_A2);
+  string_KD:=string_HA1&":"&p_nonce&":"&p_nc&":"&p_cnonce&":"&p_qop&":"&string_HA2;
+  string_Z:=f_calculateMD5(string_KD)
+
+
+
+  return string_Z
+
+}//endfunction
+
+*/
+
+//*************************************************************************
+function f_mapFileDeclaration2RequestFile(  in  Query_harness p_harness, in integer p_index) return Request.file_list
+//*************************************************************************
+
+{   
+  //p_harness.actionDecl_list[p_index].file_list[i]
+
+  var Request.file_list v_req
+
+    if(p_harness.actionDecl_list[p_index].file_list=={}) 
+  {
+    v_req:={}; 
+    log("v_req",v_req);return v_req;   
+  }
+
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].file_list); i := i+1)
+  {
+    v_req[i].name:="";
+    v_req[i].filename:="";
+  }
+
+
+  log("v_req init",v_req)
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].file_list); i := i+1)
+  {
+
+    if (ispresent(p_harness.actionDecl_list[p_index].file_list[i].name))
+    {
+      v_req[i].name:=p_harness.actionDecl_list[p_index].file_list[i].name;
+    }
+    else 
+    {
+      v_req[i].name:="";  
+    }
+
+
+
+    //.....................................................to be completed!!!
+
+  }//endfor
+
+
+  log("v_req",v_req);return v_req;               
+}//endfunction
+
+
+//*************************************************************************
+function f_mapXmlParameterDeclaration2RequestXmlParameter(  in  Query_harness p_harness, in integer p_index) return Request.xmlParameter_list
+//*************************************************************************
+
+{   
+  //p_harness.actionDecl_list[p_index].xmlParameter_list[i]
+
+  var Request.xmlParameter_list v_req
+
+    if(p_harness.actionDecl_list[p_index].xmlParameter_list=={}) 
+  {
+    v_req:={}; 
+    log("v_req",v_req);return v_req;   
+  }
+
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].xmlParameter_list); i := i+1)
+  {
+    v_req[i].name:="";
+    v_req[i].elem:="";
+  }
+
+
+  log("v_req init",v_req)
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].xmlParameter_list); i := i+1)
+  {
+
+    if (ispresent(p_harness.actionDecl_list[p_index].xmlParameter_list[i].name))
+    {
+      v_req[i].name:=p_harness.actionDecl_list[p_index].xmlParameter_list[i].name;
+    }
+    else 
+    {
+      v_req[i].name:="";  
+    }
+
+
+    //xml cannot be inferred here, it has to be imported e.g. as a tsp    
+    //.....................................................to be completed!!!
+
+  }//endfor
+
+
+  log("v_req",v_req);return v_req;               
+}//endfunction
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+function f_ScanServerPorts()   runs on ServerMapping_CT 
+//-----------------------------------------------------------------------------
+
+{//startfunction
+
+  var charstring vl_char,vl_char0;
+  var ASP_Send                  vl_ASP_TCP;
+  var ASP_RecvFrom              vl_rcvdASP_TCP;
+  var ASP_Event                 vl_rcvdASP_Event;
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+
+
+
+  var jabber_iq_auth.Query v_Query;
+  var Stream vl_Stream; 
+  var integer vl_client_id, index;
+  var charstring v_username,v_password,v_resource,v_id,v_version;
+  var boolean flag;
+
+
+
+  v_UserTable[0].username:="toaster";
+  v_UserTable[0].password:="toaster";
+  v_UserTable[0].resource:="";
+
+  v_UserTable[1].username:="titan0";
+  v_UserTable[1].password:="titan0";
+  v_UserTable[1].resource:="";
+
+  v_RoutingTable[0].dest:="pubsub"&tsp_fqdn;
+  v_RoutingTable[0].routeId:=0;
+  for (var integer i:=1;i<10;i:=i+1)
+  {
+    v_RoutingTable[i].dest:="";
+    v_RoutingTable[i].routeId:=0;
+
+
+
+  }
+
+
+
+
+
+  vl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+  vl_result :=f_IPL4_listen(
+    TCP_PCO,
+    "",
+    tsp_ServerListenerPort,
+    {tcp:={}},
+    {}
+
+  )
+
+
+
+  log(vl_result)
+
+
+  if (ispresent(vl_result.connId))
+  {
+    Ctl_PCO.send("ready"); 
+  }
+  if (not(ispresent(vl_result.connId)))
+  {
+    log("Server could not connect to listener port");
+    Ctl_PCO.send("abort");
+    //stop;
+  } 
+
+
+
+
+
+
+  v_run := true;
+  vl_char:="";
+  vl_char0:="";
+
+  while (v_run)
+  {//startwhile
+    alt
+    {//startalt0
+
+
+
+      []TCP_PCO.receive(t_ASP_Event) -> value vl_rcvdASP_Event;//connection opened by a client
+      {//startStatementBlock
+        vl_client_id:=vl_rcvdASP_Event.connOpened.connId;
+
+
+        var f_IPL4_getMsgLen getMsg_Func := refers(f_GetMsgLengthNTAF);
+        f_IPL4_setGetMsgLen(TCP_PCO,vl_client_id, getMsg_Func, {});
+
+
+        alt 
+        {//startalt1
+
+          []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+
+          {//statstatement1
+            vl_char:=oct2char(vl_rcvdASP_TCP.msg);
+            log("Received: >>>>>>",vl_char);
+
+            vl_Stream:=dec_Stream(vl_rcvdASP_TCP.msg);
+
+
+            log("vl_Stream: >>>>>>",vl_Stream);
+
+            if (vl_Stream.version==omit)//  if(match(vl_char,t_RegExpStartStreamv0))
+            {//startif1   
+
+
+              log("Non-SASL authentication initiated :",vl_char);
+
+              vl_char0:="<?xml version='1.0' encoding='UTF-8'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' from="&tsp_fqdn&" id='non_sasl_auth1' xml:lang='en'>"
+
+
+              vl_ASP_TCP.connId:=vl_client_id;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=char2oct(vl_char0);
+
+
+              TCP_PCO.send(vl_ASP_TCP)   
+
+
+              alt {//startalt2
+                []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+                {//startstatement2
+
+                  //  vl_char:=oct2char(vl_rcvdASP_TCP.msg);
+
+                  vl_cIq:=dec_cIq(vl_rcvdASP_TCP.msg);
+                  //  log("match!!!!",match(vl_char,t_RegExpNonSASLAuth1));
+
+                  if(true)         //  if(match(vl_char,t_RegExpNonSASLAuth1))
+                  { //startif2  
+
+
+
+                    v_Query:=dec_Query(char2oct(unichar2char(vl_cIq.elem)));
+                    v_username:=unichar2char(v_Query.username);
+                    v_id:=unichar2char(vl_cIq.id);
+
+                    log("v_username",v_username)
+
+                    //check if username exists
+                    flag:=false;
+                    for (var integer i:=0;i<sizeof(v_UserTable);i:=i+1)
+                    {
+                      if (v_username==v_UserTable[i].username) {flag:=true;}
+
+
+                    }
+                    if (flag==false) {log("username not found");}
+
+                    vl_char0:= "<iq type=\"result\" id=\""&v_id&"\"><query xmlns='jabber:iq:auth'><username>"&v_username&"</username><password/><digest/><resource/></query></iq>"
+
+
+                    vl_ASP_TCP.connId:=vl_client_id;
+                    vl_ASP_TCP.proto := {tcp:={}};        
+                    vl_ASP_TCP.msg:=char2oct(vl_char0);
+
+
+                    TCP_PCO.send(vl_ASP_TCP) ;
+
+                    alt {
+                      []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+
+                      {
+
+                        //  vl_char:=oct2char(vl_rcvdASP_TCP.msg);
+                        //  log("match!!!!",match(vl_char,t_RegExpNonSASLAuth2));
+                        vl_cIq:=dec_cIq(vl_rcvdASP_TCP.msg);
+                        if(true)//  if(match(vl_char,t_RegExpNonSASLAuth2))
+                        {   
+
+
+                          v_Query:=dec_Query(char2oct(unichar2char(vl_cIq.elem)));
+                          v_id:=unichar2char(vl_cIq.id);
+
+                          log("v_Query",v_Query)
+
+                          v_username:=unichar2char(v_Query.username);
+                          v_resource:=unichar2char(v_Query.resource);
+                          v_password:=unichar2char(v_Query.choice.password_list[0]);
+
+                          //check username, password
+
+
+                          flag:=false;
+                          for (var integer i:=0;i<sizeof(v_UserTable);i:=i+1)
+                          {
+                            if ((v_username==v_UserTable[i].username)  and (v_password==v_UserTable[i].password)) {flag:=true;}
+
+
+                          }
+                          if (flag==false) {log("username/password not found");}
+
+
+                          //update routing table
+
+                          index:= f_find_firstEmpty();
+
+                          v_RoutingTable[index].dest:=v_username&"@"&tsp_fqdn&"/"&v_resource;
+                          v_RoutingTable[index].routeId:=vl_client_id;
+
+
+                          log("v_RoutingTable",v_RoutingTable)
+
+
+
+
+
+                          vl_char0:= "<iq type='result' id=\""&v_id&"\" to="&v_username&"@"&tsp_fqdn&"/"&v_resource&"/>"
+
+
+                          vl_ASP_TCP.connId:=vl_client_id;
+                          vl_ASP_TCP.proto := {tcp:={}};        
+                          vl_ASP_TCP.msg:=char2oct(vl_char0);
+
+
+                          TCP_PCO.send(vl_ASP_TCP) ;
+
+
+
+                        }
+                      }
+
+                    }                  
+                  }//endif2
+
+
+
+                }//endstatement2
+              }//endalt2
+
+
+
+            }//endif1
+
+
+
+
+            else      if (vl_Stream.version=="1.0")//if(match(vl_char,t_RegExpStartStreamv1))
+            {//start if 2 
+              log("SASL authentication initiated :",vl_char);
+
+              vl_char0:="<?xml version='1.0' encoding='UTF-8'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' from="&tsp_fqdn&"
+                  id='non_sasl_auth1' xml:lang='en' version='1.0'>"
+
+
+              vl_ASP_TCP.connId:=vl_client_id;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=char2oct(vl_char0);
+
+
+              TCP_PCO.send(vl_ASP_TCP)   
+
+
+              vl_char0:="<?xml version='1.0' encoding='UTF-8'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:client' from="&tsp_fqdn&" id='non_sasl_auth1'
+                  xml:lang='en' version='1.0'><stream:features><starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'></starttls><mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'><mechanism>DIGEST-MD5</mechanism><mechanism>PLAIN</mechanism><mechanism>ANONYMOUS</mechanism><mechanism>CRAM-MD5</mechanism></mechanisms><compression
+xmlns='http://jabber.org/features/compress'><method>zlib</method></compression><auth xmlns='http://jabber.org/features/iq-auth'/><register xmlns='http://jabber.org/features/iq-register'/></stream:features>"
+
+
+
+              vl_ASP_TCP.connId:=vl_client_id;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=char2oct(vl_char0);
+
+
+              TCP_PCO.send(vl_ASP_TCP)               
+
+
+
+            }//end if 2
+          }//endstatement1          
+
+        }//endalt1
+
+
+      }//endStatementBlock
+
+
+
+
+
+
+      //************************************************************************* 
+      // Messages  received  on the upper port
+      //*************************************************************************
+
+
+      [] Comm_PCO.receive(jabber_client.Iq:?) -> value vl_cIq
+
+        {//startStatementBlock
+
+
+          vl_ASP_TCP.connId:=f_read_routingTable(vl_cIq.to_);
+          vl_ASP_TCP.proto := {tcp:={}};        
+          vl_ASP_TCP.msg:=enc_cIq(vl_cIq);
+
+          TCP_PCO.send(vl_ASP_TCP);
+
+        }//endStatementBlock
+
+
+      [] Comm_PCO.receive(jabber_client.Message:?) -> value vl_cMessage
+
+        {//startStatementBlock
+
+
+          vl_ASP_TCP.connId:=f_read_routingTable(vl_cMessage.to_);
+          vl_ASP_TCP.proto := {tcp:={}};        
+          vl_ASP_TCP.msg:=enc_cMessage(vl_cMessage);  
+
+          TCP_PCO.send(vl_ASP_TCP);
+
+
+        }//endStatementBlock
+
+
+
+
+      [] Comm_PCO.receive(Stream:?) -> value vl_Stream
+
+        {//startStatementBlock
+
+
+
+          vl_ASP_TCP.connId:=vl_client_id;
+          vl_ASP_TCP.proto := {tcp:={}};        
+          vl_ASP_TCP.msg:=enc_Stream(vl_Stream);  
+
+
+
+          TCP_PCO.send(vl_ASP_TCP);
+
+        }//endStatementBlock
+
+
+
+      //************************************************************************* 
+      // Messages  received from the TCP port
+      //*************************************************************************
+
+
+      []TCP_PCO.receive(ASP_Event : ?) -> value vl_rcvdASP_Event;
+      {//startStatementBlock
+
+      }
+
+
+      []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+      {//startStatementBlock
+
+
+
+        vl_char:=oct2char(vl_rcvdASP_TCP.msg);
+
+        log("Received stanza:>>>>>>",vl_char);
+        //   if(match(vl_char,t_RegExpIq))
+        //    {//startif
+
+
+        if(decode_cIq(vl_rcvdASP_TCP.msg,vl_cIq)==0) 
+        {
+          var integer vl_routeId:=f_read_routingTable(vl_cIq.to_);
+          if (vl_routeId==0)
+          {         
+            CommTrans_PCO.send(vl_cIq)
+          }
+          else {//reroute to client
+
+            vl_ASP_TCP.connId:=vl_routeId;
+            vl_ASP_TCP.proto := {tcp:={}};        
+            vl_ASP_TCP.msg:=enc_cIq(vl_cIq);
+
+            TCP_PCO.send(vl_ASP_TCP);      
+          }
+
+        }
+
+
+
+        else if(decode_cMessage(vl_rcvdASP_TCP.msg,vl_cMessage)==0) 
+
+        {
+
+          if(ispresent(vl_cMessage.to_)) {
+
+            var integer vl_routeId:=f_read_routingTable(vl_cMessage.to_);
+            if (vl_routeId==0)
+            {         
+
+              CommTrans_PCO.send(vl_cMessage)
+            }
+            else {//reroute to client
+
+              vl_ASP_TCP.connId:=vl_routeId;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=enc_cMessage(vl_cMessage);
+
+              TCP_PCO.send(vl_ASP_TCP);      
+            }
+
+
+          }
+          else 
+          {
+            CommTrans_PCO.send(vl_cMessage)        
+          }
+
+        }
+
+        else if(decode_cPresence(vl_rcvdASP_TCP.msg,vl_cPresence)==0) 
+        {
+          if(ispresent(vl_cPresence.to_)) {
+            var integer vl_routeId:=f_read_routingTable(vl_cPresence.to_);
+            if (vl_routeId==0)
+            {         
+
+
+              CommTrans_PCO.send(vl_cPresence)
+            }
+            else {//reroute to client
+
+              vl_ASP_TCP.connId:=vl_routeId;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=enc_cPresence(vl_cPresence);
+
+              TCP_PCO.send(vl_ASP_TCP);      
+            }
+          }
+          else 
+          {
+            CommTrans_PCO.send(vl_cPresence)
+
+          }
+
+
+        }
+
+
+/*         if(match(vl_char,t_RegExpServerIq))
+          {   
+
+
+            log("This Server Iq is sent to decode:#############",vl_char);
+            CommTrans_PCO.send(dec_sIq(char2oct(vl_char)));vl_char:="";
+
+          }
+          else 
+          { 
+            log("This Client Iq is sent to decode:#############",vl_char);
+            CommTrans_PCO.send(dec_cIq(char2oct(vl_char)));vl_char:="";
+
+          }
+
+     //   }//endif
+
+
+
+        else if(match(vl_char,t_RegExpMessage))//Message
+        {
+
+
+          if(match(vl_char,t_RegExpServerMessage))
+          {   
+
+
+            log("This Server Message is sent to decode:#############",vl_char);
+            CommTrans_PCO.send(dec_sMessage(char2oct(vl_char)));vl_char:="";
+
+          }
+          else 
+          { 
+            log("This Client Message is sent to decode:#############",vl_char);
+
+            CommTrans_PCO.send(dec_cMessage(char2oct(vl_char))) ;vl_char:="";
+
+          }
+
+
+        }//endelseMessage
+
+        else if(match(vl_char,t_RegExpPresence))
+        {
+          CommTrans_PCO.send(dec_cPresence(char2oct(vl_char))) ; vl_char:="";  
+        }
+
+        else if(match(vl_char,t_RegExpStartStream))//stream
+        {
+          CommTrans_PCO.send(dec_Stream(char2oct(vl_char))) ; vl_char:="";  
+
+          //v_run := false; vl_char:=""; repeat;
+        }
+
+
+
+        else if(match(vl_char,t_RegExpEndStream))//stream
+        {
+          CommTrans_PCO.send(dec_Stream(char2oct(vl_char))) ; vl_char:="";  
+
+          //v_run := false; vl_char:=""; repeat;
+        }
+
+        else if(match(vl_char,t_RegExpStreamError))//stream
+        {
+          CommTrans_PCO.send(dec_Stream(char2oct(vl_char))) ; vl_char:="";  
+        }
+
+
+*/
+
+      }//endStatementBlock
+
+
+      //*****************************************************************************
+      //Message received on the coordination port
+      //*****************************************************************************  
+
+
+      [] Ctl_PCO.receive("halt") {
+
+
+
+          //--------------------------------------------------------------------------------------------------------------------------
+
+
+          Twait.start(4.0);     
+
+
+
+        }//endStatementBlock
+
+      [] Twait.timeout {v_run := false; 
+
+          //******************************************************************************************    
+          //end stream
+          //
+          //******************************************************************************************    
+          for (var integer i:=1;i<sizeof(v_RoutingTable);i:=i+1)
+          {
+            if(v_RoutingTable[i].dest!=""){
+
+              vl_ASP_TCP.connId:=v_RoutingTable[i].routeId;
+              vl_ASP_TCP.proto := {tcp:={}};        
+              vl_ASP_TCP.msg:=char2oct(c_endstream);
+
+              f_ServerSendReceiveAndMatchStanza(vl_ASP_TCP.connId,vl_ASP_TCP.msg,t_endstream);
+
+              vl_result:=f_IPL4_close( TCP_PCO,v_RoutingTable[i].routeId, {tcp:={}}  );
+
+            }
+
+          }//endfor        
+
+        }
+
+    }//endalt0
+
+  }//endwhile
+
+
+
+}//endfunction
+
+
+
+
+
+//-----------------------------------------------------------------------------
+function f_SendReceiveAndMatchStanza(in integer p_client_id, in octetstring p_data, in template charstring p_xml) runs on Mapping_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+
+  var ASP_Send vl_sentASP_TCP;
+  var ASP_RecvFrom vl_rcvdASP_TCP;
+
+
+  var charstring vl_rcvd;
+
+  vl_sentASP_TCP.msg:=p_data;
+  vl_sentASP_TCP.proto := {tcp:={}};
+  vl_sentASP_TCP.connId:=p_client_id;
+
+  TCP_PCO.send(vl_sentASP_TCP);    
+  Twait.start(4.0);
+  vl_rcvd:="";
+
+
+  alt {
+    []Twait.timeout;
+
+
+    []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+
+    { 
+      if(vl_rcvdASP_TCP.msg!=''O)  { 
+        vl_rcvd:=oct2char(vl_rcvdASP_TCP.msg) ;
+        // if (tsp_debug) {  log("received:   ",vl_rcvd );}
+
+
+        select (vl_rcvd) 
+        {
+          case (p_xml) { log ("The first branch is selected"); }
+          case else         { log ("No match"); repeat; }
+        }
+
+        Twait.stop;
+
+
+      }
+    };
+
+
+
+  }
+
+  if(vl_rcvd!=""){    log("received:   ",vl_rcvd );}
+
+
+
+
+}//endfunction
+
+
+
+//-----------------------------------------------------------------------------
+function f_ReceiveAndMatchStanza(in template charstring p_xml) runs on Mapping_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+
+
+
+  var ASP_RecvFrom vl_rcvdASP_TCP;
+  var charstring vl_rcvd;
+
+
+  Twait.start(4.0);
+  vl_rcvd:="";
+
+
+  alt {
+    []Twait.timeout;
+
+
+    []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+
+    { 
+      if(vl_rcvdASP_TCP.msg!=''O)  { 
+        vl_rcvd:=vl_rcvd&oct2char(vl_rcvdASP_TCP.msg) ;
+        if (tsp_debug) {  log("received:   ",vl_rcvd );}
+
+
+        select (vl_rcvd) 
+        {
+          case (p_xml) { log ("The first branch is selected"); }
+          case else         { log ("No match"); repeat; }
+        }
+
+        Twait.stop;
+
+
+      }
+    };
+
+
+
+  }
+
+  if(vl_rcvd!=""){    log("received:   ",vl_rcvd );}
+
+
+
+
+}//endfunction
+
+
+
+//-----------------------------------------------------------------------------
+function f_ServerSendReceiveAndMatchStanza(in integer p_client_id, in octetstring p_data, in template charstring p_xml) runs on ServerMapping_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+  //  var jabber_server.Iq  vl_Iq;
+
+
+  var ASP_Send vl_sentASP_TCP;
+  var ASP_RecvFrom vl_rcvdASP_TCP;
+
+
+  var charstring vl_rcvd;
+
+  vl_sentASP_TCP.msg:=p_data;
+  vl_sentASP_TCP.proto := {tcp:={}};
+  vl_sentASP_TCP.connId:=p_client_id;
+
+  TCP_PCO.send(vl_sentASP_TCP);    
+  Twait.start(4.0);
+  vl_rcvd:="";
+
+
+  alt {
+    []Twait.timeout;
+
+
+    []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+
+    { 
+      if(vl_rcvdASP_TCP.msg!=''O)  { 
+        vl_rcvd:=vl_rcvd&oct2char(vl_rcvdASP_TCP.msg) ;
+        if (tsp_debug) {  log("received:   ",vl_rcvd );}
+
+
+        select (vl_rcvd) 
+        {
+          case (p_xml) { log ("The first branch is selected"); }
+          case else         { log ("No match"); repeat; }
+
+        }
+
+
+
+
+      }
+    };
+
+
+
+  }
+
+  if(vl_rcvd!=""){    log("received:   ",vl_rcvd );}
+
+
+
+
+}//endfunction
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+function f_ProviderSendReceiveIq(in jabber_client.Iq  p_cIq) runs on Provider_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+  var jabber_client.Iq  vl_cIq;
+  // var jabber_server.Iq  vl_sIq;
+  var jabber_client.Message vl_cMessage;
+  //  var jabber_server.Message  vl_sMessage;
+
+
+  Comm_PCO.send(p_cIq);    
+  Twait.start(20.0);
+
+
+
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)      { };
+    []InComm_PCO.receive(jabber_client.Presence:?)     {repeat; };
+    []InComm_PCO.receive(CompositeClientMessage:?)     { };
+
+
+  }
+
+
+
+
+}//endfunction
+
+
+
+//-----------------------------------------------------------------------------
+function ConfigurationBuild() runs on MTC_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+
+
+  if(tsp_server) {
+    v_ServerMapping_CT:=ServerMapping_CT.create;
+    v_TranslatorS_CT:=Translator_CT.create;
+    v_Server_CT:=Server_CT.create;
+
+    connect(v_ServerMapping_CT:Ctl_PCO,self:Ctlsm_PCO);
+    connect(v_Server_CT:Ctl_PCO,self:Ctls_PCO);
+    connect(v_TranslatorS_CT:Ctl_PCO,self:Ctlst_PCO);
+
+
+    connect(v_ServerMapping_CT:Comm_PCO,v_Server_CT:Comm_PCO);
+    connect(v_ServerMapping_CT:CommTrans_PCO,v_TranslatorS_CT:CommTrans_PCO);
+    connect(v_Server_CT:InComm_PCO,v_TranslatorS_CT:InComm_PCO);
+
+
+
+    map(v_ServerMapping_CT:TCP_PCO, system:TCPs_PCO);
+
+
+  }
+
+  if(tsp_requestor) {
+
+    v_RequestorMapping_CT:=Mapping_CT.create;
+    v_TranslatorR_CT:=Translator_CT.create;
+    v_Requestor_CT:=Requestor_CT.create;
+
+    connect(v_RequestorMapping_CT:Ctl_PCO,self:Ctlrm_PCO);
+    connect(v_Requestor_CT:Ctl_PCO,self:Ctlr_PCO);
+    connect(v_TranslatorR_CT:Ctl_PCO,self:Ctlrt_PCO);
+
+
+
+    connect(v_RequestorMapping_CT:Comm_PCO,v_Requestor_CT:Comm_PCO);
+    connect(v_RequestorMapping_CT:CommTrans_PCO,v_TranslatorR_CT:CommTrans_PCO);
+    connect(v_Requestor_CT:InComm_PCO,v_TranslatorR_CT:InComm_PCO);
+
+
+
+    map(v_RequestorMapping_CT:TCP_PCO, system:TCPr_PCO);
+
+  }
+
+
+
+  if(tsp_provider) {  
+    v_ProviderMapping_CT:=Mapping_CT.create;
+    v_TranslatorP_CT:=Translator_CT.create;
+    v_Provider_CT:=Provider_CT.create;
+
+
+
+    connect(v_ProviderMapping_CT:Ctl_PCO,self:Ctlpm_PCO);
+    connect(v_Provider_CT:Ctl_PCO,self:Ctlp_PCO);
+    connect(v_TranslatorP_CT:Ctl_PCO,self:Ctlpt_PCO);
+
+
+    connect(v_ProviderMapping_CT:Comm_PCO,v_Provider_CT:Comm_PCO);
+    connect(v_ProviderMapping_CT:CommTrans_PCO,v_TranslatorP_CT:CommTrans_PCO);
+    connect(v_Provider_CT:InComm_PCO,v_TranslatorP_CT:InComm_PCO);
+
+
+
+    map(v_ProviderMapping_CT:TCP_PCO, system:TCPp_PCO);
+  }
+
+
+
+
+
+
+}//endfunction 
+
+
+//-----------------------------------------------------------------------------
+function ConfigurationKill() runs on MTC_CT
+//-----------------------------------------------------------------------------
+
+{//startfunction
+
+
+  if(tsp_requestor) {
+    unmap(v_RequestorMapping_CT:TCP_PCO, system:TCPr_PCO);
+    disconnect(v_RequestorMapping_CT:Comm_PCO,v_Requestor_CT:Comm_PCO);
+    disconnect(v_Requestor_CT:Ctl_PCO,self:Ctlr_PCO);
+    disconnect(v_RequestorMapping_CT:Ctl_PCO,self:Ctlrm_PCO);
+  }
+
+
+
+  if(tsp_server) {
+    unmap(v_ServerMapping_CT:TCP_PCO, system:TCPs_PCO);
+
+    disconnect(v_ServerMapping_CT:Comm_PCO,v_Server_CT:Comm_PCO);
+    disconnect(v_ServerMapping_CT:CommTrans_PCO,v_TranslatorS_CT:CommTrans_PCO);
+    disconnect(v_Server_CT:InComm_PCO,v_TranslatorS_CT:InComm_PCO);
+
+
+    disconnect(v_Server_CT:Ctl_PCO,self:Ctls_PCO);
+    disconnect(v_ServerMapping_CT:Ctl_PCO,self:Ctlsm_PCO);
+    disconnect(v_TranslatorS_CT:Ctl_PCO,self:Ctlst_PCO);
+  }
+
+  if(tsp_provider) {  
+    unmap(v_ProviderMapping_CT:TCP_PCO, system:TCPp_PCO);
+
+
+    disconnect(v_ProviderMapping_CT:Comm_PCO,v_Provider_CT:Comm_PCO);
+    disconnect(v_ProviderMapping_CT:CommTrans_PCO,v_TranslatorP_CT:CommTrans_PCO);
+    disconnect(v_Provider_CT:InComm_PCO,v_TranslatorP_CT:InComm_PCO);
+
+
+    disconnect(v_Provider_CT:Ctl_PCO,self:Ctlp_PCO);
+    disconnect(v_ProviderMapping_CT:Ctl_PCO,self:Ctlpm_PCO);
+    disconnect(v_TranslatorP_CT:Ctl_PCO,self:Ctlpt_PCO);
+  }
+
+   all component.kill;
+}//endfunction 
+
+
+
+function  f_reset_position(integer i) runs on Provider_CT
+//-----------------------------------------------------------------------------
+{
+  v_Toaster[i].state:=idle;
+  v_Toaster[i].requestor:="";
+  v_Toaster[i].stanzaId:="";
+  v_Toaster[i].slottimer:=0.0;
+
+}
+
+
+
+//-----------------------------------------------------------------------------
+function  f_ServerBehaviour() runs on Server_CT
+//-----------------------------------------------------------------------------
+{
+
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+  var Stream vl_Stream;
+
+  var CompositeClientIq  vl_compcIq;
+  var CompositeClientMessage vl_compcMessage;
+  var jabber_client.Presence vl_compcPresence;
+
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+
+  Ctl_PCO.send("go");
+
+
+  v_run:=true;
+
+  while (v_run)
+  {//startwhile
+
+
+    alt {//startalt
+
+
+
+
+
+
+
+
+      []InComm_PCO.receive(charstring:?) //-> value vl_rcvdASP_TCP 
+
+        { 
+
+        }
+
+
+      []InComm_PCO.receive(jabber_client.Presence:?)  -> value vl_compcPresence
+
+        { 
+
+          log("vl_compcPresence", vl_compcPresence)
+        }
+
+      []InComm_PCO.receive(CompositeClientMessage:?)  -> value vl_compcMessage
+
+        { 
+
+          log("vl_compcMessage", vl_compcMessage)
+        }
+
+
+      []InComm_PCO.receive(CompositeClientIq:?)  -> value vl_compcIq
+
+        { 
+
+          log("vl_compcIq", vl_compcIq)
+        }
+
+
+
+    }//endalt
+
+
+  }//endwhile
+}//endfunction
+
+
+//-----------------------------------------------------------------------------
+function  f_ProviderBehaviour() runs on Provider_CT
+//-----------------------------------------------------------------------------
+{
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+
+  var CompositeClientIq  vl_compcIq;
+  var CompositeClientMessage vl_compcMessage;
+  var jabber_client.Presence  vl_compcPresence;
+
+
+  var integer j;
+  var integer v_tempIndex;
+  var float   v_tempLevel; 
+
+
+  v_provDefault:=activate(as_defaultProviderBehaviour()); 
+
+
+  for (var integer i:=0;i<4;i:=i+1)
+  {
+
+    f_reset_position(i);
+  }
+
+  v_ToasterState:=deactivated;
+  v_SessionState:=available;
+  //-----------------------------------------------------------------------------
+
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_service_support_info));
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+
+  if(tsp_create_root_coll_node) {
+    f_ProviderSendReceiveIq(valueof(t_Iq_create_root_collection_node)); 
+  }
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_ntaf_node_info));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_getNodeConfig));
+
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_create_tool_node_toaster)); 
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_publish_tool_info_toaster));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_tool_registry));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_all_tools));//not supported!!!!
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_subscriptions));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_toaster_node_info));
+
+  Ctl_PCO.send("go");
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+  // Twait.start(180.0);
+
+  v_run:=true;
+
+  while (v_run)
+  {//startwhile
+
+
+    alt {//startalt
+
+
+
+
+
+
+/*
+
+      []InComm_PCO.receive(charstring:?) //-> value vl_rcvdASP_TCP 
+
+        { 
+          repeat;
+        }
+
+      */
+      []InComm_PCO.receive(tr_CompIq_query_harness_toaster)  -> value vl_compcIq 
+
+        { 
+          Comm_PCO.send(ts_Iq_query_result_harness_provider_toaster(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_query_harness_resource_owner)  -> value vl_compcIq 
+
+        { 
+          Comm_PCO.send(ts_Iq_query_result_harness_provider_resource_owner(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_query_harness_resource_inventory)  -> value vl_compcIq 
+
+        { 
+          Comm_PCO.send(ts_Iq_query_result_harness_provider_resource_inventory(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_disco_info_toaster) //-> value vl_rcvdASP_TCP 
+
+        { 
+          Comm_PCO.send(ts_Iq_query_result_disco_info_toaster);
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_request_activate) -> value vl_compcIq 
+
+        { 
+          if(tsp_debug){log("v_ToasterState",v_ToasterState);}
+          if (v_ToasterState==deactivated)
+          {v_ToasterState:=active;Comm_PCO.send(ts_Iq_activation_result(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.activation_activate.toolId));}
+          else {}
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_request_deactivate) -> value vl_compcIq 
+
+        { 
+          if(tsp_debug){log("v_ToasterState",v_ToasterState);}
+          if (v_ToasterState!=deactivated)
+          { v_ToasterState:=deactivated;Comm_PCO.send(ts_Iq_deactivation_result(vl_compcIq.id,vl_compcIq.from_));}
+          repeat;
+        }
+
+
+
+
+      []InComm_PCO.receive(tr_CompIq_request_status_toaster) -> value vl_compcIq 
+
+        { 
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+/*
+              for (var integer i:=0;i<4;i:=i+1)
+
+              {
+                if(v_Toaster[i].state==idle) {v_StringArray[i]:="true"} else {v_StringArray[i]:="false"}
+
+              }  
+
+
+              Comm_PCO.send(ts_Iq_result_response_getStatus(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,"true",v_StringArray[0],v_StringArray[1],v_StringArray[2],v_StringArray[3]));
+*/              Comm_PCO.send(ts_Iq_result_response_getStatus(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,"true"));
+
+
+            }//endif1 
+            else {
+
+              Comm_PCO.send(ts_Iq_result_response_getStatus(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,"false"));
+
+
+            }
+
+
+          }//endif0
+
+          else {
+
+            Comm_PCO.send(ts_Iq_result_response_getStatus(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,"false"));
+
+
+          }
+
+
+
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_request_status_slot1) -> value vl_compcIq 
+
+        { 
+
+          var charstring vl_String:="";
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+
+              if(v_Toaster[0].state==idle) {vl_String:="true"} else {vl_String:="false"}
+              Comm_PCO.send(ts_Iq_result_response_getStatusSlot(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,vl_String,"1"));
+            }//endif1 
+            else {}
+          }//endif0
+
+          else {}
+
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_request_status_slot2) -> value vl_compcIq 
+
+        { 
+
+          var charstring vl_String:="";
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+
+              if(v_Toaster[1].state==idle) {vl_String:="true"} else {vl_String:="false"}
+              Comm_PCO.send(ts_Iq_result_response_getStatusSlot(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,vl_String,"2"));
+            }//endif1 
+            else {}
+          }//endif0
+
+          else {}
+
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_request_status_slot3) -> value vl_compcIq 
+        { 
+
+          var charstring vl_String:="";
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+
+              if(v_Toaster[2].state==idle) {vl_String:="true"} else {vl_String:="false"}
+              Comm_PCO.send(ts_Iq_result_response_getStatusSlot(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,vl_String,"3"));
+            }//endif1 
+            else {}
+          }//endif0
+
+          else {}
+
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_request_status_slot4) -> value vl_compcIq 
+        { 
+
+          var charstring vl_String:="";
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+
+              if(v_Toaster[3].state==idle) {vl_String:="true"} else {vl_String:="false"}
+              Comm_PCO.send(ts_Iq_result_response_getStatusSlot(vl_compcIq.id,vl_compcIq.from_,vl_compcIq.elem.harness_request.session,vl_String,"4"));
+            }//endif1 
+            else {}
+          }//endif0
+
+          else {}
+
+          repeat;
+        }
+
+
+
+
+      []InComm_PCO.receive(tr_Iq_request_set_toast) -> value vl_compcIq 
+
+        { 
+
+          if(v_ToasterState==active) {//startif0
+            log("toaster was activated");
+
+            if   (v_SessionState==seized) {//startif1 
+
+              log("session was opened");
+              for (var integer i:=0;i<sizeof(vl_compcIq.elem.harness_request.parameter_list);i:=i+1)
+              {
+
+
+                if((vl_compcIq.elem.harness_request.parameter_list[i].name=="slotNumber") or (vl_compcIq.elem.harness_request.parameter_list[i].name=="parameter1"))
+                {
+                  if(vl_compcIq.elem.harness_request.parameter_list[i].base=="1")  {v_tempIndex:=0}
+                  else if(vl_compcIq.elem.harness_request.parameter_list[i].base=="2")  {v_tempIndex:=1}  
+                  else if(vl_compcIq.elem.harness_request.parameter_list[i].base=="3")  {v_tempIndex:=2}  
+                  else if(vl_compcIq.elem.harness_request.parameter_list[i].base=="4")  {v_tempIndex:=3}  
+                  else {//wrong slot nr.;setting default
+                    v_tempIndex:=0
+                  }  
+
+                }
+                else if((vl_compcIq.elem.harness_request.parameter_list[i].name=="powerLevel") or (vl_compcIq.elem.harness_request.parameter_list[i].name=="parameter2")) 
+
+                {
+                  if(vl_compcIq.elem.harness_request.parameter_list[i].base=="low")     {v_tempLevel:=10.0}
+                  else if(vl_compcIq.elem.harness_request.parameter_list[i].base=="medium")  {v_tempLevel:=20.0}  
+                  else if(vl_compcIq.elem.harness_request.parameter_list[i].base=="high")    {v_tempLevel:=40.0}
+                  else {//wrong power level;setting default
+                    v_tempLevel:=10.0
+                  }
+
+                } 
+
+              }//endfor  
+
+              //log("v_tempIndex:>>>",v_tempIndex, "v_tempLevel>>>",v_tempLevel);
+
+              if(v_tempIndex==0)          { v_Toaster[0].state:=busy;  v_Toaster[0].requestor:=vl_compcIq.from_; 
+                v_Toaster[0].stanzaId:=vl_compcIq.id;v_Toaster[0].slottimer:=1.0*v_tempLevel; Tsession[0].start(v_Toaster[0].slottimer); }
+              else if(v_tempIndex==1)     { v_Toaster[1].state:=busy;  v_Toaster[1].requestor:=vl_compcIq.from_;v_Toaster[1].stanzaId:=vl_compcIq.id;v_Toaster[1].slottimer:=1.1*v_tempLevel;
+                Tsession[1].start(v_Toaster[1].slottimer); }  
+              else if(v_tempIndex==2)     { v_Toaster[2].state:=busy;  v_Toaster[2].requestor:=vl_compcIq.from_;v_Toaster[2].stanzaId:=vl_compcIq.id;v_Toaster[2].slottimer:=1.2*v_tempLevel;
+                Tsession[2].start(v_Toaster[2].slottimer); }  
+              else if(v_tempIndex==3)     { v_Toaster[3].state:=busy;  v_Toaster[3].requestor:=vl_compcIq.from_;v_Toaster[3].stanzaId:=vl_compcIq.id;v_Toaster[3].slottimer:=1.3*v_tempLevel;
+                Tsession[3].start(v_Toaster[3].slottimer); }  
+
+
+
+              Comm_PCO.send(ts_Iq_immediate_response_set_toast(vl_compcIq.id,vl_compcIq.from_));
+            }//endif1 
+            else {//session not open
+
+
+              Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+            }
+
+          }//endif0 
+
+          else {//toaster not active
+            Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+          }
+
+          repeat;
+        }
+
+      []InComm_PCO.receive(tr_CompIq_open_session) -> value vl_compcIq 
+
+        { 
+          if(v_ToasterState==active) {
+            if        (v_SessionState==available)   { v_SessionState:=seized;Comm_PCO.send(ts_Iq_result_open_session(vl_compcIq.id,vl_compcIq.from_,"toasterSession"));  }
+            else if   (v_SessionState==seized) {//no idle session
+              Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+            }
+
+          } else {//toaster not active
+            Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+          }        
+
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_close_session_final) //-> value vl_rcvdASP_TCP 
+
+        { //backdoor
+
+/*
+          
+          
+<iq type='set' to='toaster@esekilxxen1843.rnd.ericsson.se/1' id='close1'> 
+<close xmlns='http://ntaforum.org/2011/harness' session='lifecycle'/> 
+</iq> 
+
+          
+          */
+
+
+
+          log("Shutting down.......");v_run:=false;
+        }
+
+
+      []InComm_PCO.receive(tr_CompIq_close_session) -> value vl_compcIq 
+
+        { 
+
+          if(v_ToasterState==active) {
+            if        (v_SessionState==seized)   { v_SessionState:=available;Comm_PCO.send(ts_Iq_result_close_session(vl_compcIq.id,vl_compcIq.from_));  }
+            else if   (v_SessionState==available) {//no  session to close
+              Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+            }
+
+          } else {//toaster not active
+            Comm_PCO.send(ts_Iq_error(vl_compcIq.id,vl_compcIq.from_,""));
+          } 
+
+
+          repeat;
+        }
+/*
+      []InComm_PCO.receive(tr_CompIq_ClientPing) -> value vl_compcIq 
+
+        { 
+          Comm_PCO.send(ts_Iq_result_ping_c(vl_compcIq.id,vl_compcIq.from_));
+          repeat;
+        }
+
+
+      []InComm_PCO.receive(CompositeClientIq:?) -> value vl_compcIq 
+
+        { 
+
+          log("received client iq, no match:<<<<<<<<<<<<<.>>>>>>>>>>>>>>>:",vl_compcIq);
+          repeat;
+        }
+
+*/
+
+      []InComm_PCO.receive(tr_CompMessage_cancel_request) -> value vl_compcMessage 
+
+        {           
+
+          for (var integer i:=0;i<4;i:=i+1)
+
+          {
+
+            if ( v_Toaster[i].stanzaId==vl_compcMessage.elem_list[0].harness_cancel.requestId)
+            {
+
+
+
+              f_reset_position(i);
+              Tsession[i].stop;          
+
+              Comm_PCO.send(ts_Message_abort(vl_compcMessage.id,vl_compcMessage.from_,vl_compcMessage.elem_list[0].harness_cancel.requestId));           
+
+            }//endif
+
+            else {//no hit, error message to be sent 
+
+
+            }
+
+
+          }//endfor  
+
+
+          repeat;
+        }
+
+
+
+      []InComm_PCO.receive(CompositeClientMessage:?) -> value vl_compcMessage 
+
+        {           
+          log("received  client message:<<<<<<<<<<<<<.>>>>>>>>>>>>>>>:",vl_compcMessage);
+
+          repeat;
+        }
+
+      []InComm_PCO.receive(jabber_client.Presence:?) -> value vl_compcPresence 
+
+        { 
+          log("received  client Presence:<<<<<<<<<<<<<.>>>>>>>>>>>>>>>:",vl_compcPresence);
+          repeat;
+        }
+
+
+
+      []Twait.timeout;
+      []Tsession[0].timeout  {     Comm_PCO.send(ts_Message_delayed_response_set_toast(v_Toaster[0].stanzaId,v_Toaster[0].requestor));
+          f_reset_position(0);
+
+        };
+      []Tsession[1].timeout  {     Comm_PCO.send(ts_Message_delayed_response_set_toast(v_Toaster[1].stanzaId,v_Toaster[1].requestor));
+
+          f_reset_position(1);
+
+        };
+      []Tsession[2].timeout  {     Comm_PCO.send(ts_Message_delayed_response_set_toast(v_Toaster[2].stanzaId,v_Toaster[2].requestor));
+
+          f_reset_position(2);
+
+        };
+      []Tsession[3].timeout  {     Comm_PCO.send(ts_Message_delayed_response_set_toast(v_Toaster[3].stanzaId,v_Toaster[3].requestor));
+          f_reset_position(3);
+
+        };
+
+
+
+    }; //endalt
+
+
+  }//endwhile     
+
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_subscriptions));
+  f_ProviderSendReceiveIq(valueof(t_Iq_retract_tool_info_toaster));
+  f_ProviderSendReceiveIq(valueof(t_Iq_remove_leaf_node_toaster));
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+  if(tsp_create_root_coll_node) {
+    f_ProviderSendReceiveIq(valueof(t_Iq_delete_root_collection_node));
+  }
+
+
+
+  Ctl_PCO.send("halt");
+
+  alt {
+    []Ctl_PCO.receive("halt ack")  {}
+  }
+
+  deactivate(v_provDefault); 
+
+  Twait.start(4.0);
+  Twait.timeout ;
+
+}//endfunction f_ProviderBehaviour
+
+/*
+
+//-----------------------------------------------------------------------------
+function  f_Test_ToasterBehaviour() runs on Provider_CT
+//-----------------------------------------------------------------------------
+{
+
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+
+
+  var CompositeClientIq  vl_compcIq;
+  var CompositeClientMessage vl_compcMessage;
+  var jabber_client.Presence  vl_compcPresence;
+
+  var integer j;
+  var integer v_tempIndex;
+  var float   v_tempLevel; 
+
+  for (var integer i:=0;i<4;i:=i+1)
+  {
+
+    f_reset_position(i);
+  }
+
+  v_ToasterState:=deactivated;
+  v_SessionState:=available;
+  //-----------------------------------------------------------------------------
+
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_service_support_info));
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_ntaf_node_info));
+  f_ProviderSendReceiveIq(valueof(t_Iq_create_root_collection_node)); 
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_ntaf_node_info));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_getNodeConfig));
+
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_create_tool_node_toaster)); 
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_publish_tool_info_toaster));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_tool_registry));
+
+
+
+  //  f_ProviderSendReceiveIq(valueof(t_Iq_get_subscriptions));
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_toaster_node_info));
+
+  Ctl_PCO.send("go");
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+  //--------------------------------------------------------------------------------------------------------------------------
+
+  //  f_ProviderSendReceiveIq(valueof(t_Iq_get_subscriptions));
+  f_ProviderSendReceiveIq(valueof(t_Iq_retract_tool_info_toaster));
+  f_ProviderSendReceiveIq(valueof(t_Iq_remove_leaf_node_toaster));
+  f_ProviderSendReceiveIq(valueof(t_Iq_get_nodes));
+  f_ProviderSendReceiveIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node));
+
+
+  f_ProviderSendReceiveIq(valueof(t_Iq_delete_root_collection_node));
+
+
+
+
+
+
+  Ctl_PCO.send("halt");
+
+
+
+
+  Twait.start(4.0);
+  Twait.timeout ;
+
+}//endfunction f_Test_ToasterBehaviour
+
+*/
+
+//******************************************************************************************    
+function  f_NTAF_Client_non_SASL_login(in charstring p_username, in charstring p_password, in integer p_localPort ) runs on Mapping_CT
+//******************************************************************************************    
+
+{//startfunction
+
+  var ASP_Send vl_ASP_TCP;
+
+  //******************************************************************************************    
+  //start stream
+  //
+  //******************************************************************************************    
+
+  //RFC 6120 par. 4.8.5
+  //  variant "namespace as 'jabber:client'" "prefix 'ns0001'";   
+  //  variant "namespace as 'jabber:server'" "prefix 'ns0002'"; 
+
+  // var charstring vl_startstream:="<?xml version='1.0' encoding='UTF-8'?><stream:stream to=\""&tsp_fqdn&"\" xmlns:ns0001=\"jabber:client\" xmlns:stream=\"http://etherx.jabber.org/streams\">"; 
+  //generates  stream error
+  var charstring vl_startstream:="<?xml version='1.0' encoding='UTF-8'?><stream:stream to=\""&tsp_fqdn&"\" xmlns=\"jabber:client\" xmlns:stream=\"http://etherx.jabber.org/streams\">";
+  //  var charstring vl_startstream:="<?xml version='1.0' encoding='UTF-8'?><stream:stream to=\""&tsp_fqdn&"\"  xmlns:stream=\"http://etherx.jabber.org/streams\">";  
+  //this results in bad-namespace-prefix
+
+
+
+  template charstring  t_a1:= pattern  "<iq type=\"result\" id=\"a1\"><query xmlns=\"jabber:iq:auth\"><username>"&p_username&"</username><password/><digest/><resource/></query></iq>"
+  //  template charstring  t_a1:= pattern  "<iq type='result' xmlns='jabber:client' id='a1'><query xmlns='jabber:iq:auth'><username>toaster</username><password/><digest/><resource/></query></iq>"
+  template charstring  t_a2:= pattern  "<iq type=\"result\" id=\"a2\" to=\"([^>]+)\"/>"
+  //"<iq type='result' xmlns='jabber:client' id='a2'/>"
+  template charstring  t_login_user_A:=   "<iq xmlns='jabber:client' id='a1' type='get'><query xmlns='jabber:iq:auth'><username>"&p_username&"</username></query></iq>"
+  template charstring  t_login_user_B:=  "<iq xmlns='jabber:client' id='a2' type='set'><query xmlns='jabber:iq:auth'><username>"&p_username&"</username><password>"&p_password&"</password><resource>"&tsp_resource&"</resource></query></iq>"
+  template charstring  t_presence:=   "<presence xmlns='jabber:client'/>"
+
+
+
+
+  vl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+  vl_result :=f_IPL4_connect(
+    TCP_PCO,
+    tsp_destIPAddrServer,
+    tsp_destPortServer,
+    "127.0.0.1",
+    p_localPort,
+    -1,  
+    {tcp:={}},
+    {}
+
+  )
+
+
+  log(vl_result)
+
+  if (not(ispresent(vl_result.connId)))
+  {
+    log("Requestor could not connect");
+    Ctl_PCO.send("abort");
+    stop;
+  } 
+
+
+
+  var f_IPL4_getMsgLen getMsg_Func := refers(f_GetMsgLengthNTAF);
+  f_IPL4_setGetMsgLen(TCP_PCO,vl_result.connId, getMsg_Func, {});
+
+
+
+  vl_client_id:= vl_result.connId;
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpStartStream);
+  //  f_SendReceiveAndMatchStanza(vl_client_id,enc_cIq(valueof(t_Iq_login_user_A(p_username))),t_a1);
+  // f_SendReceiveAndMatchStanza(vl_client_id,enc_cIq(valueof(t_Iq_login_user_B(p_username, p_password))),t_a2);
+  // f_SendReceiveAndMatchStanza(vl_client_id,enc_cPresence(valueof(t_Presence_empty)),t_RegExpPresence);
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(valueof(t_login_user_A)),t_a1);
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(valueof(t_login_user_B)),t_a2);
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(valueof(t_presence)),t_RegExpPresence);
+
+
+
+
+}//endfunction
+
+
+
+
+
+//******************************************************************************************    
+function  f_NTAF_Client_SASL_AUTH_PLAIN_login(in charstring p_username, in charstring p_password, in integer p_localPort ) runs on Mapping_CT
+//******************************************************************************************    
+
+{//startfunction
+
+
+  var ASP_Send vl_ASP_TCP;
+
+  //******************************************************************************************    
+  //start stream
+  //
+  //******************************************************************************************    
+  //var ASP_Send vl_sentASP_TCP;
+  var charstring vl_startstream:="<?xml version='1.0' encoding='UTF-8'?><stream:stream to=\""&tsp_fqdn&"\" xmlns=\"jabber:client\" xmlns:stream=\"http://etherx.jabber.org/streams\" version=\"1.0\">";
+  var charstring vl_starttls:="<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+
+
+  vl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+  vl_result :=f_IPL4_connect(
+    TCP_PCO,
+    tsp_destIPAddrServer,
+    tsp_destPortServer,
+    "127.0.0.1",
+    p_localPort,
+    -1,  
+    {tcp:={}},
+    {}
+
+  )
+
+
+  log(vl_result)
+
+  if (not(ispresent(vl_result.connId)))
+  {
+    log("Requestor could not connect");
+    Ctl_PCO.send("abort");
+    stop;
+  } 
+
+
+
+  var f_IPL4_getMsgLen getMsg_Func := refers(f_GetMsgLengthNTAF);
+  f_IPL4_setGetMsgLen(TCP_PCO,vl_result.connId, getMsg_Func, {});
+
+
+
+  vl_client_id:= vl_result.connId;
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpStreamFeatures);
+
+  //  f_SendReceiveAndMatchStanza(vl_client_id,enc_Starttls(valueof(t_Starttls)),t_RegExpProceed);
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_starttls),t_RegExpProceed);
+
+
+  //    f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_Auth(valueof(t_Auth("titan0","titan0"))));  --csak prefixxel hajlando kodolni az auth-t
+  //   f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,char2oct("<auth mechanism=\"PLAIN\"
+  //       xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">AHRpdGFuMAB0aXRhbjA=</auth>"));
+
+  vl_ASP_TCP.msg:=char2oct(vl_startstream);
+  vl_ASP_TCP.proto := {tcp:={}};
+  vl_ASP_TCP.connId:=vl_client_id;
+
+  TCP_PCO.send(vl_ASP_TCP);    
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpWeirdStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpWeirdStreamFeatures);
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct("<auth mechanism=\"PLAIN\"
+        xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">"&enc_MIME_Base64(char2oct("\0"&p_username&"\0"&p_password))&"AHRpdGFuMAB0aXRhbjA=</auth>"),t_RegExpSuccess);
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpStreamFeatures);
+  f_SendReceiveAndMatchStanza(vl_client_id,enc_cIq(valueof(t_Iq_bind)),t_RegExpIqResultBind);
+  f_SendReceiveAndMatchStanza(vl_client_id,enc_cPresence(valueof(t_Presence_empty)),t_RegExpPresence);
+
+
+}//endfunction
+
+
+//******************************************************************************************    
+function  f_NTAF_Client_SASL_AUTH_DIGEST_MD5_login(in charstring p_username, in charstring p_password, in integer p_localPort ) runs on Mapping_CT
+//******************************************************************************************    
+
+{//startfunction
+
+  var ASP_Send vl_ASP_TCP;
+  var ASP_RecvFrom vl_rcvdASP_TCP;
+
+  var charstring vl_rcvd;
+  var AuthChallenge  vl_AuthChallenge;
+  var AuthResponse   vl_AuthResponse;
+
+  var charstring v_challenge, v_response,v_nonce,cnonce,v_realm;
+  var urn_ietf_params_xml_ns_xmpp_sasl.Response v_Response;
+  var Challenge v_Challenge;
+
+
+
+  //******************************************************************************************    
+  //start stream
+  //
+  //******************************************************************************************    
+
+  var charstring vl_startstream:="<?xml version='1.0' encoding='UTF-8'?><stream:stream to=\""&tsp_fqdn&"\" xmlns=\"jabber:client\"  xmlns:stream=\"http://etherx.jabber.org/streams\" version=\"1.0\">"
+  var charstring vl_starttls:="<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+
+
+
+  vl_result := { errorCode := omit, connId  := omit, os_error_code:=omit, os_error_text:= omit };
+  vl_result :=f_IPL4_connect(
+    TCP_PCO,
+    tsp_destIPAddrServer,
+    tsp_destPortServer,
+    "127.0.0.1",
+    p_localPort,
+    -1,
+    {tcp:={}},
+    {}
+
+  )
+
+
+  if (not(ispresent(vl_result.connId)))
+  {
+    log("Requestor could not connect");
+    Ctl_PCO.send("abort");
+    stop
+  } 
+
+
+  var f_IPL4_getMsgLen getMsg_Func := refers(f_GetMsgLengthNTAF);
+  f_IPL4_setGetMsgLen(TCP_PCO,vl_result.connId, getMsg_Func, {});
+
+
+  vl_ASP_TCP.connId:= vl_result.connId;
+  vl_ASP_TCP.proto := {tcp:={}};        
+  vl_ASP_TCP.msg:=char2oct(vl_startstream); 
+
+
+
+  vl_client_id:= vl_result.connId;
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpStreamFeatures);
+
+  //f_SendReceiveAndMatchStanza(vl_client_id,enc_Starttls(valueof(t_Starttls)),t_RegExpProceed);
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_starttls),t_RegExpProceed);
+
+
+  vl_ASP_TCP.msg:=char2oct(vl_startstream);
+  vl_ASP_TCP.proto := {tcp:={}};
+  vl_ASP_TCP.connId:=vl_client_id;
+
+  TCP_PCO.send(vl_ASP_TCP);    
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpWeirdStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpWeirdStreamFeatures);
+
+  //--------------------------------------------------------------------------------------------------------------------
+
+  //send auth, receive challenge
+  //--------------------------------------------------------------------------------------------------------------------
+
+  vl_ASP_TCP.connId:=vl_client_id;
+  vl_ASP_TCP.proto := {tcp:={}};       
+  vl_ASP_TCP.msg:= char2oct("<auth mechanism=\"DIGEST-MD5\" xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\"></auth>");
+
+
+
+  TCP_PCO.send(vl_ASP_TCP);    
+
+
+
+  Twait.start(4.0);
+  vl_rcvd:="";
+
+
+  alt {
+    []Twait.timeout;
+
+    []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+    { 
+      if(vl_rcvdASP_TCP.msg!=''O)  { 
+        vl_rcvd:=vl_rcvd&oct2char(vl_rcvdASP_TCP.msg) ;
+        if (tsp_debug) {  log("received:   ",vl_rcvd );}
+
+
+        select (vl_rcvd) 
+        {
+          case (t_RegExpChallenge) { log ("challenge received"); }
+          case else         { log ("challenge expected, no match"); repeat; }
+        }
+
+        Twait.stop;
+
+
+      }
+    };
+
+  }//endalt
+
+
+  v_Challenge:=dec_saslChallenge(char2oct(vl_rcvd))
+  log("v_Challenge:   ",v_Challenge );
+
+  vl_AuthChallenge:=dec_AuthChallenge(oct2char(dec_MIME_Base64(unichar2char(v_Challenge))))
+  log("vl_AuthChallenge:   ",vl_AuthChallenge ); 
+  v_nonce:=vl_AuthChallenge.nonce;
+  log("v_nonce:   ",v_nonce ); 
+
+  if (ispresent(vl_AuthChallenge.realm))
+  {
+    v_realm:=vl_AuthChallenge.realm;
+  }
+
+  else
+  {
+    v_realm:="\"\""; 
+  } 
+
+  cnonce:="\"barmi\"";
+
+ //FIXME!!! v_response:=f_calculate_response(p_username,tsp_fqdn,p_password,f_strip_quotes(v_nonce),f_strip_quotes(cnonce),"","xmpp/"&tsp_fqdn,"00000001","auth" );
+  log("v_response:   ",v_response ); 
+
+  vl_AuthResponse:={
+
+    charset:="utf-8",
+    username:=f_add_quotes(p_username), 
+    realm:=v_realm,//vl_AuthChallenge.realm, 
+    nonce:=v_nonce, 
+    nc:="00000001",
+    cnonce:=cnonce, 
+    serv_type:="xmpp",
+    host:=omit,
+    digest_uri:=f_add_quotes("xmpp/"&tsp_fqdn),
+    response:=v_response,
+    qop:="auth",
+    authzid:=omit
+
+
+  }
+  log("vl_AuthResponse:   ",vl_AuthResponse ); 
+
+  v_Response:=enc_AuthResponse(vl_AuthResponse)
+  log("v_Response:   ",v_Response ); 
+
+  //--------------------------------------------------------------------------------------------------------------------
+
+  //send response , receive success
+  //--------------------------------------------------------------------------------------------------------------------
+
+  var octetstring v_os:=char2oct(unichar2char(v_Response));
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,f_enc_saslResponse(enc_MIME_Base64(v_os)),t_RegExpSuccess);
+
+
+  //--------------------------------------------------------------------------------------------------------------------
+
+
+
+  f_SendReceiveAndMatchStanza(vl_client_id,char2oct(vl_startstream),t_RegExpStartStream);
+  f_ReceiveAndMatchStanza(t_RegExpStreamFeatures);
+  f_SendReceiveAndMatchStanza(vl_client_id,enc_cIq(valueof(t_Iq_bind)),t_RegExpIqResultBind);
+  f_SendReceiveAndMatchStanza(vl_client_id,enc_cPresence(valueof(t_Presence_empty)),t_RegExpPresence);
+
+
+}//endfunction
+
+
+//******************************************************************************************    
+altstep as_defaultRequestorBehaviour()  runs on Requestor_CT
+//******************************************************************************************    
+{
+  var CompositeClientIq v_CompositeClientIq;
+  []InComm_PCO.receive(tr_Iq_ping)   -> value  v_CompositeClientIq
+    {
+      Comm_PCO.send( t_Iq_ping_result(v_CompositeClientIq.to_,v_CompositeClientIq.id,v_CompositeClientIq.from_) );
+      repeat;
+    };
+
+  []InComm_PCO.receive(jabber_client.Presence:?)
+    {
+      repeat;
+    };
+
+
+
+
+}
+
+//******************************************************************************************    
+altstep as_defaultProviderBehaviour()  runs on Provider_CT
+//******************************************************************************************    
+
+{
+  var CompositeClientIq v_CompositeClientIq;
+  []InComm_PCO.receive(tr_Iq_ping)   -> value  v_CompositeClientIq
+    {
+      Comm_PCO.send( t_Iq_ping_result(v_CompositeClientIq.to_,v_CompositeClientIq.id,v_CompositeClientIq.from_) )
+      repeat;
+    };
+
+  []InComm_PCO.receive(CompositeClientIq:?) -> value v_CompositeClientIq 
+
+    { 
+
+      log("received client iq, no match:<<<<<<<<<<<<<.>>>>>>>>>>>>>>>:",v_CompositeClientIq);
+      repeat;
+    }
+
+
+
+}
+
+
+//******************************************************************************************    
+function  f_RequestorBehaviour() runs on Requestor_CT
+//******************************************************************************************    
+
+{
+
+  // var default v_reqDefault:=null;
+  v_reqDefault:=activate(as_defaultRequestorBehaviour()); 
+
+  // var CompositeServerIq  v_CompositeServerIq
+  var CompositeClientIq  v_CompositeClientIq  
+
+
+
+    alt {
+
+    []Ctl_PCO.receive("go")    {};
+    []InComm_PCO.receive(jabber_client.Presence:?)    {repeat};
+
+
+  }
+
+
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_service_support_info)));
+
+
+  Comm_PCO.send(t_Iq_get_service_support_info)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_service_support_info_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)  -> value v_CompositeClientIq  { 
+
+        Twait.stop;
+
+        log (match(v_CompositeClientIq,tr_Iq_get_service_support_info_response))  
+      };
+
+  }
+
+
+
+
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_node_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_ntaf_node_info)));
+
+
+  Comm_PCO.send(t_Iq_get_ntaf_node_info)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_ntaf_node_info_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_list_of_child_nodes_from_collection_node_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_getNodeConfig)));
+
+  Comm_PCO.send(t_Iq_getNodeConfig)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_create_leaf_node_requestor)));
+
+
+
+  Comm_PCO.send(t_Iq_create_leaf_node_requestor)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_result)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+
+    //  []InComm_PCO.receive(tr_Iq_get_nodes_response_1)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_list_of_child_nodes_from_collection_node_response_1)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_tool_registry)));
+
+  Comm_PCO.send(t_Iq_fetch_tool_registry)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_fetch_tool_registry_response)   ->  value v_CompositeClientIq
+      {
+
+        var charstring v_elem:=unichar2char(v_CompositeClientIq.elem.pubsub_pubsub.choice.choice_list[0].items.item_list[0].sequence.elem);
+        //    var charstring v_node:=unichar2char(v_CompositeClientIq.elem.pubsub_pubsub.choice.choice_list[0].items.node);
+
+        var Entry v_Entry:=dec_Entry(char2oct(v_elem));
+        log("v_Entry",v_Entry);
+
+
+        for (var integer i:=0;i<sizeof(v_Entry.harness_list);i:=i+1)
+
+        {
+
+          Comm_PCO.send(ts_Iq_get_query_harness(v_CompositeClientIq.id,v_CompositeClientIq.elem.pubsub_pubsub.choice.choice_list[0].items.node,v_Entry.harness_list[i].name));
+
+          alt 
+          {
+            []InComm_PCO.receive(tr_Iq_query_result_harness)    {}
+          }
+
+
+        } 
+
+
+
+
+
+        Twait.stop
+
+
+
+      };
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_subscriptions)));
+
+  Comm_PCO.send(t_Iq_get_subscriptions)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_get_subscriptions_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  Twait.start(4.0);  Twait.timeout ;
+
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_disco_info_toaster)));
+
+
+  Comm_PCO.send(ts_Iq_disco_info_toaster)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_disco_info_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_query_harness_toaster)));
+
+
+
+  Comm_PCO.send(ts_Iq_query_harness_toaster)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_query_harness_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_activate_always_on_tool)));
+
+
+  Comm_PCO.send(ts_Iq_activate_always_on_tool)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_activate_always_on_tool_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_open_session)));
+
+
+  Comm_PCO.send(ts_Iq_open_session)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_open_session_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  Twait.start(2.0);  Twait.timeout ;
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_status_toaster)));
+
+
+
+  Comm_PCO.send(ts_Iq_request_status_toaster)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_request_status_toaster_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_set_toast)));
+
+
+  Comm_PCO.send(ts_Iq_request_set_toast)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+  Twait.start(2.0);   Twait.timeout ;
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_request_set_toast_1)));
+
+
+
+  Comm_PCO.send(ts_Iq_request_set_toast_1)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+  Twait.start(2.0);   Twait.timeout ; 
+  //  f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cMessage(valueof(ts_Message_cancel_request_set_toast_1)));
+
+
+  Comm_PCO.send(ts_Message_cancel_request_set_toast_1)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_abort_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+
+  Twait.start(60.0);
+  Twait.timeout ;
+
+
+  Twait.start(4.0); 
+
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_delayed_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientMessage:?)    {Twait.stop};
+
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_close_session)));
+
+
+
+  Comm_PCO.send(ts_Iq_close_session)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_generic_pass_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(ts_Iq_deactivate_always_on_tool)));
+
+
+
+  Comm_PCO.send(ts_Iq_deactivate_always_on_tool)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(tr_Iq_deactivate_always_on_tool_response)    {Twait.stop};
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+
+  }
+
+
+
+  //tr_Message_delayed_response_set_toast
+
+  alt {
+
+
+    []Ctl_PCO.receive("halt")    {log("halt received in requestor, terminating")};
+
+
+/*
+    []InComm_PCO.receive(tr_CompIq_ClientPing) -> value v_CompositeClientIq
+
+      {
+
+        Comm_PCO.send(ts_Iq_result_ping_c(v_CompositeClientIq.id,v_CompositeClientIq.from_));
+        repeat;
+
+      };
+*/
+
+  }//endalt
+
+
+
+
+
+
+  //f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_subscriptions)));
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_retract_tool_info_toaster)));
+
+  Comm_PCO.send(t_Iq_get_subscriptions)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_remove_leaf_node_requestor)));
+
+  Comm_PCO.send(t_Iq_remove_leaf_node_requestor)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  //     f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_get_nodes)));
+
+
+  Comm_PCO.send(t_Iq_get_nodes)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cIq(valueof(t_Iq_fetch_list_of_child_nodes_from_collection_node)));
+
+
+
+  Comm_PCO.send(t_Iq_fetch_list_of_child_nodes_from_collection_node)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(CompositeClientIq:?)    {Twait.stop};
+
+  }
+
+
+  // f_RequestorSendReceiveStanzaAndDisplayString(vl_client_id,enc_cPresence(valueof(t_Presence_unavail)));
+
+
+  Comm_PCO.send(t_Presence_unavail)
+
+  Twait.start(4.0); 
+  alt {
+    []Twait.timeout;
+
+    []InComm_PCO.receive(jabber_client.Presence:?)    {Twait.stop};
+
+  }
+
+  deactivate(v_reqDefault);
+
+  Ctl_PCO.send("halt ack")
+
+
+
+
+}//endfunction
+
+
+//************************************************************************* 
+function f_ScanClientPorts(in AuthType p_AuthType, in charstring p_username, in charstring p_password, in integer p_localPort)  runs on Mapping_CT
+//*************************************************************************
+
+{//startfunction ScanPort
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+
+
+  var ASP_Send                  vl_ASP_TCP;
+  var ASP_RecvFrom              vl_rcvdASP_TCP;
+
+
+
+  //  var integer vl_client_id;
+  var charstring               vl_char,vl_char0
+    // var charstring vl_startstream:="<?xml version=\"1.0\"?><stream:stream to=\""&tsp_fqdn&"\" xmlns=\"jabber:client\" xmlns:stream=\"http://etherx.jabber.org/streams\">"
+
+
+    //******************************************************************************************    
+    //start stream
+    //
+    //******************************************************************************************    
+    if(p_AuthType==Non_SASL)
+  {
+
+    f_NTAF_Client_non_SASL_login(p_username,p_password,p_localPort); 
+  }
+  else if (p_AuthType==SASL_PLAIN)
+  {
+    f_NTAF_Client_SASL_AUTH_PLAIN_login(p_username,p_password,p_localPort); 
+  }
+  else if (p_AuthType==SASL_DIGEST_MD5)
+  {
+    f_NTAF_Client_SASL_AUTH_DIGEST_MD5_login(p_username,p_password,p_localPort); 
+  }
+
+
+
+  Ctl_PCO.send("ready");
+
+  v_run := true;
+  vl_char:="";
+
+  while (v_run)
+  {//startwhile
+    alt
+    {//startalt
+
+      //************************************************************************* 
+      // Messages  received  on the upper port
+      //*************************************************************************
+
+      [] Comm_PCO.receive(jabber_client.Iq:?) -> value vl_cIq
+
+        {//startStatementBlock
+
+          vl_ASP_TCP.connId:=vl_client_id;
+          vl_ASP_TCP.proto := {tcp:={}};        
+          vl_ASP_TCP.msg:=encode_cIq(vl_cIq); 
+          if(tsp_debug) {log(">>>---->>>Sent Iq:---> ",oct2char(vl_ASP_TCP.msg))}; 
+          TCP_PCO.send(vl_ASP_TCP);
+
+        }//endStatementBlock
+
+
+      [] Comm_PCO.receive(jabber_client.Message:?) -> value vl_cMessage
+
+        {//startStatementBlock
+
+          vl_ASP_TCP.connId:=vl_client_id;
+          vl_ASP_TCP.proto := {tcp:={}};        
+          vl_ASP_TCP.msg:=encode_cMessage(vl_cMessage); 
+          if(tsp_debug) {log(">>>---->>>Sent Message:---> ",oct2char(vl_ASP_TCP.msg))};  
+          TCP_PCO.send(vl_ASP_TCP);
+
+        }//endStatementBlock
+
+
+      //************************************************************************* 
+      // Messages  received from the TCP port
+      //*************************************************************************
+
+
+      []TCP_PCO.receive(ASP_RecvFrom : ?) -> value vl_rcvdASP_TCP;
+      {//startStatementBlock
+        vl_char:=vl_char&oct2char(vl_rcvdASP_TCP.msg);
+       if(tsp_debug) {log(">>>---->>>Received Stanza:---->",vl_char)};
+
+/*
+
+             if(decode_cIq(vl_rcvdASP_TCP.msg,vl_cIq)==0) {CommTrans_PCO.send(vl_cIq)}
+        else if(decode_sIq(vl_rcvdASP_TCP.msg,vl_sIq)==0) {CommTrans_PCO.send(vl_sIq)}
+        else if(decode_cMessage(vl_rcvdASP_TCP.msg,vl_cMessage)==0) {CommTrans_PCO.send(vl_cMessage)}
+        else if(decode_sMessage(vl_rcvdASP_TCP.msg,vl_sMessage)==0) {CommTrans_PCO.send(vl_sMessage)}
+        else if(decode_cPresence(vl_rcvdASP_TCP.msg,vl_cPresence)==0) {CommTrans_PCO.send(vl_cPresence)}
+        else if(decode_sPresence(vl_rcvdASP_TCP.msg,vl_sPresence)==0) {CommTrans_PCO.send(vl_sPresence)}
+          
+          //as namespaces are not sent, decode returns 1 !!!!
+          
+          
+*/
+        if(match(vl_char,t_RegExpIq))
+
+        {//startif
+         if(tsp_debug){ log("This Client Iq is sent to decode:####------>>>>>>>",vl_char)};
+          CommTrans_PCO.send(dec_cIq(char2oct(vl_char)));vl_char:="";
+
+        }//endif
+        else if(match(vl_char,t_RegExpMessage))//Message
+        {
+          if(tsp_debug){  log("This Client Message is sent to decode:####------>>>>>>>",vl_char)};
+          CommTrans_PCO.send(dec_cMessage(char2oct(vl_char))) ;vl_char:="";
+        }//endelseMessage
+        else if(match(vl_char,t_RegExpPresence))
+        {
+          CommTrans_PCO.send(dec_cPresence(char2oct(vl_char))) ; vl_char:="";  
+        }
+   /*     else if(match(vl_char,t_RegExpEndStream))//stream
+        {
+          v_run := false; vl_char:=""; repeat;
+        }
+        else if(match(vl_char,t_RegExpStreamError))//stream
+        {
+          v_run := false; vl_char:=""; repeat;
+        }
+        else {//startelse
+
+
+          log("keep going, no match****>>>>>>>", vl_char); // vl_char:=""; the vl_char should not be initialized, it contains the first part of a stanza
+
+        }//endelse    
+
+*/
+        else {//startelse
+
+
+          log("something went wrong here, no match****>>>>>>>", vl_char); 
+
+        }//endelse    
+
+        
+
+      }//endStatementBlock
+
+
+      //*****************************************************************************
+      //Message received on the coordination port
+      //*****************************************************************************  
+
+
+      [] Ctl_PCO.receive("halt") {
+
+          //--------------------------------------------------------------------------------------------------------------------------
+
+          f_SendReceiveAndMatchStanza(vl_client_id,enc_cPresence(valueof(t_Presence_unavail)),t_RegExpPresence);
+          Twait.start(2.0);     
+
+        }//endStatementBlock
+
+      [] Twait.timeout {v_run := false; 
+
+          //******************************************************************************************    
+          //end stream
+          //
+          //******************************************************************************************    
+
+          f_SendReceiveAndMatchStanza(vl_client_id,char2oct(c_endstream),t_RegExpEndStream);
+          vl_result:=f_IPL4_close( TCP_PCO,vl_client_id, {tcp:={}}  );
+
+
+
+        }
+
+    }//endalt
+
+  }//endwhile
+
+}//endfunction  ScanToasterPorts
+
+
+//************************************************************************* 
+function f_translate(in FilterIngress p_ingress, out FilterEgress p_egress) runs on Translator_CT
+//************************************************************************* 
+
+{
+
+
+
+  for (var integer i:=0;i<sizeof(p_ingress);i:=i+1)
+
+  {
+
+    //-----------------------------------------------------------------------------
+    if (match(unichar2char(p_ingress[i]),t_RegExpNamespacePubsub))
+    {if (tsp_debug) {log("hit t_RegExpNamespacePubsub")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpPubsub)) 
+      {
+        p_egress[i]:={pubsub_pubsub:=dec_Pubsub(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpConfigure)) 
+      {
+        p_egress[i]:={pubsub_configure:=dec_Configure(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpCreate))  
+      {
+        p_egress[i]:={pubsub_create:=dec_Create(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {};
+    }//endif
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespacePubsubOwner))
+    {if (tsp_debug) {log("hit t_RegExpNamespacePubsubOwner")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpPubsub)) 
+      {
+        p_egress[i]:={pubsub_owner_pubsub:=dec_Pubsub_owner(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {};
+    }//end elsif
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespacePubsubEvent))
+    {if (tsp_debug) {log("hit t_RegExpNamespacePubsubEvent")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpEvent)) 
+      {
+
+        p_egress[i]:={pubsub_event_event:=dec_Pubsub_Event(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {};
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceDiscoInfo))
+    {if (tsp_debug) {log("hit t_RegExpNamespaceDiscoInfo")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpQuery)) 
+      {
+        p_egress[i]:={info_query:=dec_Query_info(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {}
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceDiscoItems))
+    {if (tsp_debug) {log("hit t_RegExpNamespaceDiscoItems")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpQuery)) 
+      {
+        p_egress[i]:={items_query:=dec_Query_items(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {}
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceAuth))
+
+    {if (tsp_debug) {log("hit t_RegExpNamespaceAuth")};
+
+    } //activation before harness!!!  <a:activate xmlns:a=\"http://ntaforum.org/2011/activation\" xmlns:h=\"http://ntaforum.org/2011/harness\" toolId=\"toaster@esekilxxen1843.rnd.ericsson.se/1#always_on\">
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceActivation))
+    {if (tsp_debug) {log("hit t_RegExpNamespaceActivation")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpDeactivate)) 
+      {
+        p_egress[i]:={activation_deactivate:=dec_Deactivate(char2oct(unichar2char(p_ingress[i])))};
+      }
+
+      else if (match(unichar2char(p_ingress[i]),t_RegExpActivate)) 
+      {
+        p_egress[i]:={activation_activate:=dec_Activate(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {};
+
+    }
+
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceHarness))
+    {if (tsp_debug) {log("hit t_RegExpNamespaceHarness")};
+      if (match(unichar2char(p_ingress[i]),t_RegExpOpen)) 
+      {
+        p_egress[i]:={harness_open:=dec_Open(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpClose)) 
+      {
+        p_egress[i]:={harness_close:=dec_Close(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpRequest)) 
+      {
+        p_egress[i]:={harness_request:=dec_Request(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpResponse)) 
+      {
+        p_egress[i]:={harness_response:=dec_Response(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpEvent))
+      {
+        p_egress[i]:={harness_event:=dec_Event(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpCancel)) 
+      {
+        p_egress[i]:={harness_cancel:=dec_Cancel(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpProgress))
+      {
+        p_egress[i]:={harness_progress:=dec_Progress(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpQueryHarness)) 
+      {
+        p_egress[i]:={harness_query_harness:=dec_Query_harness(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpNotifyAction)) 
+      {
+        p_egress[i]:={harness_notify_action:=dec_Notify_action(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else      if (match(unichar2char(p_ingress[i]),t_RegExpNotifyClose)) 
+      {
+        p_egress[i]:={harness_notify_close:=dec_Notify_close(char2oct(unichar2char(p_ingress[i])))};
+      }
+      else {};
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceRegistry))
+
+    {
+      if (tsp_debug) {log("hit t_RegExpNamespaceRegistry")};
+
+    }
+    //-----------------------------------------------------------------------------    
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespacePing))
+
+    { 
+      if (tsp_debug) {log("hit t_RegExpNamespacePing")};
+      p_egress[i]:={opaque:=p_ingress[i]};
+    }
+
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceError))
+
+    {
+      if (tsp_debug) {log("hit t_RegExpNamespaceError")};
+      p_egress[i]:={opaque:=p_ingress[i]};      
+
+    }
+    //-----------------------------------------------------------------------------
+/*    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceStream))
+
+    {if (tsp_debug) {log("hit t_RegExpNamespaceStream")};
+
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceXmppTls))
+
+    {if (tsp_debug) {log("hit t_RegExpNamespaceXmppTls")};
+
+    }
+    //-----------------------------------------------------------------------------
+    else if (match(unichar2char(p_ingress[i]),t_RegExpNamespaceXmppSasl))
+
+    {if (tsp_debug) {log("hit t_RegExpNamespaceXmppSasl")};
+
+    } */
+
+    else 
+
+    {
+      log("this should not happen");
+    }
+    //-----------------------------------------------------------------------------        
+
+  }//endfor      
+
+
+
+}//endfunction
+
+
+//************************************************************************* 
+function f_translatecIq() runs on Translator_CT
+//************************************************************************* 
+
+{
+
+
+
+
+  vl_compcIq.from_:=vl_cIq.from_;
+  vl_compcIq.id:=vl_cIq.id;
+  vl_compcIq.lang:=vl_cIq.lang;
+  vl_compcIq.to_:=vl_cIq.to_;
+
+  if (vl_cIq.type_==error_) {vl_compcIq.type_:=error_}
+  else if (vl_cIq.type_==get)    {vl_compcIq.type_:=get   }        
+  else if (vl_cIq.type_==result) {vl_compcIq.type_:=result}    
+  else if (vl_cIq.type_==set_)   {vl_compcIq.type_:=set_  }   
+
+  vl_compcIq.error_:=vl_cIq.error_;   
+  vl_compcIq.elem:={opaque:="<dummy>value</dummy>" };    //to prevent decoding DTE
+
+  if (tsp_debug) {log("vl_cIq.elem>>>>>>",vl_cIq.elem) }; 
+
+  if (vl_cIq.elem!=omit) {//startif0   
+
+
+
+    v_FilterIngress[0]:=vl_cIq.elem;
+    v_FilterEgress:={};
+
+    f_translate(v_FilterIngress,v_FilterEgress);
+    vl_compcIq.elem:= v_FilterEgress[0];    
+
+
+  }//endif0
+  else {
+
+    vl_compcIq.elem:=omit;
+  }
+
+
+}//endfunction
+
+//************************************************************************* 
+function f_translatecMessage() runs on Translator_CT
+//************************************************************************* 
+
+{
+
+
+
+  vl_compcMessage.from_:=vl_cMessage.from_;
+  vl_compcMessage.id:=vl_cMessage.id;
+  vl_compcMessage.lang:=vl_cMessage.lang;
+  vl_compcMessage.to_:=vl_cMessage.to_;
+
+
+  if (vl_cMessage.type_==omit) {vl_compcMessage.type_:=omit}
+  else if (vl_cMessage.type_==chat) {vl_compcMessage.type_:=chat}
+  else if (vl_cMessage.type_==error_)    {vl_compcMessage.type_:=error_   }        
+  else if (vl_cMessage.type_==groupchat) {vl_compcMessage.type_:=groupchat}    
+  else if (vl_cMessage.type_==headline)   {vl_compcMessage.type_:=headline  }
+  else if (vl_cMessage.type_==normal)   {vl_compcMessage.type_:=normal  }   
+
+  if (vl_cMessage.choice_list=={} ) {vl_compcMessage.choice_list:={} }
+
+  else {
+    for (var integer i:=0;i<sizeof(vl_cMessage.choice_list);i:=i+1)
+
+    {
+
+      if(ischosen(vl_cMessage.choice_list[i].subject)){vl_compcMessage.choice_list[i].subject:=vl_cMessage.choice_list[i].subject;}
+      else if(ischosen(vl_cMessage.choice_list[i].body)){vl_compcMessage.choice_list[i].body:=vl_cMessage.choice_list[i].body;}
+      else if(ischosen(vl_cMessage.choice_list[i].thread)){vl_compcMessage.choice_list[i].thread:=vl_cMessage.choice_list[i].thread;}
+
+    }//endfor
+  }//endelse
+
+  vl_compcMessage.error_:=vl_cMessage.error_;   
+
+
+
+  if (vl_cMessage.elem_list!={})
+  {//startif0
+    for (var integer i:=0;i<sizeof(vl_cMessage.elem_list);i:=i+1){   
+      v_FilterIngress[i]:=vl_cMessage.elem_list[i];
+    }
+    v_FilterEgress:={};
+
+    f_translate(v_FilterIngress,v_FilterEgress);
+    for (var integer i:=0;i<sizeof(v_FilterEgress);i:=i+1){   
+      vl_compcMessage.elem_list[i]:= v_FilterEgress[i];    
+    }
+
+  } //endif0
+
+  else {
+
+    vl_compcMessage.elem_list:={};
+  }  
+
+
+
+}//endfunction
+/*
+  //************************************************************************* 
+  function f_translatecPresence() runs on Translator_CT
+  //************************************************************************* 
+
+  {
+
+
+
+
+    vl_compcPresence.from_:=vl_cPresence.from_;
+    vl_compcPresence.id:=vl_cPresence.id;
+    vl_compcPresence.lang:=vl_cPresence.lang;
+    vl_compcPresence.to_:=vl_cPresence.to_;
+
+
+
+    if (vl_cPresence.type_==omit) {vl_compcPresence.type_:=omit}
+    else if (vl_cPresence.type_==error_)    {vl_compcPresence.type_:=error_   }        
+    else if (vl_cPresence.type_==probe) {vl_compcPresence.type_:=probe}    
+    else if (vl_cPresence.type_==subscribe)   {vl_compcPresence.type_:=subscribe  }
+    else if (vl_cPresence.type_==subscribed)   {vl_compcPresence.type_:=subscribed }
+    else if (vl_cPresence.type_==unavailable)   {vl_compcPresence.type_:=unavailable  }
+    else if (vl_cPresence.type_==unsubscribe)   {vl_compcPresence.type_:=unsubscribe  }
+    else if (vl_cPresence.type_==unsubscribed)   {vl_compcPresence.type_:=unsubscribed }
+
+
+    if (vl_cPresence.choice_list=={} ) {vl_compcPresence.choice_list:={} }
+
+    else {
+      for (var integer i:=0;i<sizeof(vl_cPresence.choice_list);i:=i+1)
+
+      {
+
+        if(ischosen(vl_cPresence.choice_list[i].show)){vl_compcPresence.choice_list[i].show:=vl_cPresence.choice_list[i].show;}
+        else if(ischosen(vl_cPresence.choice_list[i].status)){vl_compcPresence.choice_list[i].status:=vl_cPresence.choice_list[i].status;}
+        else if(ischosen(vl_cPresence.choice_list[i].priority)){vl_compcPresence.choice_list[i].priority:=vl_cPresence.choice_list[i].priority;}
+
+      }//endfor
+    }//endelse
+
+    vl_compcPresence.error_:=vl_cPresence.error_;   
+
+
+
+    if (vl_cPresence.elem_list!={})
+    {//startif0
+      for (var integer i:=0;i<sizeof(vl_cPresence.elem_list);i:=i+1){   
+        v_FilterIngress[i]:=vl_cPresence.elem_list[i];
+      }
+      v_FilterEgress:={};
+
+      f_translate(v_FilterIngress,v_FilterEgress);
+      for (var integer i:=0;i<sizeof(v_FilterEgress);i:=i+1){   
+        vl_compcPresence.elem_list[i]:= v_FilterEgress[i];    
+      }
+
+    } //endif0
+
+    else {
+
+      vl_compcPresence.elem_list:={};
+    }  
+
+
+
+  }//endfunction
+
+
+*/
+//************************************************************************* 
+function f_ScanTranslatorPorts()  runs on Translator_CT
+//*************************************************************************
+
+{//startfunction f_ScanTranslatorPorts
+  v_run := true;
+  while (v_run)
+  {//startwhile
+    alt
+    {//startalt
+
+      //************************************************************************* 
+      // Messages  received  on the lower  port
+      //*************************************************************************
+
+
+      [] CommTrans_PCO.receive(jabber_client.Iq:?) -> value vl_cIq
+
+        {//startStatementBlock
+          f_translatecIq();
+          InComm_PCO.send(vl_compcIq);
+          vl_compcIq.elem:=omit;
+        }//endStatementBlock
+
+
+      [] CommTrans_PCO.receive(jabber_client.Message:?) -> value vl_cMessage
+
+        {//startStatementBlock
+
+          f_translatecMessage() ;
+          if (not(ischosen(vl_compcMessage.elem_list[0].pubsub_event_event)))  //!!
+          {
+
+            InComm_PCO.send(vl_compcMessage);  
+          }
+
+          else {  log("vl_compcMessage : don't forget to fix this!!!!", vl_compcMessage)  }
+          vl_compcMessage.elem_list:={};
+        }//endStatementBlock
+
+
+      [] CommTrans_PCO.receive(jabber_client.Presence:?) -> value vl_cPresence
+
+        {//startStatementBlock
+          //   f_translatecPresence() ;
+          //   InComm_PCO.send(vl_compcPresence); 
+          InComm_PCO.send(vl_cPresence);  //Presence carries in 'elem'  xml documents with unsupported decoding
+          //   vl_compcPresence.elem_list:={};
+
+
+        }//endStatementBlock
+
+
+      [] CommTrans_PCO.receive(Stream:?) -> value vl_Stream
+
+        {//startStatementBlock
+          InComm_PCO.send(vl_Stream);  
+
+        }//endStatementBlock
+
+
+      //*****************************************************************************
+      //Message received on the coordination port
+      //*****************************************************************************  
+
+
+      [] Ctl_PCO.receive("halt") {
+
+
+
+          //--------------------------------------------------------------------------------------------------------------------------
+
+
+          Twait.start(2.0);     
+
+
+
+        }//endStatementBlock
+
+      [] Twait.timeout {v_run := false; }
+
+    }//endalt
+
+  }//endwhile
+
+}//endfunction  ScanTranslatorPorts
+
+
+//*************************************************************************
+function f_GetMsgLengthNTAF(  in octetstring stream,   inout ro_integer args) return integer
+//*************************************************************************
+
+{    
+
+
+  return f_calc_XML_length(stream, char2oct("stream:stream")) ;                
+}
+
+//*************************************************************************
+function f_generate_random_string(  in integer p_len) return charstring
+//*************************************************************************
+{
+  var charstring v_char
+
+    for(var integer i := 0; i < p_len; i := i+1)
+  {    
+    //float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+    //generate printable ascii char:
+    v_char[i]:=int2char(float2int(96.0*rnd()) +32 )
+
+  }  
+
+  return v_char;
+}
+
+//*************************************************************************
+function f_generate_random_string_multiline(  in integer p_len) return charstring
+//*************************************************************************
+{
+  var charstring v_char
+
+    for(var integer i := 0; i < p_len; i := i+1)
+  {    
+    //float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+    //generate printable ascii char:
+    v_char[i]:=int2char(float2int(96.0*rnd()) +32 )
+
+  } 
+
+
+  v_char[f_generate_random_integer(0,p_len)]:= oct2char('0A'O);
+
+  return v_char;
+}
+
+
+
+//*************************************************************************
+function f_generate_random_integer(  in integer p_lowerbound, in integer p_upperbound) return integer
+//*************************************************************************
+{
+
+  //float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+  return  float2int(int2float(p_upperbound-p_lowerbound+1)*rnd()) +p_lowerbound 
+}
+
+//*************************************************************************
+function f_generate_random_decimal(  in float p_lowerbound, in float p_upperbound) return float
+//*************************************************************************
+{
+
+  //float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+  return  (p_upperbound-p_lowerbound+1.0)*rnd() +p_lowerbound 
+}
+
+
+//*************************************************************************
+function f_mapParameterDeclaration2RequestParameter(  in  Query_harness p_harness, in integer p_index) return Request.parameter_list
+//*************************************************************************
+
+{   
+  //p_harness.actionDecl_list[p_index].parameter_list[i]
+
+  var Request.parameter_list v_req
+
+    if(p_harness.actionDecl_list[p_index].parameter_list=={}) 
+  {
+    v_req:={}; 
+    log("v_req",v_req);return v_req;   
+  }
+
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].parameter_list); i := i+1)
+  {
+    v_req[i].name:="";
+    v_req[i].base:="";
+  }
+
+
+  log("v_req init",v_req)
+
+  for(var integer i := 0; i < sizeof(p_harness.actionDecl_list[p_index].parameter_list); i := i+1)
+  {
+    if (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].name))
+    {
+      v_req[i].name:=p_harness.actionDecl_list[p_index].parameter_list[i].name;
+    }
+    else 
+    {
+      v_req[i].name:="";  
+    }
+
+    if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].datatype)) 
+    {
+      //-----------------------------------------------------------------------------------------------
+      if (p_harness.actionDecl_list[p_index].parameter_list[i].datatype==boolean_) 
+      {
+        //-----------------------------------------------------------------------------------------------
+
+
+        if(not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory))  //mandatory field not present, assume true
+          or (
+            (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory)) and (p_harness.actionDecl_list[p_index].parameter_list[i].mandatory) //mandatory list present, set to true
+          )
+        )
+
+        {//generate value        
+
+          if (2.0*rnd()>1.0) 
+          {
+            v_req[i].base:="true" ; log("v_req",v_req);return v_req;         
+          }
+          else 
+          {
+            v_req[i].base:="false" ; log("v_req",v_req);return v_req;   
+          }
+
+
+        }
+
+        else //mandatory field present and false
+
+        {//take default if applicable, else if empty , generate value
+
+          if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_!=""))
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].default_ ; log("v_req",v_req);return v_req;    
+          }
+          else if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_==""))
+          {//default unusable , generate value
+            if (2.0*rnd()>1.0) 
+            {
+              v_req[i].base:="true" ; log("v_req",v_req);return v_req;         
+            }
+            else 
+            {
+              v_req[i].base:="false" ; log("v_req",v_req);return v_req;   
+            }
+          }
+          else if (not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_))) 
+          {
+            v_req[i].base:="" ; log("v_req",v_req);return v_req;    
+
+          }
+
+        }
+
+      }//endif datatype boolean
+      //-----------------------------------------------------------------------------------------------
+
+      else  if (p_harness.actionDecl_list[p_index].parameter_list[i].datatype==integer_) 
+      //-----------------------------------------------------------------------------------------------
+
+      {
+        if(not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory))  //mandatory field not present, assume true
+          or (
+            (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory)) and (p_harness.actionDecl_list[p_index].parameter_list[i].mandatory) //mandatory list present, set to true
+          )
+        )
+
+        { //generate value       
+
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list)) 
+          {
+
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list[0].base;//random index??
+            return v_req;
+          }
+
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedRange_list))   
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedRange_list[0].min;//random index??random value between min and max??
+            return v_req;
+
+          }
+          else 
+          {
+            //generate random integer
+            // float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+            v_req[i].base:= int2char(f_generate_random_integer(1,100)); log("v_req",v_req);return v_req; 
+          }
+
+        }
+
+        else //mandatory field present and false
+
+        {//take default if applicable, else if  empty, generate value 
+
+          if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_!=""))
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].default_ ; log("v_req",v_req);return v_req;    
+          }
+          else if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_==""))
+          {//default unusable , generate value
+            v_req[i].base:=int2str(f_generate_random_integer(1,100));log("v_req",v_req);return v_req; 
+          }
+          else if (not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_))) 
+          {
+            v_req[i].base:="" ; log("v_req",v_req);return v_req;    
+
+          }
+
+        }
+
+
+
+      }//endif datatype integer
+      //-----------------------------------------------------------------------------------------------
+
+      else   if (p_harness.actionDecl_list[p_index].parameter_list[i].datatype==string) 
+      {
+        //-----------------------------------------------------------------------------------------------
+
+        if(not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory))  //mandatory field not present, assume true
+          or (
+            (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory)) and (p_harness.actionDecl_list[p_index].parameter_list[i].mandatory) //mandatory list present, set to true
+          )
+        )
+
+        {  
+
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list)) 
+          {
+
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list[0].base;//random index??
+            return v_req;
+          }
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedPattern_list)) 
+          {
+            //port xeger to c?
+            //  v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list[0].base;//random index??
+            //  return v_req;
+          }
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedLength)) 
+          {
+            if (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].isMultiline))
+            {
+              v_req[i].base:=f_generate_random_string_multiline(f_generate_random_integer(p_harness.actionDecl_list[p_index].parameter_list[i].allowedLength.min,p_harness.actionDecl_list[p_index].parameter_list[i].allowedLength.max));
+
+            }
+            else 
+            {
+
+              v_req[i].base:=f_generate_random_string(f_generate_random_integer(p_harness.actionDecl_list[p_index].parameter_list[i].allowedLength.min,p_harness.actionDecl_list[p_index].parameter_list[i].allowedLength.max));
+
+            }
+            return v_req;
+          }
+
+          if (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].isMultiline))
+          {
+            //generate value    
+            v_req[i].base:= f_generate_random_string(f_generate_random_integer(5,15));  
+          }
+          else 
+          {
+
+            //generate value    
+            v_req[i].base:= f_generate_random_string(f_generate_random_integer(5,15));          
+          }
+
+          return v_req;
+
+        }
+
+        else //mandatory field present and false
+
+        {//take default if applicable, else if empty, generate value 
+          if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_!=""))
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].default_ ; log("v_req",v_req);return v_req;    
+          }
+          else if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_==""))
+          {//default unusable , generate value
+            v_req[i].base:=f_generate_random_string(f_generate_random_integer(5,15));
+            log("v_req",v_req);return v_req; 
+          }
+          else if (not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_))) 
+          {
+            v_req[i].base:="" ; log("v_req",v_req);return v_req;    
+
+          }
+
+        }
+
+
+
+      }//endif datatype string
+
+      else  if (p_harness.actionDecl_list[p_index].parameter_list[i].datatype==decimal) 
+      {
+
+
+        if(not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory))  //mandatory field not present, assume true
+          or (
+            (ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].mandatory)) and (p_harness.actionDecl_list[p_index].parameter_list[i].mandatory) //mandatory list present, set to true
+          )
+        )
+
+        { //generate value       
+
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list)) 
+          {
+
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedValue_list[0].base;//random index??
+            return v_req;
+          }
+
+          if(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].allowedRange_list))   
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].allowedRange_list[0].min;//random index??random value between min and max??
+            return v_req;
+
+          }
+          else 
+          {
+            //generate random decimal
+            // float2int(int2float(upperbound-lowerbound+1)*rnd()) +lowerbound 
+            v_req[i].base:= float2str(f_generate_random_decimal(1.0,10.0)); log("v_req",v_req);return v_req; 
+          }
+
+        }
+
+        else //mandatory field present and false
+
+        {//take default if applicable, else if  empty, generate value 
+
+          if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_!=""))
+          {
+            v_req[i].base:=p_harness.actionDecl_list[p_index].parameter_list[i].default_ ; log("v_req",v_req);return v_req;    
+          }
+          else if ((ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_)) and (p_harness.actionDecl_list[p_index].parameter_list[i].default_==""))
+          {//default unusable , generate value
+            v_req[i].base:=float2str(f_generate_random_decimal(1.0,10.0)); log("v_req",v_req);return v_req; 
+          }
+          else if (not(ispresent(p_harness.actionDecl_list[p_index].parameter_list[i].default_))) 
+          {
+            v_req[i].base:="" ; log("v_req",v_req);return v_req;    
+
+          }
+
+        }  
+
+
+      }//endif datatype decimal
+
+    }//endif datatype is present
+
+    else { //datataype not present, assume datatype string?
+
+
+    }
+
+  }//endfor
+
+
+  log("v_req",v_req);return v_req;               
+}
+
+
+
+
+//******************************************************************************************    
+
+testcase  tc_Toaster() runs on MTC_CT
+{
+  ConfigurationBuild();
+  //---------------------------------------------------------------------------------------------
+  if(tsp_provider) {  
+
+    v_ProviderMapping_CT.start(f_ScanClientPorts(tsp_AuthType_provider,"toaster","toaster",tsp_localPortProvider));
+    alt { []Ctlpm_PCO.receive("ready")    {
+
+        v_TranslatorP_CT.start(f_ScanTranslatorPorts());
+        v_Provider_CT.start(f_ProviderBehaviour());
+        //v_Provider_CT.start(f_Test_ToasterBehaviour());
+
+      };   
+
+
+      []Ctlpm_PCO.receive("abort")    {
+
+          {  
+            log("Requestor component could not be started");
+          };   
+        }
+    }//endalt
+
+  }  
+
+  //---------------------------------------------------------------------------------------------
+
+  if(tsp_server) {  
+
+    v_ServerMapping_CT.start(f_ScanServerPorts());
+
+    alt { []Ctlsm_PCO.receive("ready")    {
+        v_TranslatorS_CT.start(f_ScanTranslatorPorts());
+        v_Server_CT.start(f_ServerBehaviour());
+
+      };   
+    }
+  }  
+
+  //---------------------------------------------------------------------------------------------
+
+
+  if(tsp_requestor) {
+
+    v_RequestorMapping_CT.start(f_ScanClientPorts(tsp_AuthType_requestor,"titan0","titan0",tsp_localPortRequestor));
+
+
+    alt { 
+      []Ctlrm_PCO.receive("ready")    {
+
+          v_TranslatorR_CT.start(f_ScanTranslatorPorts());
+          v_Requestor_CT.start(f_RequestorBehaviour());
+
+
+        };   
+      []Ctlrm_PCO.receive("abort")    {
+
+          {   
+            log("Requestor component could not be started");
+          };   
+
+        }
+    }//endalt
+
+  }//endif  
+
+
+  //---------------------------------------------------------------------------------------------
+
+  if(tsp_provider)  {
+    alt {
+      []Ctlp_PCO.receive("go")    { if(tsp_requestor) {   Ctlr_PCO.send("go")    }};
+    }//endalt
+  }
+  if(tsp_server) {
+    alt {
+
+      []Ctls_PCO.receive("go")    { if(tsp_requestor) {   Ctlr_PCO.send("go")    }};
+    }//endalt
+  }        
+  //---------------------------------------------------------------------------------------------
+
+  if(tsp_provider) {
+
+    alt {
+
+      []Ctlp_PCO.receive("halt")    
+        {   
+
+
+
+          if(tsp_requestor) {
+
+            Ctlr_PCO.send("halt");
+            alt {
+              []Ctlr_PCO.receive("halt ack") {
+                  Ctlrt_PCO.send("halt");
+                  Ctlrm_PCO.send("halt");
+                }
+
+            }//endalt 
+          }//endif
+          Ctlp_PCO.send("halt ack"); 
+          Ctlpt_PCO.send("halt");
+          Ctlpm_PCO.send("halt");
+
+          if(tsp_server) {  
+            Ctlst_PCO.send("halt");
+            Ctlsm_PCO.send("halt");
+          }
+
+        };
+
+    }//endalt
+
+  }  
+  //---------------------------------------------------------------------------------------------
+
+  all component.done;
+  ConfigurationKill();
+
+}
+
+
+
+
+
+
+//  control
+
+//  }//endcontrol
+}
+
+with {    encode "XML"     }

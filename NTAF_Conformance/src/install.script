@@ -1,0 +1,136 @@
+#!/bin/sh 
+
+##******************************************************************************
+## Copyright (c) 2004, 2017  Ericsson AB
+## All rights reserved. This program and the accompanying materials
+## are made available under the terms of the Eclipse Public License v1.0
+## which accompanies this distribution, and is available at
+## http://www.eclipse.org/legal/epl-v10.html
+##
+## Contributors:
+##  Elemer Lelik - initial implementation
+##  Endre Kulcsar
+##  Eszter Susanszky
+##
+##
+##  File:               install.script
+##  Description:        NTAF Conformance Test Suite 
+##  Rev:                 
+##  Prodnr:              
+##  Updated:            2013-09-10
+##  Contact:            http://ttcn.ericsson.se
+##
+##############################################################################/
+
+##############################################################################/
+##  Module:  
+##
+##  Purpose: 
+##     
+##
+##  Module Parameters:
+##      -
+##
+##  Module depends on:
+##    -
+##
+##############################################################################
+
+
+
+# Run this script from  the ~/bin directory. It will create links in ~bin to all necessary files. 
+
+
+
+# Creating softlinks from main & protocols' directories
+#
+# Linking non-protocol-bound files 
+
+
+
+ln -sf ../src/Makefile                                                 ../bin/Makefile
+
+protocolmodulepath=${PROTOCOLMODULE_PATH:-'/home/ntaf/Conformance/ProtocolModules'}
+
+ln -sf $protocolmodulepath/NTAF_CNL113776/src/http_ntaforum_org_2011_activation.ttcn                       ../bin
+ln -sf $protocolmodulepath/NTAF_CNL113776/src/http_ntaforum_org_2011_harness.ttcn                          ../bin
+ln -sf $protocolmodulepath/NTAF_CNL113776/src/http_ntaforum_org_2011_registry.ttcn                         ../bin
+
+
+ln -sf $protocolmodulepath/COMMON/src/http_www_w3_org_XML_1998_namespace.ttcn                              ../bin
+ln -sf $protocolmodulepath/COMMON/src/UsefulTtcn3Types.ttcn                                                ../bin
+ln -sf $protocolmodulepath/COMMON/src/XSD.ttcn                                                             ../bin
+ln -sf ../src/NTAF_common.ttcn                                                                             ../bin
+ln -sf ../src/NTAF_templates.ttcn                                                                          ../bin 
+ln -sf ../src/NTAF.cfg                                                                                     ../bin
+ln -sf ../src/XMPP_slicer.cc                                                                               ../bin
+ln -sf ../src/NTAF_Auth.ttcn                                                                               ../bin
+ln -sf ../src/NTAF_ProviderConformance.ttcn                                                                ../bin
+ln -sf ../src/NTAF_exec.ttcn                                                                               ../bin
+ln -sf ../src/NTAF_static.ttcn                                                                             ../bin
+ln -sf ../src/NTAF_RequestorConformance.ttcn                                                               ../bin
+ln -sf ../src/NTAF_Television.ttcn                                                                         ../bin
+
+
+
+
+
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/jabber_server.ttcn                                           ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/jabber_client.ttcn                                           ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/urn_ietf_params_xml_ns_xmpp_stanzas.ttcn                     ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/urn_ietf_params_xml_ns_xmpp_bind.ttcn                        ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/urn_ietf_params_xml_ns_xmpp_sasl.ttcn                        ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/urn_ietf_params_xml_ns_xmpp_streams.ttcn                     ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/urn_ietf_params_xml_ns_xmpp_tls.ttcn                         ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_etherx_jabber_org_streams.ttcn                          ../bin
+
+
+
+
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_pubsub.ttcn           		   ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_pubsub_errors.ttcn                  ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_pubsub_event.ttcn                   ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_pubsub_owner.ttcn                   ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/jabber_x_data.ttcn                                           ../bin
+
+
+
+
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_disco_items.ttcn                    ../bin
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/http_jabber_org_protocol_disco_info.ttcn                     ../bin
+
+ln -sf $protocolmodulepath/XMPP_CNL113775/src/jabber_iq_auth.ttcn                                          ../bin
+
+      
+# Authentication
+
+ln -sf ../src/Auth_EncDec.cc                                               ../bin
+
+
+
+ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCEncoding_Functions.ttcn                                   ../bin
+ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCEncoding.cc                                               ../bin
+
+ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCConversion_Functions.ttcn                                 ../bin
+ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCConversion.cc                                             ../bin
+
+
+#ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCOpenSecurity_Functions.ttcn                               ../bin
+#ln -sf $protocolmodulepath/TCCUsefulFunctions_CNL113472/src/TCCOpenSecurity.cc                                           ../bin
+
+
+# Linking test ports
+
+portpath=${PORT_PATH:-'/home/ntaf/Conformance/TestPorts'}
+
+
+ln -sf $portpath/IPL4asp_CNL113531/src/IPL4asp_Types.ttcn                                                ../bin
+ln -sf $portpath/IPL4asp_CNL113531/src/IPL4asp_PT.cc                                                     ../bin
+ln -sf $portpath/IPL4asp_CNL113531/src/IPL4asp_PT.hh                                                     ../bin
+ln -sf $portpath/IPL4asp_CNL113531/src/IPL4asp_PortType.ttcn                                             ../bin
+
+ln -sf $portpath/Socket_API_CNL113686/src/Socket_API_Definitions.ttcn                                    ../bin
+
+
+
+ln -sf ../src/logF.sh                                                      ../bin

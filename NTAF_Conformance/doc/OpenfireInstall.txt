@@ -1,0 +1,74 @@
+Openfire server installation for NTAF
+
+
+http://www.igniterealtime.org/downloads/index.jsp
+
+
+System property:
+
+xmpp.pubsub.multiple-subscriptions  false
+
+
+
+If logging does not start (logs are shown as being of size 0)
+
+the {$openfirehome} variable  ~/lib/log4j.xml doesn't pick the actual location of directory so replacing each occurance of {$openfirehome} in log4j.xml with the actual home directory path of the log files fixes the problem.
+
+ example:
+ old---
+{$openfirehome}/logs/info.log
+new--
+/usr/local/openfire/logs/info.log
+
+
+CREATE ntaf.tools node:
+
+
+<iq type="set" to="pubsub.esekilxxen1843.rnd.ericsson.se" id="create1">
+    <pubsub xmlns="http://jabber.org/protocol/pubsub">
+        <create node="ntaf.tools"/>
+        <configure>
+            <x xmlns='jabber:x:data' type='submit'>
+                <field var='FORM_TYPE' type='hidden'><value>http://jabber.org/protocol/pubsub#node_config</value></field>
+                <field var='pubsub#node_type'><value>collection</value></field>
+            </x>
+        </configure>
+    </pubsub>
+</iq>
+
+
+<iq id="yrx100-0" to="pubsub.esekilxxen1843.rnd.ericsson.se" type="set">
+	<pubsub xmlns="http://jabber.org/protocol/pubsub">
+		<create node="ntaf.tools"/>
+		<configure>
+			<x type="submit" xmlns="jabber:x:data">
+                		<field var='FORM_TYPE' type='hidden'><value>http://jabber.org/protocol/pubsub#node_config</value></field>
+                		<field var='pubsub#node_type'><value>collection</value></field>
+				<field type="list-single" var="pubsub#access_model">
+					<value>open</value>
+				</field>
+				<field type="boolean" var="pubsub#deliver_payloads">
+					<value>1</value>
+				</field>
+				<field type="boolean" var="pubsub#notify_retract">
+					<value>1</value>
+				</field>
+				<field type="boolean" var="pubsub#persist_items">
+					<value>1</value>
+				</field>
+				<field type="text-single" var="pubsub#max_items">
+					<value>10</value> <!-- ejabberd default max 20 -->
+				</field>
+				<field type="list-single" var="pubsub#publish_model">
+					<value>open</value>
+				</field>
+			</x>
+		</configure>
+	</pubsub>
+</iq>
+
+<iq type="set" to="pubsub.esekilxxen1843.rnd.ericsson.se" id="delete1">
+<pubsub xmlns="http://jabber.org/protocol/pubsub#owner">
+<delete node="ntaf0.tools"/>
+</pubsub>
+</iq>

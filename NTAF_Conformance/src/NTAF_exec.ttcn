@@ -1,0 +1,137 @@
+/******************************************************************************
+* Copyright (c) 2004, 2017  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Elemer Lelik - initial implementation
+*   Endre Kulcsar
+*   Eszter Susanszky
+******************************************************************************/
+//
+//  File:               NTAF_exec.ttcn
+//  Description:        NTAF Conformance Test Suite 
+//  Rev:                 
+//  Prodnr:              
+//  Updated:            2013-09-10
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module:  
+//
+//  Purpose:
+//     
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+module NTAF_exec
+
+{
+
+
+import from NTAF_common  	   		   	all;
+import from NTAF_ProviderConformance			all;
+import from NTAF_templates  			        all;
+import from NTAF_static  				all;
+import from NTAF_RequestorConformance   		all;
+import from NTAF_Television                		all;
+
+
+control
+{
+
+
+  //************************************************************************************************************
+  //Static
+  //************************************************************************************************************
+
+ 
+  if (tsp_tc_staticEncDec)                              {execute(tc_staticEncodeDecode()) }			//toaster, titan0
+
+  //************************************************************************************************************
+  //Simulations
+  //************************************************************************************************************
+
+
+  //************************************************************************************************************
+  if(tsp_tc_Toaster)                                    {execute(tc_Toaster()); }
+  if(tsp_tc_Television)                                 {execute(tc_Television()); }
+  if (tsp_tc_Provider_ActivateDeactivate)               {execute(tc_Provider_ActivateDeactivate()) }	
+
+
+  //************************************************************************************************************
+  //Provider Conformance
+  //************************************************************************************************************
+
+
+
+
+  if (tsp_tc_preamble_postamble)				{execute(tc_TS001_preamble_postamble()) }			//toaster, titan0
+  if (tsp_tc_act_deact_separately)				{execute(tc_TS001_act_deact_separately()) }
+  if (tsp_tc_act_deact_altogether)				{execute(tc_TS001_act_deact_altogether()) }
+  if (tsp_tc_discovering_harness_support)			{execute(tc_TS002_disco_info_query_harness()) }	//feature list: ... {var_ := "http://ntaforum.org/2011/harness"} ..., actions
+  if (tsp_tc_open_session_separately)			{execute(tc_TS002_open_session_separately())}
+  if (tsp_tc_open_session_altogether)			{execute(tc_TS002_open_session_altogether())}
+  if (tsp_tc_notify_action)					{execute(tc_TS002_user_activity_notification())}
+  if (tsp_tc_notify_close)					{execute(tc_TS002_notify_close())}
+  if (tsp_tc_session_resource_availability)		{execute(tc_TS002_session_resource_availability())}
+  if (tsp_tc_invisible_and_automated)			{execute(tc_TS002_performing_actions_invisible_and_automated())}
+  if (tsp_tc_perform_actions_cancelling)			{execute(tc_TS002_performing_actions_cancelling())}
+  if (tsp_tc_visible_and_automated)				{execute(tc_TS002_performing_actions_visible_and_automated())}
+
+  if (tsp_tc_deactivate_wrong_actRef_separately)	{execute(tc_TS001_deactivate_wrong_actRef_separately())}
+  if (tsp_tc_activate_unsupportedMode)			{execute(tc_TS001_activate_unsupportedMode())}
+  if (tsp_tc_activate_unsupportedHarness)			{execute(tc_TS001_activate_unsupportedHarness())}
+  if (tsp_tc_deactivate_wrong_actRef_altogether)	{execute(tc_TS001_deactivate_wrong_actRef_altogether())}
+  if (tsp_tc_activate_already_activated)			{execute(tc_TS001_activate_already_activated())}
+  if (tsp_tc_deactivate_already_deactivated)		{execute(tc_TS001_deactivate_already_deactivated())}
+
+
+  if (tsp_tc_open_session_without_activation)		{execute(tc_TS002_open_session_without_activation())}
+  if (tsp_tc_open_session_not_activated_mode)		{execute(tc_TS002_open_session_not_activated_mode())}
+  if (tsp_tc_open_session_unsupported_mode)		{execute(tc_TS002_open_session_unsupported_mode())}
+  if (tsp_tc_close_closed_session)				{execute(tc_TS002_close_closed_session())}
+  if (tsp_tc_open_unsupportedMode_session_altogether)	{execute(tc_TS002_open_unsupportedMode_session_altogether())}
+  if (tsp_tc_close_nonexisting_session)			{execute(tc_TS002_close_nonexisting_session())}
+  if (tsp_tc_close_closed_session_altogether)		{execute(tc_TS002_close_closed_session_altogether())}
+  if (tsp_tc_perform_nonexisting_action)			{execute(tc_TS002_perform_nonexisting_action())}
+  if (tsp_tc_cancel_cancelled_action)			{execute(tc_TS002_cancel_cancelled_action())}
+  if (tsp_tc_cancel_finished_action)			{execute(tc_TS002_cancel_finished_action())}
+  if (tsp_tc_cancel_notStarted_action)			{execute(tc_TS002_cancel_notStarted_action())}
+  if (tsp_tc_cancel_nonExisting_action)			{execute(tc_TS002_cancel_nonExisting_action())}
+
+  if (tsp_tc_tool_resource)				{execute(tc_TS003_tool_resource())}
+  if (tsp_tc_get_attributes_connectors)			{execute(tc_TS003_get_attributes_connectors())}
+
+  //************************************************************************************************************
+  //Requestor Conformance
+  //************************************************************************************************************
+  if (tsp_tc_Provider_TP_NTAF_TS_001_ACT_RBV_001)       {execute(tc_Provider_TP_NTAF_TS_001_ACT_RBV_001()) }	
+  if (tsp_tc_Provider_TP_NTAF_TS_001_ACT_RBV_005)       {execute(tc_Provider_TP_NTAF_TS_001_ACT_RBV_005()) }	
+  if (tsp_tc_Provider_OpenSession_Separately)           {execute(tc_Provider_OpenSession_Separately()) }	
+  if (tsp_tc_Provider_OpenSession_Altogether)           {execute(tc_Provider_OpenSession_Altogether() ) }	
+  if (tsp_tc_Provider_Actions_visible_and_automated)    {execute(tc_Provider_Actions_visible_and_automated()) }
+  if (tsp_tc_Provider_Actions_invisible_and_automated)  {execute(tc_Provider_Actions_invisible_and_automated()) }	
+  if (tsp_tc_Provider_Actions_cancelling) 		  {execute(tc_Provider_Actions_cancelling()) }	
+ 
+
+
+
+
+
+}//endcontrol
+
+
+
+
+}//emdmodule

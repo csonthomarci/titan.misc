@@ -1,0 +1,4855 @@
+/******************************************************************************
+* Copyright (c) 2004, 2017  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Elemer Lelik - initial implementation
+*   Endre Kulcsar
+*   Eszter Susanszky
+******************************************************************************/
+//
+//  File:               NTAF_templates.ttcn
+//  Description:        NTAF Conformance Test Suite 
+//  Rev:                 
+//  Prodnr:              
+//  Updated:            2014-01-07
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module:  
+//
+//  Purpose:
+//     
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+module NTAF_templates
+
+{
+
+modulepar {
+
+  charstring  tsp_fqdn:="ntaf.conformance.test";
+  charstring  tsp_username_provider:="toaster";
+  charstring  tsp_password_provider:="toaster";
+  charstring  tsp_username_requestor:="titan0";
+  charstring  tsp_password_requestor:="titan0";
+  charstring  tsp_resource:="1";
+  charstring  tsp_activationRef:="toasterRef";
+  charstring  tsp_sessionId:="toasterSession";
+  charstring  tsp_backdoor:="lifecycle";
+  charstring  tsp_immediateResponse:="pass";//pending
+  Harness_description tsp_harness_description_harness_name:=
+  {
+    populated:=false,
+    harness_structure:={
+      harness:="",
+      actionDescription_list:={},
+      eventDescription_list:={}
+
+    }
+
+  }  
+
+
+}//endmodulepar
+
+//import from  TCCSecurity_Functions 	                all;
+import from  TCCEncoding_Functions 	                all; 
+import from  TCCConversion_Functions 	                all; 
+
+import from IPL4asp_Types                                               all;
+import from IPL4asp_PortType                                            all;
+
+
+import from http_ntaforum_org_2011_harness 		all;
+import from http_ntaforum_org_2011_registry 		all;
+import from http_ntaforum_org_2011_activation 		all;
+
+import from http_jabber_org_protocol_pubsub 		all;
+import from http_jabber_org_protocol_pubsub_errors 	all;
+import from http_jabber_org_protocol_pubsub_event 	all;
+import from http_jabber_org_protocol_pubsub_owner 	all;
+import from http_etherx_jabber_org_streams              all;
+import from http_jabber_org_protocol_disco_items 	all; 
+import from http_jabber_org_protocol_disco_info 	all;
+
+
+
+//import from jabber_server 				all;
+import from jabber_client 				all;
+import from jabber_x_data 				all;
+import from jabber_iq_auth                       	all;
+
+
+//import from urn_ietf_params_xml_ns_xmpp_stanzas 	all;
+import from urn_ietf_params_xml_ns_xmpp_bind           	all;
+import from urn_ietf_params_xml_ns_xmpp_sasl            all;
+import from urn_ietf_params_xml_ns_xmpp_tls             all;
+
+
+
+
+import from XSD                             	        all;
+
+import from http_www_w3_org_XML_1998_namespace          all;
+
+//import from NTAF_Auth 					all;
+
+
+
+//-----------------------------------------------------------------------------
+//External functions
+//-----------------------------------------------------------------------------
+
+//RFC 6120 4.8.3
+//XMPP as defined in this specification uses two content namespaces: 'jabber:client' and 'jabber:server'. 
+//These namespaces are nearly identical but are used in different contexts (client-to-server communication for 
+//'jabber:client' and server-to-server communication for 'jabber:server').
+
+//jabber_client, jabber_server
+//encoding in client--> server direction
+//decoding in server --> client direction
+external function enc_cIq(in jabber_client.Iq pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_cIq(in octetstring stream) return jabber_client.Iq
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+/*
+external function enc_sIq(in jabber_server.Iq pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_sIq(in octetstring stream) return jabber_server.Iq
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+*/
+external function enc_cMessage(in jabber_client.Message pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_cMessage(in octetstring stream) return jabber_client.Message
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+/*
+external function enc_sMessage(in jabber_server.Message pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_sMessage(in octetstring stream) return jabber_server.Message
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+*/
+
+external function enc_cPresence(in jabber_client.Presence pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_cPresence(in octetstring stream) return jabber_client.Presence
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+/*
+external function enc_sPresence(in jabber_server.Presence pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_sPresence(in octetstring stream) return jabber_server.Presence
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+*/
+
+//http_jabber_org_protocol_pubsub
+external function enc_Pubsub(in http_jabber_org_protocol_pubsub.Pubsub pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Pubsub(in octetstring stream) return http_jabber_org_protocol_pubsub.Pubsub
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Configure(in http_jabber_org_protocol_pubsub.Configure pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Configure(in octetstring stream) return http_jabber_org_protocol_pubsub.Configure
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Create(in http_jabber_org_protocol_pubsub.Create pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Create(in octetstring stream) return http_jabber_org_protocol_pubsub.Create
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_jabber_org_protocol_pubsub_event
+external function enc_Pubsub_Event(in http_jabber_org_protocol_pubsub_event.Event pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Pubsub_Event(in octetstring stream) return http_jabber_org_protocol_pubsub_event.Event
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_pubsub_owner
+
+external function enc_Pubsub_owner(in http_jabber_org_protocol_pubsub_owner.Pubsub pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Pubsub_owner(in octetstring stream) return http_jabber_org_protocol_pubsub_owner.Pubsub
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_disco_info
+external function enc_Query_info(in http_jabber_org_protocol_disco_info.Query pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Query_info(in octetstring stream) return http_jabber_org_protocol_disco_info.Query
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_disco_items
+external function enc_Query_items(in http_jabber_org_protocol_disco_items.Query pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Query_items(in octetstring stream) return http_jabber_org_protocol_disco_items.Query
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//jabber_iq_auth
+external function enc_Query(in jabber_iq_auth.Query pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Query(in octetstring stream) return jabber_iq_auth.Query
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//jabber_x_data
+
+
+external function enc_X(in jabber_x_data.X pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_X(in octetstring stream) return jabber_x_data.X
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_bind
+external function enc_Bind(in Bind pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Bind(in octetstring stream) return Bind
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_tls
+external function enc_Starttls(in Starttls pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Starttls(in octetstring stream) return Starttls
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Proceed(in Proceed pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Proceed(in octetstring stream) return Proceed
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Failure(in urn_ietf_params_xml_ns_xmpp_tls.Failure pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Failure(in octetstring stream) return urn_ietf_params_xml_ns_xmpp_tls.Failure
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_sasl
+
+external function enc_Mechanisms(in Mechanisms pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Mechanisms(in octetstring stream) return Mechanisms
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Auth(in Auth pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Auth(in octetstring stream) return Auth
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Success(in Success pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Success(in octetstring stream) return Success
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_saslChallenge(in Challenge pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_saslChallenge(in octetstring stream) return Challenge
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_saslResponse(in urn_ietf_params_xml_ns_xmpp_sasl.Response pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_saslResponse(in octetstring stream) return urn_ietf_params_xml_ns_xmpp_sasl.Response
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_etherx_jabber_org_streams
+
+external function enc_Stream(in Stream pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Stream(in octetstring stream) return Stream
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_ntaforum_org_2011_registry
+external function enc_Entry(in Entry pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Entry(in octetstring stream) return Entry
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_ntaforum_org_2011_activation
+external function enc_Activate(in Activate pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Activate(in octetstring stream) return Activate
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Deactivate(in Deactivate pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Deactivate(in octetstring stream) return Deactivate
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_ntaforum_org_2011_harness
+
+
+external function enc_Open(in Open pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Open(in octetstring stream) return Open
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Close(in Close pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Close(in octetstring stream) return Close
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Response(in http_ntaforum_org_2011_harness.Response pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Response(in octetstring stream) return http_ntaforum_org_2011_harness.Response
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Request(in Request pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Request(in octetstring stream) return Request
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Event(in http_ntaforum_org_2011_harness.Event pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Event(in octetstring stream) return http_ntaforum_org_2011_harness.Event
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+external function enc_Cancel(in Cancel pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Cancel(in octetstring stream) return Cancel
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Progress(in Progress pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Progress(in octetstring stream) return Progress
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+
+external function enc_Query_harness(in Query_harness pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Query_harness(in octetstring stream) return Query_harness
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+
+external function enc_Notify_action(in Notify_action pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Notify_action(in octetstring stream) return Notify_action
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+external function enc_Notify_close(in Notify_close pdu) return octetstring
+with { extension "prototype (convert) encode(XER:XER_EXTENDED)" };
+external function dec_Notify_close(in octetstring stream) return Notify_close
+with {
+  extension "prototype (convert) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//-----------------------------------------------------------------------------
+//External functions 2
+//-----------------------------------------------------------------------------
+
+
+
+//jabber_client, jabber_server
+//encoding in client--> server direction
+//decoding in server --> client direction
+//external function encode_cIq(in jabber_client.Iq pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+
+function f_remove_ns(in universal charstring xml, charstring ns) return universal charstring
+{
+
+  var charstring v_str:=unichar2char(xml);
+
+  v_str:=f_replaceFirstOccurenceOfSubstring(v_str,":"&ns,"");
+  v_str:=f_replaceEveryOccurenceOfSubstring(v_str,ns&":","")
+
+  return v_str; 
+}
+
+
+
+function encode_cIq(in jabber_client.Iq pdu) return octetstring
+{
+
+  var charstring v_str:=oct2char(enc_cIq(pdu));
+
+  v_str:=f_replaceFirstOccurenceOfSubstring(v_str, "xmlns:ns0001='jabber:client'","xmlns='jabber:client'");
+  v_str:=f_replaceEveryOccurenceOfSubstring(v_str,"ns0001:","")
+
+  return char2oct(v_str); 
+}
+
+
+
+external function decode_cIq(in octetstring stream, out jabber_client.Iq struct) return integer
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_sIq(in jabber_server.Iq pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+/*external function decode_sIq(in octetstring stream, out jabber_server.Iq struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+*/
+//external function encode_cMessage(in jabber_client.Message pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+
+function encode_cMessage(in jabber_client.Message pdu) return octetstring
+{
+
+  var charstring v_str:=oct2char(enc_cMessage(pdu));
+
+  v_str:=f_replaceFirstOccurenceOfSubstring(v_str, "xmlns:ns0001='jabber:client'","xmlns='jabber:client'");
+  v_str:=f_replaceEveryOccurenceOfSubstring(v_str,"ns0001:message","message")
+
+  return char2oct(v_str); 
+}
+
+
+external function decode_cMessage(in octetstring stream, out jabber_client.Message struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_sMessage(in jabber_server.Message pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+/*external function decode_sMessage(in octetstring stream, out jabber_server.Message struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+*/
+//external function encode_cPresence(in jabber_client.Presence pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_cPresence(in octetstring stream, out jabber_client.Presence struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_sPresence(in jabber_server.Presence pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+/*external function decode_sPresence(in octetstring stream, out jabber_server.Presence struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+*/
+
+//http_jabber_org_protocol_pubsub
+//external function encode_Pubsub(in http_jabber_org_protocol_pubsub.Pubsub pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Pubsub(in octetstring stream, out http_jabber_org_protocol_pubsub.Pubsub struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Configure(in http_jabber_org_protocol_pubsub.Configure pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Configure(in octetstring stream, out http_jabber_org_protocol_pubsub.Configure struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Create(in http_jabber_org_protocol_pubsub.Create pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Create(in octetstring stream, out http_jabber_org_protocol_pubsub.Create struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_jabber_org_protocol_pubsub_event
+//external function encode_Pubsub_Event(in http_jabber_org_protocol_pubsub_event.Event pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Pubsub_Event(in octetstring stream, out  http_jabber_org_protocol_pubsub_event.Event struct)  return integer
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_pubsub_owner
+
+//external function encode_Pubsub_owner(in http_jabber_org_protocol_pubsub_owner.Pubsub pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Pubsub_owner(in octetstring stream, out http_jabber_org_protocol_pubsub_owner.Pubsub struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_disco_info
+//external function encode_Query_info(in http_jabber_org_protocol_disco_info.Query pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Query_info(in octetstring stream, out http_jabber_org_protocol_disco_info.Query struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_jabber_org_protocol_disco_items
+//external function encode_Query_items(in http_jabber_org_protocol_disco_items.Query pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Query_items(in octetstring stream, out http_jabber_org_protocol_disco_items.Query struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//jabber_iq_auth
+//external function encode_Query(in jabber_iq_auth.Query pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Query(in octetstring stream, out jabber_iq_auth.Query struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//jabber_x_data
+
+
+//external function encode_X(in jabber_x_data.X pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_X(in octetstring stream, out jabber_x_data.X struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_bind
+//external function encode_Bind(in Bind pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Bind(in octetstring stream, out Bind struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_tls
+//external function encode_Starttls(in Starttls pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Starttls(in octetstring stream, out Starttls struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Proceed(in Proceed pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Proceed(in octetstring stream, out Proceed struct) return integer
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Failure(in urn_ietf_params_xml_ns_xmpp_tls.Failure pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Failure(in octetstring stream,  out urn_ietf_params_xml_ns_xmpp_tls.Failure struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//urn_ietf_params_xml_ns_xmpp_sasl
+
+//external function encode_Mechanisms(in Mechanisms pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Mechanisms(in octetstring stream, out Mechanisms struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Auth(in Auth pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Auth(in octetstring stream, out Auth struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Success(in Success pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Success(in octetstring stream, out Success struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_saslChallenge(in Challenge pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_saslChallenge(in octetstring stream, out Challenge struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_saslResponse(in urn_ietf_params_xml_ns_xmpp_sasl.Response pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_saslResponse(in octetstring stream, out urn_ietf_params_xml_ns_xmpp_sasl.Response struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_etherx_jabber_org_streams
+
+//external function encode_Stream(in Stream pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Stream(in octetstring stream, out Stream struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_ntaforum_org_2011_registry
+//external function encode_Entry(in Entry pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Entry(in octetstring stream, out Entry struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//http_ntaforum_org_2011_activation
+//external function encode_Activate(in Activate pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Activate(in octetstring stream, out Activate struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Deactivate(in Deactivate pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Deactivate(in octetstring stream, out Deactivate struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//http_ntaforum_org_2011_harness
+
+
+//external function encode_Open(in Open pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Open(in octetstring stream, out Open struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Close(in Close pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Close(in octetstring stream, out Close struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Response(in http_ntaforum_org_2011_harness.Response pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Response(in octetstring stream, out http_ntaforum_org_2011_harness.Response struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Request(in Request pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Request(in octetstring stream, out Request struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Event(in http_ntaforum_org_2011_harness.Event pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Event(in octetstring stream, out http_ntaforum_org_2011_harness.Event struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+//external function encode_Cancel(in Cancel pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Cancel(in octetstring stream, out Cancel struct) return integer
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Progress(in Progress pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Progress(in octetstring stream, out Progress struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+
+//external function encode_Query_harness(in Query_harness pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Query_harness(in octetstring stream, out Query_harness struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+
+//external function encode_Notify_action(in Notify_action pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Notify_action(in octetstring stream, out Notify_action struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+//external function encode_Notify_close(in Notify_close pdu) return octetstring
+//with { extension "prototype (backtrack) encode(XER:XER_EXTENDED)" };
+external function decode_Notify_close(in octetstring stream, out Notify_close struct) return integer 
+with {
+  extension "prototype (backtrack) decode(XER:XER_EXTENDED)" 
+  extension "errorbehavior(ALL:WARNING)"  
+} ;
+
+
+
+//-----------------------------------------------------------------------------
+//Types
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+//
+
+type record Harness_structure
+{
+  Namespace harness,
+  record of record {
+    ActionName name,
+    record of RequestParameter    request_parameter_list,
+    record of RequestXmlParameter request_xmlParameter_list,
+    record of RequestFile         request_file_list,
+    record of RequestGroup        request_group_list,
+    record of ResponseItem        response_item_list,
+    record of ResponseXmlItem     response_xmlItem_list,
+    record of FileItem            response_file_list,
+    record of ResponseGroup       response_group_list
+  } actionDescription_list,
+  record of record {
+    XSD.Name name,
+    record of ResponseItem        response_item_list,
+    record of ResponseXmlItem     response_xmlItem_list,
+    record of FileItem            response_file_list,
+    record of ResponseGroup       response_group_list   
+  } eventDescription_list
+
+}
+
+
+type record Harness_description
+{
+  boolean           populated,
+  Harness_structure harness_structure
+
+}
+
+
+type record UserEntry 
+{
+
+  charstring username,
+  charstring password,
+  charstring resource
+
+};
+
+type record of UserEntry UserTable;
+
+type record of charstring AuthenticatedJid;
+
+type record RouteEntry 
+{
+  universal  charstring dest,
+  integer    routeId 
+}
+
+
+type record of RouteEntry  RoutingTable;
+
+
+type enumerated AuthType  {Non_SASL(0),SASL_PLAIN(1), SASL_DIGEST_MD5(2)};
+
+
+type record length (4) of universal charstring StringArray;
+type enumerated SlotState  {idle(0),busy(1)};
+type enumerated ToasterState {active(0), deact_ordered(1),deactivated(2)};
+type enumerated SessionState {available(0), seized(1)};
+
+
+
+type record ToasterSlot {
+
+  SlotState  state,
+  universal charstring  requestor,
+  universal charstring  stanzaId,
+  float       slottimer
+
+};
+
+
+type record of ToasterSlot Toaster;
+
+
+
+//-----------------------------------------------------------------------------
+//Types for Television Provider
+//-----------------------------------------------------------------------------
+
+type enumerated TV_Mode 
+{
+  television,
+  video,
+  teletext
+}
+
+type enumerated TV_Language 
+{
+  English,
+  German,
+  French,
+  Russian 
+}
+
+//type enumerated TelevisionState     {active(0), deact_ordered(1),deactivated(2)};
+type enumerated TelevisionState {inactive(0), active(1),session_opened(2)};
+
+type record TelevisionSettings
+{
+  boolean      isTurnedOn,
+  integer      channel (1..99),
+  integer      volume  (1..20),
+  boolean      isMuted,
+  integer      contrast (1..20),
+  TV_Mode      tV_Mode, 
+  TV_Language  tV_Language,
+  boolean      muteSetting
+}
+
+type record of Channel ChannelList;
+
+type record Channel
+{
+  universal charstring channel_name, 
+  integer channel_number optional
+}
+
+
+type port Control_PT message
+{
+  inout charstring
+}with { extension "internal"}  
+
+
+type port Comm_PT message
+{
+  inout charstring, jabber_client.Iq,jabber_client.Message,jabber_client.Presence,Stream
+}with { extension "internal"}  
+
+type port InnerComm_PT message
+{
+  inout charstring, CompositeClientIq,CompositeClientMessage,jabber_client.Presence,Stream
+}with { extension "internal"}  
+
+
+
+type component system_CT
+{
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port IPL4asp_PT       TCPp_PCO; //provider
+  port IPL4asp_PT       TCPr_PCO; //requestor
+  port IPL4asp_PT       TCPs_PCO; //server
+
+  port IPL4asp_PT       TCP_PCO; //mtc -not used
+
+
+
+
+}//end system component
+
+
+
+type component MTC_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+
+
+	var Mapping_CT 		v_RequestorMapping_CT:=null;
+	var Mapping_CT  	v_ProviderMapping_CT:=null;
+	var ServerMapping_CT    v_ServerMapping_CT:=null;
+	var Server_CT          	v_Server_CT:=null;
+	var Requestor_CT       	v_Requestor_CT:=null;
+	var Provider_CT        	v_Provider_CT:=null;
+	var Translator_CT	v_TranslatorP_CT:=null;
+	var Translator_CT     	v_TranslatorR_CT:=null;
+	var Translator_CT     	v_TranslatorS_CT:=null;
+
+  var Entry.harness_list v_harness_list :=
+{
+	{
+		name := "http://Example.org/ttcn/titan_television",
+		supportedMode_list :=
+		{
+			invisible_and_automated,visible_and_interactive,visible_and_automated
+		}
+	}, 
+	{
+		name := "http://Example.org/ttcn/titan_television_position",
+		supportedMode_list :=
+		{
+			invisible_and_automated 
+		}
+	} 
+};
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+	
+	timer Twait;  
+
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+	port Control_PT      Ctlr_PCO;//requestor
+	port Control_PT      Ctlrm_PCO;//requestor mapping
+	port Control_PT      Ctlrt_PCO;//requestor translator
+
+	port Control_PT      Ctlp_PCO;//provider
+	port Control_PT      Ctlpm_PCO;//provider mapping
+	port Control_PT      Ctlpt_PCO;//provider translator
+
+	port Control_PT      Ctls_PCO; //server
+	port Control_PT      Ctlsm_PCO;//server mapping
+	port Control_PT      Ctlst_PCO;//server translator
+
+
+};
+
+
+type component Requestor_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //----------------------------------------------------------------------------- 
+
+	var default v_reqDefault:=null;
+
+	var universal charstring v_session:= "";
+
+	var Node v_toasterNodeInfos;
+
+	//  var RecordOfChar v_list_of_tool_nodes;
+	var integer v_nrOfActivations:= 0;
+
+	var Nodes v_ntafNodes := {};
+
+	var RecordOfString v_list_of_tool_nodes := {};
+
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;  
+  timer TwaitSendReceive;
+  timer Twait2;
+  timer Twait3;
+  timer Twait4;
+
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port Control_PT      Ctl_PCO;
+  port Comm_PT         Comm_PCO;
+  port InnerComm_PT    InComm_PCO;
+};
+
+type component Translator_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+  var boolean v_run;
+  var FilterEgress v_FilterEgress;
+  var FilterIngress v_FilterIngress;
+
+
+
+  var jabber_client.Iq  vl_cIq;
+  var jabber_client.Message vl_cMessage;
+  var jabber_client.Presence vl_cPresence;
+  var Stream vl_Stream;
+
+  var CompositeClientIq  vl_compcIq;
+  var CompositeClientMessage vl_compcMessage;
+  var jabber_client.Presence vl_compcPresence;
+
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;  
+
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+  port InnerComm_PT    InComm_PCO;
+  port Control_PT      Ctl_PCO;
+  port Comm_PT         CommTrans_PCO;
+};
+
+
+
+type component Server_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+  var boolean               v_run;
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;  
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port Control_PT      Ctl_PCO;
+  port Comm_PT         Comm_PCO;
+  port InnerComm_PT         InComm_PCO;
+};
+
+
+
+type component Provider_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+
+  var default v_provDefault:=null;
+  //  var StringArray           v_StringArray;
+  var Toaster               v_Toaster;
+  var ToasterState          v_ToasterState;
+  var SessionState          v_SessionState;
+  var boolean               v_run;
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;
+  timer Twait2;
+  timer Twait_pending;
+  //timer T1,T2,T3,T4;//session timers  
+
+  timer Tsession[4];
+
+  timer TchannelAssign := 15.0;  // time to wait for assignNumberToTunedChannel
+    //-----------------------------------------------------------------------------
+  //ComponentVariables for Television Provider
+  //-----------------------------------------------------------------------------  
+
+  var TelevisionSettings v_TelevisionSettings :=
+  {
+     isTurnedOn := false,
+     channel := 1,
+     volume := 10,
+     isMuted := false,
+     contrast  := 10,
+     tV_Mode := television,
+     tV_Language := English
+  }
+  
+
+
+   var TelevisionState          v_TelevisionState := inactive;  
+
+   var integer                  v_channelSearchIndex := 1;
+   var ChannelList              v_ChannelList := {{"MTV1", omit},{"MTV2",omit},{"Duna", omit}}
+  
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port Control_PT      Ctl_PCO;
+  port Comm_PT         Comm_PCO;
+  port InnerComm_PT         InComm_PCO;
+};
+
+
+type component ServerMapping_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+  var boolean               v_run;
+  var IPL4asp_Types.Result  vl_result; 
+  var RoutingTable          v_RoutingTable;
+  var UserTable             v_UserTable;  
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;  
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port IPL4asp_PT       TCP_PCO;
+  port Comm_PT         Comm_PCO;
+  port Control_PT       Ctl_PCO;
+  port Comm_PT         CommTrans_PCO; 
+
+};
+
+
+
+
+
+type component Mapping_CT
+{
+  //-----------------------------------------------------------------------------
+  //ComponentVariables
+  //-----------------------------------------------------------------------------  
+  var boolean               v_run;
+  var IPL4asp_Types.Result  vl_result;
+  var integer vl_client_id;
+  var AuthType  v_Auth;
+  //-----------------------------------------------------------------------------
+  //ComponentTimers
+  //-----------------------------------------------------------------------------  
+  timer Twait;  
+
+
+
+  //-----------------------------------------------------------------------------
+  //ComponentPorts
+  //-----------------------------------------------------------------------------  
+
+
+  port IPL4asp_PT       TCP_PCO;
+  port Control_PT      Ctl_PCO;
+  port Comm_PT         Comm_PCO;
+  port Comm_PT         CommTrans_PCO;
+};
+//-----------------------------------------------------------------------------
+//Eszter Types
+//-----------------------------------------------------------------------------  
+
+type record HarnessInfo
+{
+	Harness harness,
+	http_ntaforum_org_2011_harness.Query_harness action_list,
+	record of Namespace subharnessList
+}
+
+type record of HarnessInfo Harnesses;
+
+type record Resource
+{
+	XSD.String resourceName,
+	record of ResponseGroup attributes,
+	record of ResponseGroup connectors
+}
+
+type record of Resource Resources;
+
+type record Node
+{
+	boolean proxy,
+	XSD.String proxy_jid optional,
+	XSD.String nodeId optional,
+	XSD.String itemId,
+	Harnesses harnesses,
+	Activations listOfActivations,
+	RecordOfString listOfFeatures,
+	Resources listOfResources //,
+	//record of Namespace subharnessList
+};
+
+type record of Node Nodes;
+
+type record Activation
+{
+	Activate activate_,
+	RecordOfString sessionId_List
+}
+
+type record of Activation Activations;
+
+type record of XSD.String RecordOfString;
+
+type record length(1 .. infinity) of SessionMode RecordOfMode;
+
+
+//-----------------------------------------------------------------------------
+//Composite Types
+//-----------------------------------------------------------------------------  
+
+type   union AnyType  {
+  http_jabber_org_protocol_pubsub.Pubsub        pubsub_pubsub,
+  http_jabber_org_protocol_pubsub.Configure     pubsub_configure,
+  http_jabber_org_protocol_pubsub.Create        pubsub_create,
+  http_jabber_org_protocol_pubsub_event.Event   pubsub_event_event,
+  http_jabber_org_protocol_pubsub_owner.Pubsub  pubsub_owner_pubsub,
+  http_jabber_org_protocol_disco_info.Query     info_query,  
+  http_jabber_org_protocol_disco_items.Query    items_query, 
+  jabber_iq_auth.Query                          auth_query,
+  http_ntaforum_org_2011_activation.Activate    activation_activate,
+  http_ntaforum_org_2011_activation.Deactivate  activation_deactivate,
+  http_ntaforum_org_2011_harness.Open           harness_open,
+  http_ntaforum_org_2011_harness.Close          harness_close,
+  http_ntaforum_org_2011_harness.Response       harness_response,
+  http_ntaforum_org_2011_harness.Request        harness_request,
+  http_ntaforum_org_2011_harness.Cancel         harness_cancel,
+  http_ntaforum_org_2011_harness.Progress       harness_progress,
+  http_ntaforum_org_2011_harness.Event          harness_event,
+  http_ntaforum_org_2011_harness.Query_harness  harness_query_harness,
+  http_ntaforum_org_2011_harness.Notify_action  harness_notify_action,
+  http_ntaforum_org_2011_harness.Notify_close   harness_notify_close,
+  universal charstring                          opaque
+
+} 
+
+
+
+type record CompositeClientIq
+{
+  XSD.String from_ optional,
+  XSD.NMTOKEN id,
+  Lang lang optional,
+  XSD.String to_ optional,
+  enumerated {
+    error_,
+    get,
+    result,
+    set_
+  } type_,
+  AnyType elem optional,
+  jabber_client.Error error_ optional
+}
+
+
+type record CompositeClientMessage
+{
+  XSD.String from_ optional,
+  XSD.NMTOKEN id optional,
+  Lang lang optional,
+  XSD.String to_ optional,
+  enumerated {
+    chat,
+    error_,
+    groupchat,
+    headline,
+    normal
+  } type_ optional,
+  record of union {
+    jabber_client.Subject subject,
+    jabber_client.Body body,
+    jabber_client.Thread thread
+  } choice_list,
+  record of AnyType elem_list,
+  jabber_client.Error error_ optional
+}
+
+
+type record of AnyType FilterEgress; 
+type record of XSD.String FilterIngress; 
+
+//-----------------------------------------------------------------------------
+//Authentication  Templates
+//-----------------------------------------------------------------------------  
+
+template Stream   t_Stream0:=
+{
+  from_ :=omit,
+  id :=omit,
+  lang :=omit,
+  to_ :=tsp_fqdn,
+  version :=omit,
+  attr:={},
+  features :=omit,
+  elem :=omit,
+  elem_1 :=omit,
+  elem_list:={},
+  choice :=omit,
+  error_ :=omit
+}
+
+template Stream   tr_Stream0:=
+{
+  from_ :=*,
+  id :=*,
+  lang :=*,
+  to_ :=*,
+  version :=omit,
+  attr:={},
+  features :=omit,
+  elem :=omit,
+  elem_1 :=omit,
+  elem_list:={},
+  choice :=omit,
+  error_ :=omit
+}
+
+
+
+
+template Stream   t_Stream1(template universal charstring par_from,template universal charstring par_id,template universal charstring par_to):=
+{
+  from_ :=par_from,
+  id :=par_id,
+  lang :=omit,
+  to_ :=par_to,
+  version :=omit,
+  attr:={},
+  features :={elem_list:={"<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'></starttls>",
+      "<mechanisms xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>
+		<mechanism>DIGEST-MD5</mechanism>
+		<mechanism>PLAIN</mechanism>
+		<!-- mechanism>ANONYMOUS</mechanism -->
+		<!-- mechanism>CRAM-MD5</mechanism -->
+	</mechanisms>",
+      "<auth xmlns='http://jabber.org/features/iq-auth' />",
+      "<register xmlns='http://jabber.org/features/iq-register' />"}},
+  elem :=omit,
+  elem_1 :=omit,
+  elem_list:={},
+  choice :=omit,
+  error_ :=omit
+}
+
+
+
+template Starttls t_Starttls:=
+{
+  choice:=omit
+} 
+
+
+template Auth t_Auth(in charstring p_username, in charstring p_password):=
+{
+  mechanism:="PLAIN",
+  base:=enc_MIME_Base64(char2oct("\0"&p_username&"\0"&p_password))
+}
+
+
+template Bind t_Bind_resource(in charstring p_resource ):= 
+
+{
+  choice:={resource:=p_resource}
+}
+
+//-----------------------------------------------------------------------------
+//Constants
+//-----------------------------------------------------------------------------  
+
+
+const charstring c_endstream:="</stream:stream>";
+const charstring RefExp1:="((:#(0,1))(\w#(0,9)))"; //:ns
+const charstring RefExp2:="((\w#(0,9))(:#(0,1)))"; //ns:
+
+//-----------------------------------------------------------------------------
+//Server Templates
+//-----------------------------------------------------------------------------  
+
+template charstring  t_RegExpNonSASLAuth1:="<{RefExp2}iq xmlns{RefExp1}='jabber:client' id=* type='get'>(\s)+<query xmlns=\"jabber:iq:auth\"><username>*</username></query>\n</{RefExp2}iq>";
+template charstring  t_RegExpNonSASLAuth2:="<{RefExp2}iq xmlns{RefExp1}='jabber:client' id=* type='set'>(\s)+<query xmlns=\"jabber:iq:auth\"><username>*</username><resource>*</resource><password>*</password></query></{RefExp2}iq>";
+
+
+
+
+//-----------------------------------------------------------------------------
+//Templates
+//-----------------------------------------------------------------------------  
+
+
+
+template charstring t_endstream:="</stream:stream>";
+
+template charstring   t_RegExpWeirdStartStream:=pattern "*{t_RegExpStartStream}";
+template charstring   t_RegExpWeirdStreamFeatures:=pattern "*{t_RegExpStreamFeatures}";
+template charstring   t_RegExpIqResultBind:= pattern "<{RefExp2}iq*<{RefExp2}bind xmlns{RefExp1}=\"urn:ietf:params:xml:ns:xmpp-bind\"><{RefExp2}jid>*</{RefExp2}jid></{RefExp2}bind></{RefExp2}iq>"
+
+//-----------------------------------------------------------------------------------------------------------------------------
+
+template charstring t_RegExpStartStream:=pattern "<?xml version='1.0'( encoding='UTF-8')#(0,1)?><stream:stream([^>]+)>"
+template charstring t_RegExpStreamFeatures:=pattern "(<?xml version='1.0'( encoding='UTF-8')#(0,1)?><stream:stream([^>]+)>)#(0,1)<stream:features>*</stream:features>"
+template charstring t_RegExpEndStream:= pattern "</stream:stream>";
+template charstring t_RegExpStreamError:= pattern "<stream:error([^>]+)/></stream:error>"
+template charstring t_RegExpProceed:=pattern "<proceed xmlns=\"urn:ietf:params:xml:ns:xmpp-tls\"/>"
+template charstring t_RegExpChallenge:=pattern "(<challenge xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">*</challenge>)|(<challenge xmlns='urn:ietf:params:xml:ns:xmpp-sasl'>*</challenge>)"
+template charstring t_RegExpAuthResponse:=pattern "<response xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">*</response>"
+template charstring t_RegExpSuccess:=pattern "<success xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">*</success>"
+template charstring t_RegExpAuth:=pattern "<auth([^>]+)></auth>"
+template charstring t_RegExpStarttls:=pattern "<starttls xmlns='urn:ietf:params:xml:ns:xmpp-tls'/>"
+
+
+template charstring t_RegExpIq:= pattern "(<{RefExp2}iq*</{RefExp2}iq>)|(<{RefExp2}iq([^>]+)/>)";
+template charstring t_RegExpPresence:= pattern "(<{RefExp2}presence*</{RefExp2}presence>)|(<{RefExp2}presence([^>]+)/>)";
+template charstring t_RegExpMessage:= pattern "(<{RefExp2}message*</{RefExp2}message>)|(<{RefExp2}message([^>]+)/>)";
+
+
+
+
+template charstring t_RegExpNamespaceError:= pattern "*xmlns{RefExp1}=\"urn:ietf:params:xml:ns:xmpp-stanzas\"*";
+template charstring t_RegExpNamespacePing:= pattern "*xmlns{RefExp1}=\"urn:xmpp:ping\"*";
+template charstring t_RegExpNamespaceHarness:= pattern "*xmlns{RefExp1}=\"http://ntaforum.org/2011/harness\"*";
+template charstring t_RegExpNamespaceActivation:= pattern "*xmlns{RefExp1}=\"http://ntaforum.org/2011/activation\"*";
+template charstring t_RegExpNamespaceRegistry:= pattern "*xmlns{RefExp1}=\"http://ntaforum.org/2011/registry\"*";
+template charstring t_RegExpNamespacePubsub:= pattern "*xmlns{RefExp1}=\"http://jabber.org/protocol/pubsub\"*";
+template charstring t_RegExpNamespacePubsubOwner:= pattern "*xmlns{RefExp1}=\"http://jabber.org/protocol/pubsub\#owner\"*";
+template charstring t_RegExpNamespacePubsubEvent:= pattern "*xmlns{RefExp1}=\"http://jabber.org/protocol/pubsub\#event\"*";
+template charstring t_RegExpNamespaceDiscoInfo:= pattern "*xmlns{RefExp1}=\"http://jabber.org/protocol/disco\#info\"*";
+template charstring t_RegExpNamespaceDiscoItems:= pattern "*xmlns{RefExp1}=\"http://jabber.org/protocol/disco\#items\"*";
+template charstring t_RegExpNamespaceAuth:= pattern "*xmlns:{RefExp1}=\"jabber:iq:auth\"*";
+template charstring t_RegExpNamespaceStream:= pattern "*xmlns{RefExp1}=\"http://etherx.jabber.org/streams\"*";
+template charstring t_RegExpNamespaceXmppTls:= pattern "*xmlns{RefExp1}=\"urn:ietf:params:xml:ns:xmpp-tls\"*"
+template charstring t_RegExpNamespaceXmppSasl:= pattern "*xmlns{RefExp1}xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\"*"
+
+
+template charstring t_RegExpNotifyClose:= pattern "(<{RefExp2}notify-close*</{RefExp2}notify-close>)|(<{RefExp2}notify-close([^>]+)/>)";
+template charstring t_RegExpNotifyAction:= pattern "(<{RefExp2}notify-action*</{RefExp2}notify-action>)|(<{RefExp2}notify-action([^>]+)/>)";
+template charstring t_RegExpQueryHarness:= pattern "(<{RefExp2}query-harness*</{RefExp2}query-harness>)|(<{RefExp2}query-harness([^>]+)/>)";
+template charstring t_RegExpProgress:= pattern "(<{RefExp2}progress*</{RefExp2}progress>)|(<{RefExp2}progress([^>]+)/>)";
+template charstring t_RegExpCancel:= pattern "(<{RefExp2}cancel*</{RefExp2}cancel>)|(<{RefExp2}cancel([^>]+)/>)";
+template charstring t_RegExpOpen:= pattern "(<{RefExp2}open*</{RefExp2}open>)|(<{RefExp2}open([^>]+)/>)";
+template charstring t_RegExpClose:= pattern "(<{RefExp2}close*</{RefExp2}close>)|(<{RefExp2}close([^>]+)/>)";
+template charstring t_RegExpActivate:= pattern "(<{RefExp2}activate*</{RefExp2}activate>)|(<{RefExp2}activate([^>]+)/>)";
+template charstring t_RegExpDeactivate:= pattern "(<{RefExp2}deactivate*</{RefExp2}deactivate>)|(<{RefExp2}deactivate([^>]+)/>)";
+template charstring t_RegExpRequest:= pattern "(<{RefExp2}request*</{RefExp2}request>)|(<{RefExp2}request([^>]+)/>)";
+template charstring t_RegExpResponse:= pattern "(<{RefExp2}response*</{RefExp2}response>)|(<{RefExp2}response([^>]+)/>)";
+template charstring t_RegExpQuery:= pattern "(<{RefExp2}query*</{RefExp2}query>)|(<{RefExp2}query([^>]+)/>)";
+template charstring t_RegExpPubsub:= pattern "(<{RefExp2}pubsub*</{RefExp2}pubsub>)|(<{RefExp2}pubsub([^>]+)/>)";
+template charstring t_RegExpConfigure:= pattern "(<{RefExp2}configure*</{RefExp2}configure>)|(<{RefExp2}configure([^>]+)/>)";
+template charstring t_RegExpCreate:= pattern "(<{RefExp2}create*</{RefExp2}create>)|(<{RefExp2}create([^>]+)/>)";
+template charstring t_RegExpEvent:= pattern "(<{RefExp2}event*</{RefExp2}event>)|(<{RefExp2}event([^>]+)/>)";
+
+
+
+
+
+//Only the long version of No more sessions message.
+template charstring t_RegExpPresenceNoSession:= pattern "(<{RefExp2}presence*(<{RefExp2}status>*No more sessions available*</{RefExp2}status>)</{RefExp2}presence>)|(<{RefExp2}presence([^>]+)/>)";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template jabber_client.Message  t_Message_chat:=
+{
+  from_ := "titan0@"&tsp_fqdn, 
+  id := omit, 
+  lang := omit, 
+  to_ := "toaster@"&tsp_fqdn, 
+  type_ := chat,
+  choice_list := {{ body:={
+        lang:=omit,
+        base:="Help, I fell down the rabbit rabbit hole!  This is a message from Titan"
+      }}}, 
+  elem_list := {}, 
+  error_ := omit 
+}
+
+//*****************************************************************************************************
+//Templates sent by the NTAF Requestor
+//*****************************************************************************************************
+
+
+template jabber_client.Iq  t_Iq_bind:=
+{
+  from_:=omit,
+  id:="bind",
+  lang:=omit,
+  to_:=omit,
+  type_:=set_,
+  elem:=oct2char(enc_Bind(valueof(t_Bind_resource("1")))),
+  error_:=omit
+}
+
+
+
+
+
+
+template jabber_client.Iq  t_Iq_login_user_A(charstring p_username):=
+{
+  from_:=omit,
+  id:="a1",
+  lang:=omit,
+  to_:=omit,
+  type_:=get,
+  elem:="<query xmlns=\"jabber:iq:auth\"><username>"&p_username&"</username></query>",
+  error_:=omit
+}
+
+
+
+template jabber_client.Iq  t_Iq_login_user_B(charstring p_username, charstring p_password):=
+{
+  from_:=omit,
+  id:="a2",
+  lang:=omit,
+  to_:=omit,
+  type_:=set_,
+  elem:="<query xmlns=\"jabber:iq:auth\"><username>"&p_username&"</username><password>"&p_password&"</password><resource>1</resource></query>",
+  error_:=omit
+}
+
+template  jabber_client.Presence t_Presence_empty:=
+{
+  from_ :=omit,
+  id :=omit,
+  lang :=omit,
+  to_ :=omit,
+  type_ :=omit,
+  choice_list:={},
+  elem_list:={},
+  error_ :=omit
+}
+
+
+
+template jabber_client.Iq  ts_Iq_disco_info_toaster:=
+
+{ 
+  from_ := omit, 
+  id := "disco_info_toaster", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get, elem := 
+    "<query xmlns=\"http://jabber.org/protocol/disco#info\"/>", 
+    error_ := omit 
+
+}
+
+
+
+
+template jabber_client.Iq  ts_Iq_query_harness_toaster:=
+
+{ 
+  from_ := omit, 
+  id := "query_harness_toaster", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get , 
+  elem := "<query-harness xmlns=\"http://ntaforum.org/2011/harness\" harness=\"http://Example.org/ttcn/titan\" xml:lang=\"en\"/>", 
+  error_ := omit 
+}
+
+template Activate t_Activate:=
+
+{
+  requestId := omit,
+  toolId := "toaster@"&tsp_fqdn&"/1#always_on",
+  result := omit ,
+  message_ := omit,
+  jid := omit,
+  activationRef := omit,
+  timestamp := omit,
+  harness_list := {
+    {
+      name := "http://Example.org/ttcn/titan",
+      supportedMode_list := {
+        invisible_and_automated 
+      }
+    }
+  }
+}
+
+
+template jabber_client.Iq  ts_Iq_activate_always_on_tool:=
+
+{
+  from_ := omit,
+  id := "activate_toaster",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := oct2char(enc_Activate(valueof(t_Activate))),
+  error_ := omit
+}
+
+
+
+template Deactivate t_Deactivate:=
+
+{
+  activationRef := tsp_activationRef
+}
+
+
+template jabber_client.Iq  ts_Iq_deactivate_always_on_tool:=
+
+{
+  from_ := omit,
+  id := "deactivate_toaster",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := oct2char(enc_Deactivate(valueof(t_Deactivate))),
+  error_ := omit
+}
+
+
+
+template Open t_open:=
+{
+  harness := "http://Example.org/ttcn/titan",
+  lang := omit,
+  mode := visible_and_interactive,
+  reportUserActivity := omit,
+  context := omit,
+  parameter_list := { },
+  xmlParameter_list := { },
+  file_list := { },
+  group_list := { },
+  timestamp := omit,
+  activationRef := tsp_activationRef
+}
+
+template jabber_client.Iq  ts_Iq_open_session:=
+
+{
+  from_ := omit,
+  id := "open_session",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := oct2char(enc_Open(valueof(t_open))),
+  error_ := omit
+}
+
+
+
+template jabber_client.Iq  ts_Iq_request_status_toaster:=
+
+{ 
+  from_ := omit, 
+  id := "request_status_toaster", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+    "<request xmlns='http://ntaforum.org/2011/harness' session='toasterSession'> 
+ <action harness='http://Example.org/ttcn/titan'>getStatus</action> 
+ </request>", 
+    error_ := omit 
+
+}
+
+
+template jabber_client.Iq  ts_Iq_request_set_toast:=
+
+{ 
+  from_ := omit, 
+  id := "request_set_toast", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+    "<request xmlns='http://ntaforum.org/2011/harness' session='toasterSession'>
+     <parameter name=\"slotNumber\">3</parameter>
+     <parameter name=\"powerLevel\">high</parameter> 
+    <action harness='http://Example.org/ttcn/titan'>setToast</action>
+  </request>", 
+    error_ := omit 
+
+}
+
+template jabber_client.Iq  ts_Iq_request_set_toast_1:=
+
+{ 
+  from_ := omit, 
+  id := "request_set_toast1", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+    "<request xmlns='http://ntaforum.org/2011/harness' session='toasterSession'>
+     <parameter name=\"slotNumber\">1</parameter>
+     <parameter name=\"powerLevel\">medium</parameter> 
+    <action harness='http://Example.org/ttcn/titan'>setToast</action>
+  </request>", 
+    error_ := omit 
+
+}
+
+template jabber_client.Message  ts_Message_cancel_request_set_toast_1:=
+
+{
+  from_ := omit,
+  id := "cancel_request",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := normal,
+  choice_list := { },
+  elem_list := {
+    "<cancel xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\" requestId=\"request_set_toast1\"/>"
+  },
+  error_ := omit
+}
+
+
+
+template jabber_client.Iq  ts_Iq_close_session:=
+{
+  from_ := omit,
+  id := "close_session",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := "<close xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"/>",
+  error_ := omit
+}
+
+
+
+template  jabber_client.Presence t_Presence_unavail:=
+{
+  from_ :=omit,
+  id :=omit,
+  lang :=omit,
+  to_ :=omit,
+  type_ :=unavailable,
+  choice_list:={},
+  elem_list:={},
+  error_ :=omit
+}
+
+template jabber_client.Message  tr_Message_delayed_response_set_toast:=
+
+{
+  from_ := omit,
+  id := *,
+  lang := omit,
+  to_ := *,
+  type_ := normal ,
+  choice_list := {},
+  elem_list := {"<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"> 
+ <result>pass</result> 
+ </response>"},
+  error_ := omit
+}
+
+template jabber_client.Iq  t_Iq_ping_c:=
+
+{
+  from_ := *,
+  id := ?,
+  lang := omit,
+  to_ := *,
+  type_ := get,
+  elem := "<ping xmlns=\"urn:xmpp:ping\"/>",
+  error_ := omit
+}
+
+
+template http_jabber_org_protocol_pubsub_owner.Pubsub t_Pubsub_remove_leaf_node_requestor:=
+{
+  choice:={
+    delete:={
+      node:=tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+      redirect:=omit
+    }
+  }
+}
+
+
+template jabber_client.Iq  t_Iq_remove_leaf_node_requestor:=
+{
+  from_:=omit,
+  id:="delete_leaf_node_req",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub_owner(valueof(t_Pubsub_remove_leaf_node_requestor))),
+  error_:=omit
+}
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_create_tool_node_requestor:=
+
+{ choice := 
+  { sequence :=
+    { create_ := { node := tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"" },
+      configure := { choice := 
+        { x := 
+          { type_ := submit ,  title := omit, instructions_list := { },
+            field_list := {
+              { label_ := omit, type_ := omit ,var_ := "pubsub#node_type", desc := omit, required := omit,value_list := { "leaf" }, option_list := { } },
+              { label_ := omit, type_ := omit ,var_ := "pubsub#collection", desc := omit, required := omit,value_list := { "ntaf.tools" }, option_list := { } },
+              { label_ := omit, type_ := omit ,var_ := "pubsub#children", desc := omit, required := omit,value_list := { "" }, option_list := { } },
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#deliver_payloads", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#notify_retract", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#subscribe", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#persist_items", desc := omit,required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#max_items", desc := omit, required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#access_model", desc := omit,required := omit, value_list := { "open" }, option_list := { } }, 
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#publish_model", desc := omit,required := omit, value_list := { "publishers" }, 
+                option_list := { } } }, 
+            reported := omit, 
+            item_list := { } } } 
+      }
+
+    } 
+  } 
+}
+
+
+
+template jabber_client.Iq  t_Iq_create_leaf_node_requestor:=
+{
+  from_:=omit,
+  id:="create_leaf_requestor",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_create_tool_node_requestor))),
+  error_:=omit
+}
+//*****************************************************************************************************
+//Templates received by the NTAF Requestor
+//*****************************************************************************************************
+
+template CompositeClientIq  tr_Iq_ping := 
+{
+  from_ := *,
+  id := ?,
+  lang := omit,
+  to_ := *,
+  type_ := get ,
+  elem := {
+    opaque := "<ping xmlns=\"urn:xmpp:ping\"/>"
+  },
+  error_ := omit
+}
+
+
+template jabber_client.Iq  t_Iq_ping_result(template universal charstring par_from,template universal charstring par_id,template universal charstring par_to) :=
+{
+  from_ := par_from,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := omit,
+  error_ := omit
+}
+
+
+template CompositeClientIq tr_Iq_get_service_support_info_response:=
+
+
+{
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    info_query := {
+      node := omit,
+      sequence := {
+        identity_list := {
+          {
+            category := "pubsub",
+            name := pattern "Publish-Subscribe*",//"Publish-Subscribe service",
+            type_ := "service"
+          }
+        },
+        feature_list := ?,
+        x := *
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq  tr_Iq_get_node_response:={
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    items_query := {
+      node := omit,
+      sequence := {
+        item_list := ?
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+
+template CompositeClientIq  tr_Iq_get_ntaf_node_info_response:={
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    info_query := {
+      node := "ntaf.tools",
+      sequence := {
+        identity_list := {
+          {
+            category := "pubsub",
+            name := omit,
+            type_ := "collection"
+          }
+        },
+        feature_list := ?,
+        x := ?
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq  tr_Iq_fetch_list_of_child_nodes_from_collection_node_response :={
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    items_query := {
+      node := "ntaf.tools",
+      sequence := {
+        item_list := ?
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+
+template CompositeClientIq  tr_Iq_getNodeConfig_error:={
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := error_ ,
+  elem := {
+    pubsub_owner_pubsub := {
+      choice := {
+        configure := {
+          node := "ntaf.tools",
+          choice := omit
+        }
+      }
+    }
+  },
+  error_ := {
+    by := "403",
+    type_ := auth ,
+    stanzaErrorGroup := {
+      forbidden := ""
+    },
+    text := omit
+  }
+}
+
+template CompositeClientIq tr_Iq_create_leaf_node_requestor_error:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := error_ ,
+  elem := {
+    pubsub_pubsub := {
+      choice := {
+        sequence := {
+          create_ := {
+            node := ?
+          },
+          configure := {
+            choice := {
+              x := {
+                type_ := submit ,
+                title := *,
+                instructions_list := { },
+                field_list := ?,
+                reported := omit,
+                item_list := { }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  error_ := {
+    by := "409",
+    type_ := cancel ,
+    stanzaErrorGroup := {
+      conflict := ""
+    },
+    text := omit
+  }
+}
+
+template CompositeClientIq tr_Iq_get_nodes_response_1:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  elem := {
+    items_query := {
+      node := omit,
+      sequence := {
+        item_list := {
+          {
+            jid := "pubsub.esekilxxen1843.rnd.ericsson.se",
+            name := "",
+            node := "ntaf.tools"
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+
+template  CompositeClientIq tr_Iq_fetch_list_of_child_nodes_from_collection_node_response_1:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    items_query := {
+      node := "ntaf.tools",
+      sequence := {
+        item_list := {
+          {
+            jid := "pubsub.esekilxxen1843.rnd.ericsson.se",
+            name := "",
+            node := "toaster@esekilxxen1843.rnd.ericsson.se/1"
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq tr_Iq_fetch_tool_registry_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    pubsub_pubsub := {
+      choice := {
+        choice_list := {
+          {
+            items := {
+              max_items := omit,
+              node := ?,
+              subid := omit,
+              item_list := {
+                {
+                  id := ?,
+                  sequence := {
+                    elem := ?
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq tr_Iq_get_subscriptions_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    pubsub_pubsub := {
+      choice := {
+        choice_list := {
+          {
+            subscriptions := {
+              node := omit,
+              sequence_list := {
+                {
+                  subscription := {
+                    jid := "titan0@esekilxxen1843.rnd.ericsson.se",
+                    node := "titan0@esekilxxen1843.rnd.ericsson.se/1",
+                    subid := omit,
+                    subscription := subscribed ,
+                    subscribe_options := omit
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+
+template CompositeClientIq tr_Iq_disco_info_toaster_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    info_query := {
+      node := omit,
+      sequence := {
+        identity_list := {
+          {
+            category := "1",
+            name := omit,
+            type_ := "text"
+          }
+        },
+        feature_list := {
+          {
+            var_ := "http://ntaforum.org/2011/harness"
+          },
+          {
+            var_ := "http://Example.org/ttcn/titan"
+          }
+        },
+        x := omit
+      }
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq tr_Iq_query_harness_toaster_response:={
+  from_ := ?,
+  id := ?,
+  lang := "en",
+  to_ := ?,
+  type_ := result,
+  elem := {
+    harness_query_harness := {
+      harness := "http://Example.org/ttcn/titan",
+      lang := "en",
+      label_ := "Toaster Control Panel",
+      tooltip := "A harness for controlling and monitoring toaster operations",
+      description := omit,
+      helpURI := omit,
+      supercedes := omit,
+      author := "elemer.lelik@ericsson.com",
+      actionDecl_list := ?,
+      eventDecl_list := { },
+      subharness_list := { }
+    }
+  },
+  error_ := omit
+}
+
+template CompositeClientIq tr_Iq_activate_always_on_tool_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    activation_activate := {
+      requestId := omit,
+      toolId := ?,
+      result := pass_ ,
+      message_ := omit,
+      jid := ?,
+      activationRef := ?,
+      timestamp := omit,
+      harness_list := {
+        {
+          name := "http://Example.org/ttcn/titan",
+          supportedMode_list := {
+            invisible_and_automated 
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+} 
+
+
+template CompositeClientIq tr_Iq_open_session_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    harness_response := {
+      lang := omit,
+      requestId := omit,
+      session := ?,
+      result := pass_ ,
+      message_ := omit,
+      duration := omit,
+      item_list := { },
+      xmlItem_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit
+    }
+  },
+  error_ := omit
+} 
+
+template CompositeClientIq tr_Iq_request_status_toaster_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    harness_response := {
+      lang := omit,
+      requestId := omit,
+      session := ?,
+      result := pass_ ,
+      message_ := omit,
+      duration := omit,
+      item_list := {
+        {
+          name := "isOperating",
+          base := "true"
+        }
+      },
+      xmlItem_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit
+    }
+  },
+  error_ := omit
+}
+
+
+template CompositeClientIq tr_Iq_generic_pass_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := {
+    harness_response := {
+      lang := omit,
+      requestId := omit,
+      session := ?,
+      result := pass_ ,
+      message_ := omit,
+      duration := omit,
+      item_list := { },
+      xmlItem_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit
+    }
+  },
+  error_ := omit
+} 
+
+template CompositeClientMessage tr_Iq_generic_abort_response :={
+  from_ := ?,
+  id :=?,
+  lang := omit,
+  to_ := ?,
+  type_ := normal ,
+  choice_list := { },
+  elem_list := {
+    {
+      harness_response := {
+        lang := omit,
+        requestId := ?,
+        session := ?,
+        result := abort ,
+        message_ := omit,
+        duration := omit,
+        item_list := { },
+        xmlItem_list := { },
+        file_list := { },
+        group_list := { },
+        timestamp := omit
+      }
+    }
+  },
+  error_ := omit
+}
+template CompositeClientIq tr_Iq_deactivate_always_on_tool_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result,
+  elem := {
+    activation_deactivate := {
+      activationRef := ?
+    }
+  },
+  error_ := omit
+} 
+
+
+
+template CompositeClientIq  tr_Iq_generic_result:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := result ,
+  elem := omit,
+  error_ := omit
+}
+
+
+
+template CompositeClientMessage tr_Iq_delayed_pass_response:= {
+  from_ := ?,
+  id := ?,
+  lang := omit,
+  to_ := ?,
+  type_ := normal ,
+  choice_list := { },
+  elem_list := {
+    {
+      harness_response := {
+        lang := omit,
+        requestId := omit,
+        session := ?,
+        result := pass_ ,
+        message_ := omit,
+        duration := omit,
+        item_list := { },
+        xmlItem_list := { },
+        file_list := { },
+        group_list := { },
+        timestamp := omit
+      }
+    }
+  },
+  error_ := omit
+}
+//*****************************************************************************************************
+//Templates sent by the NTAF Provider (Toaster)
+//*****************************************************************************************************
+
+
+
+
+template  jabber_iq_auth.Query t_Query_authA(template charstring p_user):=
+{
+  username:=p_user,
+  choice:={password_list:={}},
+  resource:=omit
+}
+
+
+template  jabber_iq_auth.Query t_Query_auth(template charstring p_user,template charstring p_password, template charstring p_resource):=
+{
+  username:=p_user,
+  choice:={password_list:={p_password}},
+  resource:=p_resource
+}
+
+
+
+
+template jabber_client.Iq  t_Iq_login_toaster_A:=
+{
+  from_:=omit,
+  id:="ta1",
+  lang:=omit,
+  to_:=omit,
+  type_:=get,
+  elem:=oct2char(enc_Query(valueof(t_Query_authA(tsp_username_provider)))),
+  error_:=omit
+}
+
+
+template jabber_client.Iq  t_Iq_login_toaster_B:=
+{
+  from_:=omit,
+  id:="ta2",
+  lang:=omit,
+  to_:=omit,
+  type_:=set_,
+  elem:=oct2char(enc_Query(valueof(t_Query_auth(tsp_username_provider,tsp_password_provider,tsp_resource)))),
+  error_:=omit
+}
+
+
+
+
+template jabber_client.Iq  t_Iq_getNodeConfig:=
+{
+  from_:=omit,
+  id:="get_node_config",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\">
+<configure node=\"ntaf.tools\"/>
+</pubsub>",
+  error_:=omit
+}
+
+
+template jabber_client.Iq  t_Iq_deleteNode:=
+{
+  from_:=omit,
+  id:="delete_nodes",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:="<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\">
+<delete node=\"ntaf.tools\"/>
+</pubsub>",
+  error_:=omit
+}
+
+
+
+
+template jabber_client.Iq  t_Iq_get_service_support_info:=
+{
+  from_:=omit,
+  id:="info_servicesupport",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<query xmlns='http://jabber.org/protocol/disco#info'/>",
+  error_:=omit
+}
+
+template jabber_client.Iq  t_Iq_get_ntaf_node_info:=
+{
+  from_:=omit,
+  id:="ntaf_node_info",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<query xmlns='http://jabber.org/protocol/disco#info' node='ntaf.tools'/>",
+  error_:=omit
+}
+
+template jabber_client.Iq  t_Iq_get_toaster_node_info:=
+{
+  from_:=omit,
+  id:="toaster_node_info",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<query xmlns='http://jabber.org/protocol/disco#info' node='toaster@"&tsp_fqdn&"/1'/>",
+  error_:=omit
+}
+
+
+
+
+template jabber_client.Iq  t_Iq_get_nodes:=
+{
+  from_:=omit,
+  id:="info_nodes",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<query xmlns='http://jabber.org/protocol/disco#items'/>",
+  error_:=omit
+}
+
+
+template jabber_client.Iq  t_Iq_get_subscriptions:=
+{
+  from_:=omit,
+  id:="get_subscriptions",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<pubsub xmlns=\"http://jabber.org/protocol/pubsub\">
+    <subscriptions/>
+  </pubsub>",
+  error_:=omit
+}
+
+
+
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_create_tool_node_toaster:=
+
+{ choice := 
+  { sequence :=
+    { create_ := { node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"" },
+      configure := { choice := 
+        { x := 
+          { type_ := submit , title := omit, instructions_list := { },  
+            field_list := { 
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#node_type", desc := omit, required := omit,value_list := { "leaf" }, option_list := { } },
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#collection", desc := omit, required := omit,value_list := { "ntaf.tools" }, option_list := { } },
+              //  { label_ := omit, type_ := omit ,var_ := "pubsub#children", desc := omit, required := omit,value_list := { "" }, option_list := { } },
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#subscribe", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#deliver_payloads", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#notify_retract", desc := omit, required := omit,value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#persist_items", desc := omit,required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#max_items", desc := omit, required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#access_model", desc := omit,required := omit, value_list := { "open" }, option_list := { } }, 
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#publish_model", desc := omit,required := omit, value_list := { "publishers" }, 
+                option_list := { } } }, 
+            reported := omit, 
+            item_list := { } } } 
+      }
+
+    } 
+  } 
+}
+
+
+
+
+template jabber_client.Iq  t_Iq_create_tool_node_toaster:=
+{
+  from_:=omit,
+  id:="create_tool_node",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_create_tool_node_toaster))),
+  error_:=omit
+}
+
+
+
+template Entry t_Entry:=  
+{
+  tooltype:="http://Example.org/tools/ttcn/titan",
+  version:="1.2.3.4567",
+  harness_list:={
+    {
+      name:="http://Example.org/ttcn/titan", supportedMode_list:={invisible_and_automated,visible_and_interactive}
+    },
+    {
+      name:="http://ntaforum.org/2012/harness/resource/owner", supportedMode_list:={invisible_and_automated}
+    },
+    {
+      name:="http://ntaforum.org/2012/harness/resource/inventory", supportedMode_list:={invisible_and_automated}
+    }
+
+  },
+  documentation_list:={{
+      lang:="en",
+      vendor:="TTCNTestTools",
+      name:="TestCompetenceCentre-Ericsson",
+      description:="Automated Toaster",
+      helpUri:="http://someUri"
+    }},
+  published:="2013-03-11T11:30:02-08:00",
+  location:={
+    workspaceID:="0d9374c4-aa1e-47f5-8b61-98bae0ad8ca1",
+    ipv4_list:={"127.0.0.1"},
+    ipv6_list:={},
+    hostname:= "localhost",
+    serialNumber:=omit,
+    assetNumber :=omit,
+    description :="1stfloor,bldg.A,BudapestHQ"
+  } ,
+  extension_list:={}
+}
+/*
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_publish_tool_info_toaster1:=
+{ choice := 
+  { choice_list := 
+    { { publish := 
+        { node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+          item_list := { { id := "toaster@"&tsp_fqdn&"/1#always_on", sequence := {"<entry xmlns='http://ntaforum.org/2011/registry'>
+<toolType>http://Example.org/tools/ttcn/titan</toolType>
+<version>1.2.3.4567</version>
+<published>2013-03-11T11:30:02-08:00</published>
+<harness xmlns='http://ntaforum.org/2011/harness' name='http://Example.org/ttcn/titan'> 
+<supportedMode>invisible_and_automated</supportedMode>
+<supportedMode>visible_and_interactive</supportedMode>
+</harness>
+<documentation xml:lang='en'>
+<vendor>TTCNTestTools</vendor>
+<name>TCC</name>
+<description>Automated Toaster</description>
+</documentation>
+<location>
+<workspaceID>0d9374c4-aa1e-47f5-8b61-98bae0ad8ca1</workspaceID>
+<ipv4>127.0.0.1</ipv4>
+<hostname>localhost</hostname>
+<description>1stfloor,bldg.A,BudapestHQ</description>
+</location>
+</entry>"} }}
+        }
+      }
+    }
+  }
+};
+
+
+*/
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_publish_tool_info_toaster:=
+{ choice := 
+  { choice_list := 
+    { { publish := 
+        { node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+          item_list := { { id := "toaster@"&tsp_fqdn&"/1#always_on", sequence := {oct2char(enc_Entry(valueof(t_Entry)))} }}
+        }
+      }
+    }
+  }
+};
+
+template jabber_client.Iq  t_Iq_publish_tool_info_toaster:=
+{
+  from_:=omit,
+  id:="publish_tool_info",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_publish_tool_info_toaster))),
+  error_:=omit
+}
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_fetch_all_tools:=
+
+{ choice := { choice_list := { { items := { max_items := omit, node := "ntaf.tools", subid := omit, item_list := { }
+        }
+      }
+    }
+  }
+}
+
+template jabber_client.Iq  t_Iq_fetch_all_tools:=
+{
+  from_:=omit,
+  id:="q_fetch_all_tools",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_fetch_all_tools))),
+  error_:=omit
+}
+
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_fetch_tool_registry:=
+
+{ choice := { choice_list := { { items := { max_items := omit, node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", subid := omit, item_list := { }
+        }
+      }
+    }
+  }
+}
+
+template jabber_client.Iq  t_Iq_fetch_tool_registry:=
+{
+  from_:=omit,
+  id:="q_fetch_tool_reg",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_fetch_tool_registry))),
+  error_:=omit
+}
+
+
+
+template jabber_client.Iq  t_Iq_fetch_list_of_child_nodes_from_collection_node:=
+{
+  from_:=omit,
+  id:="disco_list_child_nodes",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=get,
+  elem:="<query xmlns='http://jabber.org/protocol/disco#items' node='ntaf.tools' />",
+  error_:=omit
+}
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_create_root_collection_node:=
+
+{ choice := 
+  { sequence :=
+    { create_ := { node := "ntaf.tools" },
+      configure := { choice := 
+        { x := 
+          { type_ := submit , title := omit, instructions_list := { }, 
+            field_list := { 
+              { label_ := omit, type_ := hidden ,var_ := "FORM_TYPE", desc := omit,required := omit, value_list := { "http://jabber.org/protocol/pubsub#node_config" },option_list := { } }, //!!??
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#node_type", desc := omit, required := omit,value_list := { "collection" }, option_list := { } },
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#children_association_policy", desc := omit,required := omit, value_list := { "all" }, option_list := { }}, 
+/*       
+              { label_ := omit, type_ := omit ,var_ := "pubsub#collection", desc := omit, required := omit,value_list := { "" }, option_list := { } }, 
+              { label_ := omit, type_ := omit ,var_ := "pubsub#children", desc := omit, required := omit,value_list := { "" }, option_list := { } }, 
+              
+        */      
+              { label_ := omit, type_ := omit ,var_ := "pubsub#subscription_type", desc := omit, required := omit, value_list := { "all" }, option_list := { } }, 
+              { label_ := omit, type_ := omit ,var_ := "pubsub#subscription_depth", desc := omit,required := omit, value_list := { "all" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#subscribe", desc := omit,required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#deliver_payloads", desc := omit,required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#notify_retract", desc := omit,required := omit, value_list := { "1" }, option_list := { } }, 
+              { label_ := omit, type_ := boolean_ ,var_ := "pubsub#persist_items", desc := omit,required := omit, value_list := { "1" }, option_list := { } },
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#access_model", desc := omit,required := omit, value_list := { "open" },option_list := { } },
+              { label_ := omit, type_ := list_single ,var_ := "pubsub#publish_model", desc := omit,required := omit, value_list := { "open" }, option_list := { } } 
+
+            }, 
+            reported := omit, 
+            item_list := { } } } 
+      }
+
+    } 
+  } 
+}
+
+
+template jabber_client.Iq  t_Iq_create_root_collection_node:=
+{
+  from_:=omit,
+  id:="create_root_coll_node",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_create_root_collection_node))),
+  error_:=omit
+}
+
+
+template jabber_client.Iq  t_Iq_delete_root_collection_node:=
+{
+  from_:=omit,
+  id:="delete_node_ntaf.tools",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:="<pubsub xmlns=\"http://jabber.org/protocol/pubsub#owner\">
+<delete node=\"ntaf.tools\"/>
+</pubsub>",
+  error_:=omit
+}
+
+
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_subscribe_for_tool_registry_updates:=
+
+{ choice := { sequence_1 := { subscribe := { jid := tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"", node := "ntaf.tools" }
+      , options := omit }
+  }
+}
+
+template jabber_client.Iq  t_Iq_subscribe_for_tool_registry_updates:=
+{
+  from_:=omit,
+  id:="sub_for_tool_reg_updates",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_subscribe_for_tool_registry_updates))),
+  error_:=omit
+}
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_unsubscribe_from_tool_registry_updates(template charstring p_jid):=
+
+{ choice := { choice_list := { { unsubscribe := { jid := p_jid, node := "ntaf.tools", subid := omit }
+      }
+    }
+  }
+}
+
+
+
+
+
+template jabber_client.Iq  t_Iq_unsubscribe_from_tool_registry_updates(template charstring p_jid):=
+{
+  from_:=omit,
+  id:="unsub_from_tool_reg_updates",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_unsubscribe_from_tool_registry_updates(p_jid)))),
+  error_:=omit
+}
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_unsubscribe_from_tool_node(template charstring p_jid):=
+
+{ choice := { choice_list := { { unsubscribe := { jid := p_jid, node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", subid := omit }
+      }
+    }
+  }
+}
+
+template jabber_client.Iq  t_Iq_unsubscribe_from_tool_node(template charstring p_jid):=
+{
+  from_:=omit,
+  id:="unsub_from_tool_node",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_unsubscribe_from_tool_node(p_jid)))),
+  error_:=omit
+}
+
+
+
+
+template http_jabber_org_protocol_pubsub_owner.Pubsub t_Pubsub_remove_leaf_node_toaster:=
+{choice:={delete:={
+      node:=tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+      redirect:=omit
+    }}
+}
+
+
+template jabber_client.Iq  t_Iq_remove_leaf_node_toaster:=
+{
+  from_:=omit,
+  id:="delete_leaf_node",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub_owner(valueof(t_Pubsub_remove_leaf_node_toaster))),
+  error_:=omit
+}
+
+
+
+
+template http_jabber_org_protocol_pubsub.Pubsub t_Pubsub_retract_tool_info_toaster:=
+
+{ choice := { choice_list := { { retract := { node := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", notify := omit, item_list := { { id := "toaster@"&tsp_fqdn&"/1#always_on", sequence := omit }
+          }
+        }
+      }
+    }
+  }
+}
+
+template jabber_client.Iq  t_Iq_retract_tool_info_toaster:=
+{
+  from_:=omit,
+  id:="retract_tool_info",
+  lang:=omit,
+  to_:="pubsub."&tsp_fqdn,
+  type_:=set_,
+  elem:=oct2char(enc_Pubsub(valueof(t_Pubsub_retract_tool_info_toaster))),
+  error_:=omit
+}
+
+
+
+template jabber_client.Iq  tr_Iq_disco_info_toaster:=
+
+{ 
+  from_ := *, 
+  id := "disco_info_toaster", 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get, elem := 
+    "<query xmlns=\"http://jabber.org/protocol/disco#info\"/>", 
+    error_ := omit 
+
+}
+
+template CompositeClientIq  tr_CompIq_disco_info_toaster:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get, 
+  elem := 
+  {info_query:={
+      node:=omit,
+      sequence := omit /*{
+                identity_list := { },
+                feature_list := { },
+                x := omit
+            }*/
+    }}, 
+  error_ := * 
+
+}
+
+
+
+
+template CompositeClientIq  tr_CompIq_query_harness_toaster:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get , 
+  elem := {
+    harness_query_harness:=
+
+    {
+      harness := "http://Example.org/ttcn/titan",
+      lang :=?,
+      label_ := *,
+      tooltip := omit,
+      description := omit,
+      helpURI := omit,
+      supercedes := omit,
+      author := *,
+      actionDecl_list := { },
+      eventDecl_list := { },
+      subharness_list := { }
+    }
+
+
+  }, 
+  error_ := * 
+}
+
+template CompositeClientIq  tr_CompIq_query_harness_resource_owner:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get , 
+  elem := {
+    harness_query_harness:=
+
+    {
+      harness := "http://ntaforum.org/2012/harness/resource/owner",
+      lang :=?,
+      label_ := *,
+      tooltip := omit,
+      description := omit,
+      helpURI := omit,
+      supercedes := omit,
+      author := *,
+      actionDecl_list := { },
+      eventDecl_list := { },
+      subharness_list := { }
+    }
+
+
+  }, 
+  error_ := * 
+}
+
+
+template CompositeClientIq  tr_CompIq_query_harness_resource_inventory:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get , 
+  elem := {
+    harness_query_harness:=
+
+    {
+      harness := "http://ntaforum.org/2012/harness/resource/inventory",
+      lang :=?,
+      label_ := *,
+      tooltip := omit,
+      description := omit,
+      helpURI := omit,
+      supercedes := omit,
+      author := *,
+      actionDecl_list := { },
+      eventDecl_list := { },
+      subharness_list := { }
+    }
+
+
+  }, 
+  error_ := * 
+}
+
+
+template  CompositeClientIq tr_CompIq_query_username := {
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := *,
+  type_ := get,
+  elem := {
+    opaque := "<query xmlns=\"jabber:iq:auth\"><username>titan0</username></query>"
+  },
+  error_ := omit
+}
+
+
+
+template http_jabber_org_protocol_disco_info.Query t_Query_result_disco_info_toaster:= 
+
+{
+  node := omit,
+  sequence := {
+    identity_list := {
+      {
+        category := "1",
+        name := omit,
+        type_ := "text"
+      }
+    },
+    feature_list := {
+      {
+        var_ := "http://ntaforum.org/2011/harness"
+      },
+      {
+        var_ := "http://Example.org/ttcn/titan"
+      }
+
+    },
+    x:=omit
+  }
+}
+
+template jabber_client.Iq  ts_Iq_query_result_disco_info_toaster:=
+
+{
+  from_ := omit,
+  id := "disco_info_toaster",
+  lang := omit,
+  to_ := tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := result,
+  elem := oct2char(enc_Query_info(valueof(t_Query_result_disco_info_toaster))),
+  error_ := omit
+}
+
+
+template CompositeClientIq  tr_Iq_request_set_toast:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      //   parameter_list := {{name:="slotNumber",base:="1"},{name:="powerLevel",base:="low"} },
+      //   parameter_list := {{name:="slotNumber",base:=?},{name:="powerLevel",base:=?} },
+      parameter_list := {{name:=?,base:=?},{name:=?,base:=?} },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "setToast"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+
+template jabber_client.Iq  ts_Iq_immediate_response_set_toast(template universal charstring par_id,template universal charstring par_to):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result ,
+  elem := "<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"> 
+ <result>"&tsp_immediateResponse&"</result> 
+ </response>",
+  error_ := omit
+}
+
+
+template jabber_client.Message  ts_Message_delayed_response_set_toast(template universal charstring par_id,template universal charstring par_to):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := normal ,
+  choice_list := {},
+  elem_list := {"<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"> 
+ <result>pass</result> 
+ </response>"},
+  error_ := omit
+}
+
+template jabber_client.Message  ts_Message_abort(template universal charstring par_id,template universal charstring par_to,template universal charstring par_reqId):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := normal,
+  choice_list := { },
+  elem_list := {
+    "<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\" requestId=\""&valueof(par_reqId)&"\"> 
+ <result>abort</result> 
+ </response>"
+  },
+  error_ := omit
+}
+
+
+
+
+template CompositeClientIq  tr_CompIq_request_status_toaster:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "getStatus"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+
+
+template CompositeClientIq  tr_CompIq_request_status_slot1:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "getStatusSlot1"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+template CompositeClientIq  tr_CompIq_request_status_slot2:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "getStatusSlot2"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+
+template CompositeClientIq  tr_CompIq_request_status_slot3:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "getStatusSlot3"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+
+template CompositeClientIq  tr_CompIq_request_status_slot4:=
+
+{ 
+  from_ := *, 
+  id := ?, 
+  lang := *, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := set_, 
+  elem := 
+  {harness_request:={
+      session := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      action_ := {
+        harness := ?,
+        base := "getStatusSlot4"
+      }
+    }
+  },
+  error_ := omit 
+
+}
+
+template CompositeClientIq  tr_CompIq_request_activate:=
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := {
+    activation_activate := {
+      requestId := omit,
+      toolId := ?,//"toaster@"&tsp_fqdn&"/1#always_on",
+      result := *, //not optional in the schema -see Errata
+      message_ := omit,
+      jid := omit,
+      activationRef := omit,
+      timestamp := omit,
+      harness_list := {
+        {
+          name := "http://Example.org/ttcn/titan",
+          supportedMode_list := {
+            *
+          }
+        }
+      }
+    }
+  },
+  error_ := omit
+}
+
+template CompositeClientIq  tr_CompIq_request_deactivate:=
+{
+  from_ := *,
+  id := ?,
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := {
+    activation_deactivate := {
+      activationRef := tsp_activationRef
+    }
+  },
+  error_ := omit
+}
+
+template Query_harness t_Query_harness_toaster:={
+  harness:="http://Example.org/ttcn/titan",
+  lang:="en",
+  label_:="Toaster Control Panel",
+  tooltip:="A harness for controlling and monitoring toaster operations",
+  description := "A harness for controlling and monitoring toaster operations",
+  helpURI:=omit,
+  supercedes:=omit,
+  author:="elemer.lelik@ericsson.com",
+  actionDecl_list:={ {
+      name:="getStatus",
+      label_:="Get Status",
+      tooltip:="Fetch information about current operating status",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={},
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={},
+      responseDecl:={
+        item_list:={},
+        xmlItem_list:={},
+        fileItem_list:={},  
+        group_list:={
+          {
+            name:="ToasterStatus",
+            label_:="ToasterStatus",  
+            tooltip :=omit,
+            description :=omit,
+            helpURI :=omit,
+            mandatory :=omit,
+            allowedCount :=omit,
+            itemKeyName :=omit,
+            item_list:={{
+                name:="isOperating",
+                label_:="Operating",
+                tooltip :="If true, toaster is currently operating",
+                description :=omit,
+                helpURI :=omit,
+                mandatory :=omit,
+                default_ :=omit,
+                datatype :=boolean_,
+                units :=omit,
+                masked :=omit,
+                isMultiline :=omit,
+                allowedValue_list:={},
+                allowedCount :=omit
+              }},
+            group_list:={}
+          }
+        }
+      }
+    },
+    {
+      name:="getStatusSlot1",
+      label_:="Get Status Slot1",
+      tooltip:="Fetch information about current operating status of Slot1",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={},
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={},
+      responseDecl:={
+        item_list:={},
+        xmlItem_list:={},
+        fileItem_list:={},  
+        group_list:={
+          {
+            name:="ToasterStatus",
+            label_:="ToasterStatus",  
+            tooltip :=omit,
+            description :=omit,
+            helpURI :=omit,
+            mandatory :=omit,
+            allowedCount :=omit,
+            itemKeyName :=omit,
+            item_list:={{
+                name:="slot1IdleStatus",
+                label_:="slot1IdleStatus",
+                tooltip :="If true, slot is available",
+                description :=omit,
+                helpURI :=omit,
+                mandatory :=omit,
+                default_ :=omit,
+                datatype :=boolean_,
+                units :=omit,
+                masked :=omit,
+                isMultiline :=omit,
+                allowedValue_list:={},
+                allowedCount :=omit
+              }},
+            group_list:={}
+          }
+        }
+      }
+    },
+
+    {
+      name:="getStatusSlot2",
+      label_:="Get Status Slot2",
+      tooltip:="Fetch information about current operating status of Slot2",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={},
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={
+
+
+
+      },
+      responseDecl:={
+        item_list:={},
+        xmlItem_list:={},
+        fileItem_list:={},  
+        group_list:={
+          {
+            name:="ToasterStatus",
+            label_:="ToasterStatus",  
+            tooltip :=omit,
+            description :=omit,
+            helpURI :=omit,
+            mandatory :=omit,
+            allowedCount :=omit,
+            itemKeyName :=omit,
+            item_list:={{
+                name:="slot1IdleStatus",
+                label_:="slot1IdleStatus",
+                tooltip :="If true, slot is available",
+                description :=omit,
+                helpURI :=omit,
+                mandatory :=omit,
+                default_ :=omit,
+                datatype :=boolean_,
+                units :=omit,
+                masked :=omit,
+                isMultiline :=omit,
+                allowedValue_list:={},
+                allowedCount :=omit
+              }},
+            group_list:={}
+          }
+
+        }
+      }
+
+    },
+    {
+      name:="getStatusSlot3",
+      label_:="Get Status Slot3",
+      tooltip:="Fetch information about current operating status of Slot3",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={},
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={},
+      responseDecl:={
+        item_list:={},
+        xmlItem_list:={},
+        fileItem_list:={},  
+        group_list:={
+          {
+            name:="ToasterStatus",
+            label_:="ToasterStatus",  
+            tooltip :=omit,
+            description :=omit,
+            helpURI :=omit,
+            mandatory :=omit,
+            allowedCount :=omit,
+            itemKeyName :=omit,
+            item_list:={{
+                name:="slot1IdleStatus",
+                label_:="slot1IdleStatus",
+                tooltip :="If true, slot is available",
+                description :=omit,
+                helpURI :=omit,
+                mandatory :=omit,
+                default_ :=omit,
+                datatype :=boolean_,
+                units :=omit,
+                masked :=omit,
+                isMultiline :=omit,
+                allowedValue_list:={},
+                allowedCount :=omit
+              }},
+            group_list:={}
+          }
+        }
+      }
+
+    },
+    {
+      name:="getStatusSlot4",
+      label_:="Get Status Slot4",
+      tooltip:="Fetch information about current operating status of Slot4",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={},
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={
+
+
+
+      },
+      responseDecl:={
+        item_list:={},
+        xmlItem_list:={},
+        fileItem_list:={},  
+        group_list:={
+          {
+            name:="ToasterStatus",
+            label_:="ToasterStatus",  
+            tooltip :=omit,
+            description :=omit,
+            helpURI :=omit,
+            mandatory :=omit,
+            allowedCount :=omit,
+            itemKeyName :=omit,
+            item_list:={{
+                name:="slot1IdleStatus",
+                label_:="slot1IdleStatus",
+                tooltip :="If true, slot is available",
+                description :=omit,
+                helpURI :=omit,
+                mandatory :=omit,
+                default_ :=omit,
+                datatype :=boolean_,
+                units :=omit,
+                masked :=omit,
+                isMultiline :=omit,
+                allowedValue_list:={},
+                allowedCount :=omit
+              }},
+            group_list:={}
+          }
+        }
+      }
+
+    },
+    {
+      name:="setToast",
+      label_:="Set Toast",
+      tooltip:="Perform a toasting operation on some bread",
+      description:=omit,
+      helpURI:=omit,
+      parameter_list:={
+        {
+          name:="slotNumber",
+          label_:="slotNumber",
+          tooltip :="The slot number of the toaster to be used",
+          description :=omit,
+          helpURI :=omit,
+          mandatory :=false,
+          datatype :=integer_,
+          units :=omit,
+          default_ :="1",
+          masked :=omit,
+          isMultiline :=omit,
+          allowedValue_list:={},
+          allowedLength :=omit,
+          allowedCount :=omit,
+          allowedPattern_list:={},
+          allowedRange_list:={
+            {
+              min:="1",
+              max:="4"
+            }      
+          },
+          enablementValue :=omit
+        },
+
+        {
+          name:="powerLevel",
+          label_:="Power Level",
+          tooltip :="The power level to use during toasting",
+          description :=omit,
+          helpURI :=omit,
+          mandatory :=omit,
+          datatype :=string,
+          units :=omit,
+          default_ :=omit,
+          masked :=omit,
+          isMultiline :=omit,
+          allowedValue_list:={
+
+            {
+              label_ :=omit,
+              base:="low"
+            },
+            {
+              label_ :=omit,
+              base:="medium"
+            },{
+              label_ :=omit,
+              base:="high"
+            }
+
+          },
+          allowedLength :=omit,
+          allowedCount :=omit,
+          allowedPattern_list:={},
+          allowedRange_list:={},
+          enablementValue :=omit
+        }
+
+      },
+      xmlParameter_list:={},
+      file_list:={},
+      group_list:={ },
+      responseDecl:=omit
+    }
+
+
+
+  },
+
+  eventDecl_list:={},
+  subharness_list:={}
+}
+
+template Query_harness t_Query_harness_resource_owner:=
+{
+  harness := "http://ntaforum.org/2012/harness/resource/owner",
+  lang := "en",
+  label_ := "Resource Owner",
+  tooltip := "Resource owner interface",
+  description := "Basic interface for NTAF entities which own resources.",
+  helpURI := omit,
+  supercedes := omit,
+  author := "NTAF WT-003",
+  actionDecl_list := {
+    {
+      name := "getResourceList",
+      label_ := "Get Resource List",
+      tooltip := "Fetch the list of resources supported by this tool",
+      description := "Fetch the list of resources owned by this tool. The list may include only the identifier for this tool or may contain identifiers for this tool and for additional\n            resources it controls or has created. Resources returned are first level children unless the special value 'ALL' is sent as input.",
+      helpURI := omit,
+      parameter_list := {
+        {
+          name := "resource",
+          label_ := "Resource",
+          tooltip := "Identifier for a resource",
+          description := "An identifier for a resource. The identifier is unique and must be one of the identifiers returned by getResourceList. The special value 'SELF' returns resources owned\n            by the NTAF entity. The special value 'ALL' returns children of the resource to all sub-levels (i.e. children, grandchildren, etc.).",
+          helpURI := omit,
+          mandatory := false,
+          datatype := string,
+          units := omit,
+          default_ := "SELF",
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        }
+      },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      responseDecl := {
+        item_list := {
+          {
+            name := "resource",
+            label_ := "Resource ID",
+            tooltip := "Resource identifier",
+            description := "Each item is an identifier for a resource. Together the items form a list of resource identifiers. Resource identifiers must be unique.",
+            helpURI := omit,
+            mandatory := omit,
+            default_ := omit,
+            datatype := string,
+            units := omit,
+            masked := omit,
+            isMultiline := omit,
+            allowedValue_list := { },
+            allowedCount := {
+              min := 1,
+              max := omit
+            }
+          }
+        },
+        xmlItem_list := { },
+        fileItem_list := { },
+        group_list := { }
+      }
+    }
+  },
+  eventDecl_list := { },
+  subharness_list := { }
+}
+
+template Query_harness t_Query_harness_resource_inventory:=
+
+{
+  harness := "http://ntaforum.org/2012/harness/resource/inventory",
+  lang := "en",
+  label_ := "Resource Inventory",
+  tooltip := "Resource inventory interface",
+  description := "Basic inventory interface for NTAF entities which represent resources.",
+  helpURI := omit,
+  supercedes := omit,
+  author := "NTAF WT-004",
+  actionDecl_list := {
+    {
+      name := "getAttributes",
+      label_ := "Get Resource Attributes",
+      tooltip := "Fetch the attributes associated with a specific resource",
+      description := "Fetch the attributes associated with a specific resource. \n        Returns all attributes for requested groups.\n        If no group is specified returns all attributes for all groups.",
+      helpURI := omit,
+      parameter_list := {
+        {
+          name := "resource",
+          label_ := "Resource",
+          tooltip := "Resource identifier",
+          description := "A resource identifier resource. The identifier is unique and must be one of the identifiers returned by the Resource/Owner harness getResourceList\n            action. A value of 'SELF' returns data for the NTAF entity itself. A value of 'ALL' returns data for all resources owned by the NTAF entity",
+          helpURI := omit,
+          mandatory := false,
+          datatype := string,
+          units := omit,
+          default_ := "SELF",
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        }
+      },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      responseDecl := {
+        item_list := { },
+        xmlItem_list := { },
+        fileItem_list := { },
+        group_list := {
+          {
+            name := "attributes",
+            label_ := "Inventory attributes",
+            tooltip := omit,
+            description := omit,
+            helpURI := omit,
+            mandatory := omit,
+            allowedCount := {
+              min := 0,
+              max := omit
+            },
+            itemKeyName := omit,
+            item_list := {
+              {
+                name := "resource",
+                label_ := "Resource",
+                tooltip := "Resource identifier",
+                description := omit,
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "groupName",
+                label_ := "Group name",
+                tooltip := omit,
+                description := omit,
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "attributeName",
+                label_ := "Attribute name",
+                tooltip := omit,
+                description := omit,
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "attributeDatatype",
+                label_ := "Attribute data type",
+                tooltip := omit,
+                description := "Type of data represented by attribute value.",
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := {
+                  {
+                    label_ := "String",
+                    base := "string"
+                  },
+                  {
+                    label_ := "Integer",
+                    base := "integer"
+                  },
+                  {
+                    label_ := "Decimal",
+                    base := "decimal"
+                  },
+                  {
+                    label_ := "Boolean",
+                    base := "boolean"
+                  },
+                  {
+                    label_ := "Any URI",
+                    base := "anyURI"
+                  },
+                  {
+                    label_ := "Date-Time",
+                    base := "dateTime"
+                  }
+                },
+                allowedCount := omit
+              },
+              {
+                name := "attributeValue",
+                label_ := "Attribute value",
+                tooltip := omit,
+                description := omit,
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              }
+            },
+            group_list := { }
+          }
+        }
+      }
+    },
+    {
+      name := "requestUserInput",
+      label_ := "Request Info",
+      tooltip := "Request information from the user",
+      description := "Request information from the user",
+      helpURI := omit,
+      parameter_list := {
+        {
+          name := "resource",
+          label_ := "Resource",
+          tooltip := "Identifier for a resource",
+          description := "An identifier for a resource. The identifier is unique and corresponds to identifiers returned by getResourceList.",
+          helpURI := omit,
+          mandatory := false,
+          datatype := string,
+          units := omit,
+          default_ := "SELF",
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        },
+        {
+          name := "message",
+          label_ := "Message",
+          tooltip := "A user-readable message describing what is required",
+          description := "This message will be associated with this request and may be displayed to the user.",
+          helpURI := omit,
+          mandatory := omit,
+          datatype := string,
+          units := omit,
+          default_ := omit,
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        },
+        {
+          name := "uri",
+          label_ := "URI",
+          tooltip := "Location where data can be supplied",
+          description := "This URI defines a location where the user may supply the requested information.",
+          helpURI := omit,
+          mandatory := omit,
+          datatype := anyURI,
+          units := omit,
+          default_ := omit,
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        }
+      },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      responseDecl := omit
+    },
+    {
+      name := "getConnectors",
+      label_ := "Get connector data",
+      tooltip := omit,
+      description := "Gets connector data for this resource on this resource",
+      helpURI := omit,
+      parameter_list := {
+        {
+          name := "resource",
+          label_ := "Resource",
+          tooltip := "A Resource GUID",
+          description := "A resource identifier resource. The identifier is unique and must be one of the identifiers returned by the Resource/Owner harness getResourceList\n            action. A value of 'SELF' returns connector data for the NTAF entity itself. A value of 'ALL' returns data for all connectors owned by the NTAF entity",
+          helpURI := omit,
+          mandatory := omit,
+          datatype := string,
+          units := omit,
+          default_ := "SELF",
+          masked := omit,
+          isMultiline := omit,
+          allowedValue_list := { },
+          allowedLength := omit,
+          allowedCount := omit,
+          allowedPattern_list := { },
+          allowedRange_list := { },
+          enablementValue := omit
+        }
+      },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      responseDecl := {
+        item_list := { },
+        xmlItem_list := { },
+        fileItem_list := { },
+        group_list := {
+          {
+            name := "connector",
+            label_ := "Connector",
+            tooltip := "The Connector Information",
+            description := "Connector information",
+            helpURI := "",
+            mandatory := omit,
+            allowedCount := {
+              min := 0,
+              max := omit
+            },
+            itemKeyName := omit,
+            item_list := {
+              {
+                name := "resource",
+                label_ := "Resource ID",
+                tooltip := "Identifier of resource which owns this connector",
+                description := omit,
+                helpURI := omit,
+                mandatory := omit,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "connectorId",
+                label_ := "Connector ID",
+                tooltip := "The ID of this connector",
+                description := " ID of connector. This ID must be unique in context of associated resource. ",
+                helpURI := omit,
+                mandatory := false,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "type",
+                label_ := "Type",
+                tooltip := "The type of connector",
+                description := "The type of connector",
+                helpURI := omit,
+                mandatory := false,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "category",
+                label_ := "Category",
+                tooltip := "The category group of this type of connector",
+                description := "The category group of this type of connector",
+                helpURI := omit,
+                mandatory := false,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "connectedResource",
+                label_ := "Resource",
+                tooltip := "The resource connected to",
+                description := "The resource ID of the resource that this connector is connected to",
+                helpURI := omit,
+                mandatory := false,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              },
+              {
+                name := "connectedConnector",
+                label_ := "Connector",
+                tooltip := "The connector on the resource connected to",
+                description := "The connector ID of the connector that this connector is connected to",
+                helpURI := omit,
+                mandatory := false,
+                default_ := omit,
+                datatype := string,
+                units := omit,
+                masked := omit,
+                isMultiline := omit,
+                allowedValue_list := { },
+                allowedCount := omit
+              }
+            },
+            group_list := { }
+          }
+        }
+      }
+    }
+  },
+  eventDecl_list := { },
+  subharness_list := {
+    "http://ntaforum.org/2012/harness/resource/owner"
+  }
+}
+
+
+template CompositeClientIq  tr_Iq_query_result_harness:=
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := *,
+  type_ := result,
+  elem := *,
+  error_ := omit
+}
+
+
+template jabber_client.Iq  ts_Iq_query_result_harness_provider_toaster(template universal charstring par_id,template universal charstring par_to):=
+{
+  from_ := omit,
+  id := par_id,
+  lang := "en",
+  to_ := par_to,//tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := result,
+  elem := oct2char(enc_Query_harness(valueof(t_Query_harness_toaster))),
+  error_ := omit
+}
+
+
+template jabber_client.Iq  ts_Iq_query_result_harness_provider_resource_owner(template universal charstring par_id,template universal charstring par_to):=
+{
+  from_ := omit,
+  id := par_id,
+  lang := "en",
+  to_ := par_to,//tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := result,
+  elem := oct2char(enc_Query_harness(valueof(t_Query_harness_resource_owner))),
+  error_ := omit
+}
+
+template jabber_client.Iq  ts_Iq_query_result_harness_provider_resource_inventory(template universal charstring par_id,template universal charstring par_to):=
+{
+  from_ := omit,
+  id := par_id,
+  lang := "en",
+  to_ := par_to,//tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := result,
+  elem := oct2char(enc_Query_harness(valueof(t_Query_harness_resource_inventory))),
+  error_ := omit
+}
+
+
+
+
+
+/*
+
+template jabber_client.Iq  ts_Iq_query_result_harness_provider_toaster(template universal charstring par_id,template universal charstring par_to):=
+{
+  from_ := omit,
+  id := par_id,
+  lang := "en",
+  to_ := par_to,//tsp_username_requestor&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := result,
+  elem := 
+    "<h:query-harness xmlns:h='http://ntaforum.org/2011/harness' harness='http://Example.org/ttcn/titan' xml:lang='en'>
+	<h:label>Toaster Control Panel</h:label>
+	<h:tooltip>A harness for controlling and monitoring toaster operations</h:tooltip>
+	<h:author>elemer.lelik@ericsson.com</h:author>
+	<h:actionDecl name='getStatus'>
+		<h:label>Get Status</h:label>
+		<h:tooltip>Fetch information about current operating status</h:tooltip>
+		<h:responseDecl name='Toaster Status'>
+			<h:label>ToasterStatus</h:label>
+			<h:item name='isOperating'>
+				<h:label>Operating</h:label>
+				<h:tooltip>If true, toaster is currently operating</h:tooltip>
+				<h:datatype>boolean</h:datatype>
+			</h:item>
+		</h:responseDecl>
+	</h:actionDecl>
+	<h:actionDecl name='getStatusSlot1'>
+		<h:label>Get Status Slot1</h:label>
+		<h:tooltip>Fetch information about current operating status of Slot1</h:tooltip>
+		<h:responseDecl name='Slot1 Status'>
+			<h:label>Slot1Status</h:label>
+			<h:item name='slot1IdleStatus'>
+				<h:label>slot1IdleStatus</h:label>
+				<h:tooltip>If true, slot is available</h:tooltip>
+				<h:datatype>boolean</h:datatype>
+			</h:item>
+		</h:responseDecl>
+	</h:actionDecl>
+	<h:actionDecl name='getStatusSlot2'>
+		<h:label>Get Status Slot2</h:label>
+		<h:tooltip>Fetch information about current operating status of Slot2</h:tooltip>
+		<h:responseDecl name='Slot2 Status'>
+			<h:label>Slot2Status</h:label>
+			<h:item name='slot2IdleStatus'>
+				<h:label>slot2IdleStatus</h:label>
+				<h:tooltip>If true, slot is available</h:tooltip>
+				<h:datatype>boolean</h:datatype>
+			</h:item>
+		</h:responseDecl>
+	</h:actionDecl>
+	<h:actionDecl name='getStatusSlot3'>
+		<h:label>Get Status Slot3</h:label>
+		<h:tooltip>Fetch information about current operating status of Slot3</h:tooltip>
+		<h:responseDecl name='Slot3 Status'>
+			<h:label>Slot3Status</h:label>
+			<h:item name='slot3IdleStatus'>
+				<h:label>slot3IdleStatus</h:label>
+				<h:tooltip>If true, slot is available</h:tooltip>
+				<h:datatype>boolean</h:datatype>
+			</h:item>
+		</h:responseDecl>
+	</h:actionDecl>	
+	<h:actionDecl name='getStatusSlot4'>
+		<h:label>Get Status Slot4</h:label>
+		<h:tooltip>Fetch information about current operating status of Slot4</h:tooltip>
+		<h:responseDecl name='Slot4 Status'>
+			<h:label>Slot4Status</h:label>
+			<h:item name='slot4IdleStatus'>
+				<h:label>slot4IdleStatus</h:label>
+				<h:tooltip>If true, slot is available</h:tooltip>
+				<h:datatype>boolean</h:datatype>
+			</h:item>
+		</h:responseDecl>
+	</h:actionDecl>	
+	<h:actionDecl name='setToast'>
+		<h:label>Set Toast</h:label>
+		<h:tooltip>Perform a toasting operation on some bread</h:tooltip>
+		<h:parameter name='slotNumber'>
+			<h:label>slotNumber</h:label>
+			<h:tooltip>The slot number of the toaster to be used</h:tooltip>
+			<h:datatype>integer</h:datatype>
+			<h:mandatory>false</h:mandatory> 
+			<h:default>1</h:default> 
+			<h:allowedRange> 
+				<h:min>1</h:min> 
+				<h:max>4</h:max> 
+			</h:allowedRange>    
+		</h:parameter>
+		<h:parameter name='powerLevel'> 
+			<h:label>Power Level</h:label> 
+			<h:tooltip>The power level to use during toasting</h:tooltip> 
+			<h:allowedValue>low</h:allowedValue> 
+			<h:allowedValue>medium</h:allowedValue> 
+			<h:allowedValue>high</h:allowedValue> 
+		</h:parameter>     
+	</h:actionDecl>
+</h:query-harness>",
+    error_ := omit
+}
+
+
+
+*/
+
+
+
+
+template Activate t_Activation_result(template universal charstring par_toolId):=
+
+{
+  requestId := omit,
+  toolId := par_toolId,//"toaster@"&tsp_fqdn&"/1#always_on",
+  result := pass_ ,
+  message_ := omit,
+  jid := "toaster@"&tsp_fqdn&"/"&tsp_resource,
+  activationRef := tsp_activationRef,
+  timestamp := omit,
+  harness_list := {
+
+    {
+      name := "http://Example.org/ttcn/titan",
+      supportedMode_list := {
+        invisible_and_automated 
+      }
+    }
+  }
+}
+
+template jabber_client.Iq  ts_Iq_activation_result(template universal charstring par_id,template universal charstring par_to,template universal charstring par_toolId):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem :=  oct2char(enc_Activate(valueof(t_Activation_result(par_toolId)))),
+  error_ := omit
+}
+
+
+/*
+template jabber_client.Iq  ts_Iq_activation_result:=
+
+ {
+    from_ := omit,
+    id := "activate_tool1",
+    lang := omit,
+    to_ := "titan0t@"&tsp_fqdn&"/"&tsp_resource&"",
+    type_ := result,
+    elem := "<activate xmlns=\"http://ntaforum.org/2011/activation\" toolId=\"toaster@"&tsp_fqdn&"/1#always_on\">
+<result>pass</result>
+    <jid>toaster@"&tsp_fqdn&"</jid>
+<activationRef/>
+</activate>",
+    error_ := omit
+}
+*/
+
+
+template Deactivate t_Deactivation_result:=
+
+{
+  activationRef := tsp_activationRef
+}
+
+
+template jabber_client.Iq  ts_Iq_deactivation_result(template universal charstring par_id,template universal charstring par_to):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem :=  oct2char(enc_Deactivate(valueof(t_Deactivation_result))),
+  error_ := omit
+}
+
+
+
+template jabber_client.Iq  tr_Iq_open_session:=
+
+{
+  from_ := *,
+  id := "open_session",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := *,//oct2char(enc_Open(valueof(t_open))),//"<open xmlns=\"http://ntaforum.org/2011/harness\" harness=\"http://Example.org/ttcn/titan\" mode=\"visible_and_interactive\"><activationRef/></open>",
+  error_ := omit
+}
+
+
+
+template jabber_client.Iq  ts_Iq_result_open_session(template universal charstring par_id,template universal charstring par_to, universal charstring par_session):=
+
+{
+  from_ := omit,
+  id :=par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := oct2char(enc_Response(valueof(t_Response(par_session)))),
+/*"<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"> 
+ <result>pass</result> 
+ </response>",*/
+  error_ := omit
+}
+
+
+template http_ntaforum_org_2011_harness.Response t_Response(universal charstring par_session):=
+{
+  lang := omit,
+  requestId := omit,
+  session := par_session,
+  result := pass_ ,
+  message_ := omit,
+  duration := omit,
+  item_list := { },
+  xmlItem_list := { },
+  file_list := { },
+  group_list := { },
+  timestamp := omit
+}
+
+template jabber_client.Iq  tr_Iq_close_session:=
+{
+  from_ := *,
+  id := "close_session",
+  lang := omit,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := "<close xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"/>",
+  error_ := omit
+}
+
+
+
+template jabber_client.Iq  ts_Iq_result_close_session(template universal charstring par_id,template universal charstring par_to):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := "<response xmlns=\"http://ntaforum.org/2011/harness\" session=\"toasterSession\"> 
+ <result>pass</result> 
+ </response>",
+  error_ := omit
+}
+template Query_harness t_query_harness(template universal charstring par_harness):=
+
+{
+  harness := par_harness,
+  lang := "en",
+  label_ := omit,
+  tooltip := omit,
+  description := omit,
+  helpURI := omit,
+  supercedes := omit,
+  author := omit,
+  actionDecl_list := { },
+  eventDecl_list := { },
+  subharness_list := { }
+}
+
+
+template jabber_client.Iq  ts_Iq_get_query_harness(template universal charstring par_id,template universal charstring par_to,template universal charstring par_harness):=
+
+{
+  from_ := omit,
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := get,
+  elem := oct2char(enc_Query_harness(valueof(t_query_harness(par_harness)))),
+  error_ := omit
+}
+
+/*
+template jabber_client.Iq  ts_Iq_result_ping_c(template universal charstring par_id,template universal charstring par_to):=
+
+{
+  from_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := omit,
+  error_ := omit
+}
+
+*/
+
+template CompositeClientIq  tr_CompIq_open_session:=
+
+{
+
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_ ,
+  elem := {
+    harness_open := {
+      harness := "http://Example.org/ttcn/titan",
+      lang := omit,
+      mode := ? ,
+      reportUserActivity := ?,
+      context := omit,
+      parameter_list := { },
+      xmlParameter_list := { },
+      file_list := { },
+      group_list := { },
+      timestamp := omit,
+      activationRef := tsp_activationRef
+    }
+  },
+  error_ := omit
+} 
+
+
+
+template CompositeClientIq  tr_CompIq_close_session:=
+
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := {
+    harness_close := {
+      session := ?,
+      timestamp := *
+    }
+  },
+  error_ := omit
+}
+
+template CompositeClientIq  tr_CompIq_close_session_final:=
+
+{
+  from_ := *,
+  id := ?,
+  lang := *,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := set_,
+  elem := {
+    harness_close := {
+      session := tsp_backdoor,
+      timestamp := *
+    }
+  },
+  error_ := omit
+}
+
+/*
+template CompositeClientIq  tr_CompIq_ClientPing:=
+
+{ from_ := *, 
+  id := ?, 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get ,
+  elem := { opaque := "<ping xmlns=\"urn:xmpp:ping\"/>" }, 
+  error_ := omit 
+
+}
+
+template CompositeClientIq  tr_CompIq_ServerPing:=
+
+{ from_ := ?, 
+  id := ?, 
+  lang := omit, 
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"", 
+  type_ := get ,
+  elem := { opaque := "<ping xmlns=\"urn:xmpp:ping\"/>" }, 
+  error_ := omit 
+
+}
+
+*/
+template CompositeClientMessage  tr_CompMessage_cancel_request:=
+
+{
+  from_ := *,
+  id := *,
+  lang := *,
+  to_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  type_ := normal ,
+  choice_list := { },
+  elem_list := {
+    {
+      harness_cancel := {
+        requestId := ?,
+        session := "toasterSession",
+        timestamp := omit
+      }
+    }
+  },
+  error_ := omit
+} 
+
+
+template http_ntaforum_org_2011_harness.Response t_Response_getStatus(
+    template universal charstring par_session,
+    template universal charstring par_opStat
+
+):={
+  lang := omit,
+  requestId := omit,
+  session := par_session,
+  result := pass_ ,
+  message_ := omit,
+  duration := omit,
+  item_list := {
+    {
+      name := "isOperating",
+      base := par_opStat
+    }
+  },
+  xmlItem_list := { },
+  file_list := { },
+  group_list := { },
+  timestamp := omit
+}
+
+template jabber_client.Iq  ts_Iq_result_response_getStatus(
+    template universal charstring par_id,
+    template universal charstring par_to,
+    template universal charstring par_session,
+    template universal charstring par_opStat):=
+
+{
+  from_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := oct2char(enc_Response(valueof(t_Response_getStatus(par_session,par_opStat)))),
+  error_ := omit
+}
+
+
+
+template http_ntaforum_org_2011_harness.Response t_Response_getStatusSlot(
+    template universal charstring par_session,
+    template universal charstring par_slotStat,
+    template universal charstring par_slotnr
+
+):={
+  lang := omit,
+  requestId := omit,
+  session := par_session,
+  result := pass_ ,
+  message_ := omit,
+  duration := omit,
+  item_list := {
+    {
+      name := "slot"&valueof(par_slotnr)&"IdleStatus",
+      base := par_slotStat
+    }
+  },
+  xmlItem_list := { },
+  file_list := { },
+  group_list := { },
+  timestamp := omit
+}
+
+template jabber_client.Iq  ts_Iq_result_response_getStatusSlot(
+    template universal charstring par_id,
+    template universal charstring par_to,
+    template universal charstring par_session,
+    template universal charstring par_slotStat,
+    template universal charstring par_slotnr
+):=
+
+{
+  from_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := oct2char(enc_Response(valueof(t_Response_getStatusSlot(par_session,par_slotStat,par_slotnr)))),
+  error_ := omit
+}
+
+
+
+
+template jabber_client.Iq  ts_Iq_error(template universal charstring par_id,template universal charstring par_to, template universal charstring par_elem):=
+
+{
+  from_ := tsp_username_provider&"@"&tsp_fqdn&"/"&tsp_resource&"",
+  id := par_id,
+  lang := omit,
+  to_ := par_to,
+  type_ := result,
+  elem := par_elem,
+  error_ := {
+    by:=omit,
+    type_:=cancel,
+    stanzaErrorGroup:={unexpected_request:=""},
+    text:={lang:=omit,base:="Toaster not active"}
+  }
+}
+
+
+
+
+
+}//endmodule

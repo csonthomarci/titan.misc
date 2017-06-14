@@ -1,0 +1,117 @@
+/******************************************************************************
+* Copyright (c) 2004, 2017  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+*   Elemer Lelik - initial implementation
+*   Endre Kulcsar
+*   Eszter Susanszky
+******************************************************************************/
+//
+//  File:               NTAF_Auth.ttcn
+//  Description:        NTAF Conformance Test Suite 
+//  Rev:                 
+//  Prodnr:              
+//  Updated:            2013-09-10
+//  Contact:            http://ttcn.ericsson.se
+//
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//  Module:  
+//
+//  Purpose:
+//     
+//
+//  Module Parameters:
+//      -
+//
+//  Module depends on:
+//    -
+//
+//////////////////////////////////////////////////////////////////////////////
+
+
+module NTAF_Auth
+{
+
+
+modulepar {
+  boolean tsp_AuthEncDec_debug:=false;
+}
+
+external function enc_AuthChallenge(in AuthChallenge  pdu) return  charstring;
+external function dec_AuthChallenge(in  charstring  pdu) return AuthChallenge; 
+
+external function enc_AuthResponse(in AuthResponse  pdu) return  charstring;
+external function dec_AuthResponse(in  charstring  pdu) return AuthResponse; 
+
+
+//-----------------------------------------------------------------------------
+//Types for challenge-response
+//-----------------------------------------------------------------------------  
+type record AuthChallenge 
+{
+  charstring realm optional, 
+  charstring nonce, 
+  charstring qop  optional,
+  charstring charset optional,
+  charstring algorithm
+
+
+
+}
+with {
+  encode "TEXT"
+  variant "SEPARATOR(',')"
+  variant (realm) "BEGIN('realm=')"
+  variant (nonce) "BEGIN('nonce=')"
+  variant (qop) "BEGIN('qop=')"
+  variant (charset) "BEGIN('charset=')"
+  variant (algorithm) "BEGIN('algorithm=')"
+
+};
+
+
+
+type record AuthResponse 
+{
+  charstring charset,
+  charstring username, 
+  charstring realm optional, 
+  charstring nonce, 
+  charstring nc,
+  charstring cnonce, 
+  charstring serv_type optional,
+  charstring host      optional,
+  charstring digest_uri,
+  charstring response,
+  charstring qop  optional,
+  charstring authzid   optional
+
+
+
+}with {
+  encode "TEXT"
+  variant "SEPARATOR(',')"
+  variant (username) "BEGIN('username=')"
+  variant (realm) "BEGIN('realm=')"
+  variant (nonce) "BEGIN('nonce=')"
+  variant (cnonce) "BEGIN('cnonce=')"
+  variant (nc) "BEGIN('nc=')"
+  variant (qop) "BEGIN('qop=')"
+  variant (serv_type) "BEGIN('serv_type=')"
+  variant (host) "BEGIN('host=')" 
+  variant (digest_uri) "BEGIN('digest-uri=')" 
+  variant (response) "BEGIN('response=')" 
+  variant (charset) "BEGIN('charset=')"
+  variant (authzid) "BEGIN('authzid=')"
+};
+
+
+
+
+}  with {    encode "TEXT"     }
