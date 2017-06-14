@@ -49,3 +49,21 @@
 [submodule "DIAMETER_Rx_ETSI/titan.ProtocolModules.SDP"]
 	path = DIAMETER_Rx_ETSI/titan.ProtocolModules.SDP
 	url = http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.SDP
+[submodule "NTAF_Conformance/ProtocolModules/COMMON"]
+	path = NTAF_Conformance/ProtocolModules/COMMON
+	url = https://github.com/eclipse/titan.ProtocolModules.COMMON
+[submodule "NTAF_Conformance/ProtocolModules/NTAF_CNL113776"]
+	path = NTAF_Conformance/ProtocolModules/NTAF_CNL113776
+	url = http://git.eclipse.org/gitroot/titan/titan.ProtocolModules.NTAF
+[submodule "NTAF_Conformance/ProtocolModules/TCCUsefulFunctions_CNL113472"]
+	path = NTAF_Conformance/ProtocolModules/TCCUsefulFunctions_CNL113472
+	url = https://github.com/eclipse/titan.Libraries.TCCUsefulFunctions
+[submodule "NTAF_Conformance/ProtocolModules/XMPP_CNL113775"]
+	path = NTAF_Conformance/ProtocolModules/XMPP_CNL113775
+	url = https://github.com/eclipse/titan.ProtocolModules.XMPP
+[submodule "NTAF_Conformance/TestPorts/IPL4asp_CNL113531"]
+	path = NTAF_Conformance/TestPorts/IPL4asp_CNL113531
+	url = https://github.com/eclipse/titan.TestPorts.IPL4asp
+[submodule "NTAF_Conformance/TestPorts/Socket_API_CNL113686"]
+	path = NTAF_Conformance/TestPorts/Socket_API_CNL113686
+	url = https://github.com/eclipse/titan.TestPorts.Common_Components.Socket-API

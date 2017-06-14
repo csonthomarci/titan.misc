@@ -33,6 +33,19 @@ based on http://www.etsi.org/plugtests/CoAP/Document/CoAP_TestDescriptions_v015.
 Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
 will have to be issued.
 
+
+#NTAF Conformance test cases
+based on 
+http://ntaforum.org/TS-001%20Tool%20Registration%20and%20Discovery.pdf
+http://ntaforum.org/TS-002%20Tool%20Automation%20Harness.pdf
+http://ntaforum.org/TS-003%20Resource.pdf
+http://ntaforum.org/TS-004%20Inventory.pdf
+
+Note: As this repository includes submodules, after cloning it, a 'git submodule init' and a 'git submodule update' 
+will have to be issued.
+
+
+
 Main project page:
 
 https://projects.eclipse.org/projects/tools.titan
