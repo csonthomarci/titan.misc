@@ -1,8 +1,23 @@
-/**
-*	@author 	STF 406
-*  @version    $Id: LibSip_SimpleMsgSummaryTypes.ttcn 488 2010-11-08 10:17:19Z pintar $
-*	@desc		This module provides the SMS type system for SIP tests.
-*/
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission 
+ * is hereby granted, free of charge, to copy, reproduce and amend this file 
+ * under the following conditions: It is provided "as is", without warranty of any 
+ * kind, expressed or implied. 
+ *
+ * ETSI shall never be liable for any claim, damages, or other liability arising 
+ * from its use or inability of use.This permission does not apply to any documentation 
+ * associated with this file for which ETSI keeps all rights reserved. The present 
+ * copyright notice shall be included in all copies of whole or part of this 
+ * file and shall not imply any sub-license right.
+ *
+ *  Modified by: Elemer Lelik
+ *
+ *	@author 	STF 406
+ *  @version    $Id: LibSip_SimpleMsgSummaryTypes.ttcn 488 2010-11-08 10:17:19Z pintar $
+ *	@desc		This module provides the SMS type system for SIP tests.
+ ******************************************************************************/
 
 //compiled with Titan 02.03.2106 Elemer Lelik
 module LibSip_SimpleMsgSummaryTypes { // RFC 3842

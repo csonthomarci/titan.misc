@@ -1,59 +1,74 @@
-/**
-*  @author   ETSI
-*  @version  $URL: svn+ssh://schmitting@vcs.etsi.org/TTCN3/LIB/LibCommon/trunk/ttcn/LibCommon_Sync.ttcn $
-*            $Id: LibCommon_Sync.ttcn 34 2009-05-25 13:12:29Z deshpande $
-*  @desc     This module implements _one_ generic synchronization mechanism
-*            for TTCN-3 test cases with one or more test components.
-*            Key concept is here that one test component acts as a
-*            synchronization server which listens and triggers one or more
-*            synchronization clients. It is recomended to use the MTC always as
-*            the synchronization server but in theory also a PTC can act as such
-*            a server.<br><br>
-*            This synchronization is used by calling a function on
-*            the server test component to wait for a desired amount of clients
-*            to notify the server that they have reached a specific synchronization
-*            point. Each client test component must call another
-*            function to perform this notification.<br><br>
-*            In the event that a client is not able to reach a synchronization
-*            point the server sends out a signal to all clients to abort the
-*            test case. This signal is a STOP message which can be caught by
-*            a test component default which in turn can then run a proper
-*            shut down behavior based on the current state of the test
-*            component. <br><br>
-*            Note that this synchronization mechanism can also be used
-*            in a special mode called "self synchronization" when a test case
-*            only has one test component. Here, the test component in essence
-*            acts as a server and client at the same time. The main benefit of
-*            using self synchoronization is that the same shutdown mechanisms
-*            can also be reused fomr the multi component test cases. <br><br>
-*            This module contains a lot of TTCN-3 definitions. It has been
-*            structured into tree main groups to help the user to identify
-*            quickly relevant TTCN-3 definitions. For rookie users of this
-*            module basicUserRelevantDefinitions should offer all the needed
-*            definitions. Advanced users can consider use of definitions in
-*            advancedUserRelevantDefinitions. Finally, internalDefinitions
-*            are definitions which are required for the module to work
-*            properly but do not need to be used in your code. Remember that
-*            the main motiviation of this sychronization module is to offer
-*            are _simple_ user interface. Practice has shown that when writing
-*            actual test component behavior _only a handful_ of functions
-*            usually wind up being used! Also check the synchronization examples
-*            module for example uses of this synchronization mechanism.<br><br>
-*            The invocation of the sync functions is also closely tied
-*            to the verdict control functions which should also be reviewed
-*            prior to using this module. <br><br>
-*            This module has been derived from EtsiCommon_Synchronization
-*            which was created in ETSIs STF256/276. It has been kept
-*            intentionally separate to avoid conflicts with future ETSI
-*            test suite releases.
-*  @see      LibCommon_Sync.basicUserRelevantDefinitions
-*  @see      LibCommon_Sync.advancedUserRelevantDefinitions
-*  @remark   End users should be aware that any changes made to the  in
-*            definitions this module may be overwritten in future releases.
-*            End users are encouraged to contact the distributers of this
-*            module regarding their modifications or additions so that future
-*            updates will include your changes.
-*/
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission 
+ * is hereby granted, free of charge, to copy, reproduce and amend this file 
+ * under the following conditions: It is provided "as is", without warranty of any 
+ * kind, expressed or implied. 
+ *
+ * ETSI shall never be liable for any claim, damages, or other liability arising 
+ * from its use or inability of use.This permission does not apply to any documentation 
+ * associated with this file for which ETSI keeps all rights reserved. The present 
+ * copyright notice shall be included in all copies of whole or part of this 
+ * file and shall not imply any sub-license right.
+ *
+ *  Modified by: Elemer Lelik
+ *
+ *  @author   ETSI
+ *  @version  $URL: svn+ssh://schmitting@vcs.etsi.org/TTCN3/LIB/LibCommon/trunk/ttcn/LibCommon_Sync.ttcn $
+ *            $Id: LibCommon_Sync.ttcn 34 2009-05-25 13:12:29Z deshpande $
+ *  @desc     This module implements _one_ generic synchronization mechanism
+ *            for TTCN-3 test cases with one or more test components.
+ *            Key concept is here that one test component acts as a
+ *            synchronization server which listens and triggers one or more
+ *            synchronization clients. It is recomended to use the MTC always as
+ *            the synchronization server but in theory also a PTC can act as such
+ *            a server.<br><br>
+ *            This synchronization is used by calling a function on
+ *            the server test component to wait for a desired amount of clients
+ *            to notify the server that they have reached a specific synchronization
+ *            point. Each client test component must call another
+ *            function to perform this notification.<br><br>
+ *            In the event that a client is not able to reach a synchronization
+ *            point the server sends out a signal to all clients to abort the
+ *            test case. This signal is a STOP message which can be caught by
+ *            a test component default which in turn can then run a proper
+ *            shut down behavior based on the current state of the test
+ *            component. <br><br>
+ *            Note that this synchronization mechanism can also be used
+ *            in a special mode called "self synchronization" when a test case
+ *            only has one test component. Here, the test component in essence
+ *            acts as a server and client at the same time. The main benefit of
+ *            using self synchoronization is that the same shutdown mechanisms
+ *            can also be reused fomr the multi component test cases. <br><br>
+ *            This module contains a lot of TTCN-3 definitions. It has been
+ *            structured into tree main groups to help the user to identify
+ *            quickly relevant TTCN-3 definitions. For rookie users of this
+ *            module basicUserRelevantDefinitions should offer all the needed
+ *            definitions. Advanced users can consider use of definitions in
+ *            advancedUserRelevantDefinitions. Finally, internalDefinitions
+ *            are definitions which are required for the module to work
+ *            properly but do not need to be used in your code. Remember that
+ *            the main motiviation of this sychronization module is to offer
+ *            are _simple_ user interface. Practice has shown that when writing
+ *            actual test component behavior _only a handful_ of functions
+ *            usually wind up being used! Also check the synchronization examples
+ *            module for example uses of this synchronization mechanism.<br><br>
+ *            The invocation of the sync functions is also closely tied
+ *            to the verdict control functions which should also be reviewed
+ *            prior to using this module. <br><br>
+ *            This module has been derived from EtsiCommon_Synchronization
+ *            which was created in ETSIs STF256/276. It has been kept
+ *            intentionally separate to avoid conflicts with future ETSI
+ *            test suite releases.
+ *  @see      LibCommon_Sync.basicUserRelevantDefinitions
+ *  @see      LibCommon_Sync.advancedUserRelevantDefinitions
+ *  @remark   End users should be aware that any changes made to the  in
+ *            definitions this module may be overwritten in future releases.
+ *            End users are encouraged to contact the distributers of this
+ *            module regarding their modifications or additions so that future
+ *            updates will include your changes.
+ ******************************************************************************/
 
 // Compiled with Titan 29.02.2016 Elemer Lelik
 
