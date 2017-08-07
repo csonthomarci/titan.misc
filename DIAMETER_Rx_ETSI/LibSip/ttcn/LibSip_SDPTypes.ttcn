@@ -1,18 +1,33 @@
-/**
-*  @author   STF 346, STF366, STF368, STF369
-*  @version  $Id: LibSip_SDPTypes.ttcn 514 2011-12-02 15:45:57Z garciay $
-*	@desc     This module defines message, attribute, structured and simple 
-*            SDP types as well constants used by LipSip constructs. <br>
-*            Note that any changes made to the definitions in this module
-*            may be overwritten by future releases of this library
-*            End users are encouraged to contact the distributers of this  
-*            module regarding their modifications or additions
-*  @remark   Adding of new attributes types is ok;
-*            Adding of new optional attributes in @see SDP_attribute type 
-*            is ok;
-*            Existing attribute types shall not be changed or removed -
-*            change requests shall be made to http://t-ort.etsi.org
-*/
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission 
+ * is hereby granted, free of charge, to copy, reproduce and amend this file 
+ * under the following conditions: It is provided "as is", without warranty of any 
+ * kind, expressed or implied. 
+ *
+ * ETSI shall never be liable for any claim, damages, or other liability arising 
+ * from its use or inability of use.This permission does not apply to any documentation 
+ * associated with this file for which ETSI keeps all rights reserved. The present 
+ * copyright notice shall be included in all copies of whole or part of this 
+ * file and shall not imply any sub-license right.
+ *
+ *  Modified by: Elemer Lelik
+ *
+ *  @author   STF 346, STF366, STF368, STF369
+ *  @version  $Id: LibSip_SDPTypes.ttcn 514 2011-12-02 15:45:57Z garciay $
+ *	@desc     This module defines message, attribute, structured and simple 
+ *            SDP types as well constants used by LipSip constructs. <br>
+ *            Note that any changes made to the definitions in this module
+ *            may be overwritten by future releases of this library
+ *            End users are encouraged to contact the distributers of this  
+ *            module regarding their modifications or additions
+ *  @remark   Adding of new attributes types is ok;
+ *            Adding of new optional attributes in @see SDP_attribute type 
+ *            is ok;
+ *            Existing attribute types shall not be changed or removed -
+ *            change requests shall be made to http://t-ort.etsi.org
+ ******************************************************************************/
 //compiled with Titan 02.03.2106 Elemer Lelik
 module LibSip_SDPTypes //MRO
 {

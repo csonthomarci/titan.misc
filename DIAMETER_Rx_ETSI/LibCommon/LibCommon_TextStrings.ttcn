@@ -1,17 +1,32 @@
-/**
-*  @author   ETSI
-*  @version  $URL: file:///D:/RepositoriesNew/LibCommon/tags/v1.4.0/ttcn/LibCommon_TextStrings.ttcn $
-*            $Id: LibCommon_TextStrings.ttcn 46 2014-01-16 10:23:16Z filatov $
-*  @desc     A collection of text string type and value definitions which
-*            may be useful in the implementation of any TTCN-3 test
-*            suite. "Text string" refers to TTCN-3 charstring and universal
-*            charstring types.
-*  @remark   End users should be aware that any changes made to the  in
-*            definitions this module may be overwritten in future releases.
-*            End users are encouraged to contact the distributers of this
-*            module regarding their modifications or additions so that future
-*            updates will include your changes.
-*/
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission 
+ * is hereby granted, free of charge, to copy, reproduce and amend this file 
+ * under the following conditions: It is provided "as is", without warranty of any 
+ * kind, expressed or implied. 
+ *
+ * ETSI shall never be liable for any claim, damages, or other liability arising 
+ * from its use or inability of use.This permission does not apply to any documentation 
+ * associated with this file for which ETSI keeps all rights reserved. The present 
+ * copyright notice shall be included in all copies of whole or part of this 
+ * file and shall not imply any sub-license right.
+ *
+ *  Modified by: Elemer Lelik
+ *
+ *  @author   ETSI
+ *  @version  $URL: file:///D:/RepositoriesNew/LibCommon/tags/v1.4.0/ttcn/LibCommon_TextStrings.ttcn $
+ *            $Id: LibCommon_TextStrings.ttcn 46 2014-01-16 10:23:16Z filatov $
+ *  @desc     A collection of text string type and value definitions which
+ *            may be useful in the implementation of any TTCN-3 test
+ *            suite. "Text string" refers to TTCN-3 charstring and universal
+ *            charstring types.
+ *  @remark   End users should be aware that any changes made to the  in
+ *            definitions this module may be overwritten in future releases.
+ *            End users are encouraged to contact the distributers of this
+ *            module regarding their modifications or additions so that future
+ *            updates will include your changes.
+ ******************************************************************************/
 
 // Compiled with Titan 29.02.2016 Elemer Lelik
 

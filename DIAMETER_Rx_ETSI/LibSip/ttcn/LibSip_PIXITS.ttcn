@@ -1,16 +1,31 @@
-/*
-*	@author 	STF 346, STF366, STF368, STF369
-*  @version    $Id: LibSip_PIXITS.ttcn 512 2011-10-24 14:27:33Z schmitting $
-*	@desc		This module provides the types used by the test component 
-*              for SIP-IMS tests. Module become from STF306 and STF334-336
-*  NOTE:		PIXITS in folowing groups can be ignored if this information
-*   			is provided in other modules of the ATS that uses this SIP library
-*				- Ports_and_addresses_of_the_SUT
-*				- PortsAndAddressesOfTheTS1
-*				- PortsAndAddressesOfTheTS2 
-*				- PortsAndAddressesOfTheTS3 
-*				- ParametersForHTTP_Authentication 
-*/
+/******************************************************************************
+ * Copyright (c) ETSI 2017.
+ *
+ * This file is subject to copyrights owned by ETSI. Non-exclusive permission 
+ * is hereby granted, free of charge, to copy, reproduce and amend this file 
+ * under the following conditions: It is provided "as is", without warranty of any 
+ * kind, expressed or implied. 
+ *
+ * ETSI shall never be liable for any claim, damages, or other liability arising 
+ * from its use or inability of use.This permission does not apply to any documentation 
+ * associated with this file for which ETSI keeps all rights reserved. The present 
+ * copyright notice shall be included in all copies of whole or part of this 
+ * file and shall not imply any sub-license right.
+ *
+ *  Modified by: Elemer Lelik
+ *
+ *	@author 	STF 346, STF366, STF368, STF369
+ *  @version    $Id: LibSip_PIXITS.ttcn 512 2011-10-24 14:27:33Z schmitting $
+ *	@desc		This module provides the types used by the test component 
+ *              for SIP-IMS tests. Module become from STF306 and STF334-336
+ *  NOTE:		PIXITS in folowing groups can be ignored if this information
+ *   			is provided in other modules of the ATS that uses this SIP library
+ *				- Ports_and_addresses_of_the_SUT
+ *				- PortsAndAddressesOfTheTS1
+ *				- PortsAndAddressesOfTheTS2 
+ *				- PortsAndAddressesOfTheTS3 
+ *				- ParametersForHTTP_Authentication 
+ ******************************************************************************/
 //compiled with Titan 02.03.2106 Elemer Lelik
 
 module LibSip_PIXITS //MRO
