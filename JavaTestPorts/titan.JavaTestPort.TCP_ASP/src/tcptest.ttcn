@@ -1,0 +1,85 @@
+module tcptest {
+
+import from TCPasp_Types all;
+import from TCPasp_PortType all;
+
+type component MyMTC
+{
+  port TCPasp_PT tcpport;
+}
+
+
+testcase tc_tcp() runs on MyMTC system MyMTC
+{
+  map(mtc:tcpport, system:tcpport);
+  
+  var ASP_TCP_Listen msg_listen := {2222, "localhost"};
+  
+  var ASP_TCP_Listen_result lres;
+  
+  var ASP_TCP_Connected connected;
+
+  var ASP_TCP_Close close;
+  
+  var integer clId := 0;
+  
+  tcpport.send(msg_listen);
+  
+  var ASP_TCP ping;
+  
+  timer t1 := 15.0;
+  t1.start;
+  alt {
+    []   tcpport.receive(ASP_TCP_Listen_result:?) -> value lres {
+      t1.stop;
+      log(lres);
+      setverdict(pass);
+      t1.start;
+      repeat;
+    };
+    [] tcpport.receive(ASP_TCP_Connected:?) -> value connected {
+      t1.stop;
+      log(connected);
+      clId := connected.client_id;
+      setverdict(pass);
+      
+      var ASP_TCP msg := {client_id := clId, 
+        				  data := char2oct("HelloWorld")
+      }
+      
+      tcpport.send(msg);
+      
+      t1.start;
+      repeat;
+    }
+    [] tcpport.receive(ASP_TCP_Close:?) -> value close {
+      t1.stop;
+      log(close);
+      setverdict(pass);
+      t1.start;
+      repeat;
+    }
+    [] tcpport.receive(ASP_TCP:?) -> value ping {
+      t1.stop;
+      log(ping);
+      setverdict(pass);
+      tcpport.send(ping);
+      t1.start;
+      repeat;
+    }
+    []   t1.timeout {
+      setverdict(inconc);
+    }
+  }
+  
+  unmap(mtc:tcpport, system:tcpport);
+}
+
+control
+{
+  execute(tc_tcp());
+}
+
+}
+
+
