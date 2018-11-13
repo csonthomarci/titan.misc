@@ -87,7 +87,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		InetSocketAddress isa = new InetSocketAddress(remoteHostname, remotePort); 
 		try {
 				SocketChannel sc = SocketChannel.open(isa);
-				if (optLocalhostname.ispresent() && optLocalport.ispresent()) {
+				if (optLocalhostname.is_bound() && optLocalhostname.is_present() && 
+				    optLocalport.is_bound() && optLocalport.is_present()) {
 					InetSocketAddress lisa = new InetSocketAddress(optLocalhostname.get().getValue().toString(), 
 							                                       optLocalport.get().getInt());
 					sc.bind(lisa);
@@ -107,9 +108,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		Optional<TitanCharString> optLocalhostname = send_par.getlocal__hostname(); 
 		Optional<TitanInteger> optLocalport = send_par.getportnumber();
 		
-		String localhostname = optLocalhostname.ispresent() ? optLocalhostname.get().getValue().toString() : "localhost";
+		String localhostname = optLocalhostname.is_bound() && optLocalhostname.is_present() ? optLocalhostname.get().getValue().toString() : "localhost";
 		
-		int localport = optLocalport.ispresent() ? optLocalport.get().getInt() : 0;
+		int localport = optLocalport.is_bound() && optLocalport.is_present() ? optLocalport.get().getInt() : 0;
 		ServerSocketChannel ssc;
 		try {
 			ssc = ServerSocketChannel.open();
@@ -155,7 +156,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 	@Override
 	protected void outgoing_send(ASP__TCP send_par) {
 		char[] toSend = send_par.getdata().getValue();
-		if (send_par.getclient__id().ispresent()) {
+		if (send_par.getclient__id().is_bound() && send_par.getclient__id().is_present()) {
 			  SelectableChannel sc = conn_list.get(send_par.getclient__id().get().getInt());
 			  SocketChannel socC = (SocketChannel)sc;
 			  sendOnChannel(toSend, socC);
@@ -181,7 +182,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Close send_par) {
-		if (send_par.getclient__id().ispresent()) {
+		if (send_par.getclient__id().is_bound() && send_par.getclient__id().is_present()) {
 			int clId = send_par.getclient__id().get().getInt();
 			try {
 				conn_list.get(clId).close();

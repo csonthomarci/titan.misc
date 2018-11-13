@@ -241,9 +241,9 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 		
 		//Set local address if specified
-		if (send_par.getlocal__addr().ispresent()) {
+		if (send_par.getlocal__addr().is_bound() && send_par.getlocal__addr().is_present()) {
 			localAddrStr = send_par.getlocal__addr().get().getValue().toString();
-			if (send_par.getlocal__port().ispresent()) {
+			if (send_par.getlocal__port().is_bound() && send_par.getlocal__port().is_present()) {
 				localPort = send_par.getlocal__port().get().getInt();
 			}
 			try {
@@ -255,9 +255,9 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 				
 		//Set remote address if specified
-		if (send_par.getremote__addr().ispresent()) {
+		if (send_par.getremote__addr().is_bound() && send_par.getremote__addr().is_present()) {
 			remoteAddrStr = send_par.getremote__addr().get().getValue().toString();
-			if (send_par.getremote__port().ispresent()) {
+			if (send_par.getremote__port().is_bound() && send_par.getremote__port().is_present()) {
 				remotePort = send_par.getremote__port().get().getInt();
 				try {
 					remoteInetAddr = new InetSocketAddress(remoteAddrStr, remotePort);
@@ -332,7 +332,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		TTCN_Logger.end_event();
 
 		Optional<TitanInteger> titanId = send_par.constGetid();
-		if (titanId.ispresent()) { //Channel ID is set
+		if (titanId.is_bound() && titanId.is_present()) { //Channel ID is set
 			DatagramChannel dc = (DatagramChannel) conn_list.get(titanId.get().getInt());
 			try {
 				dc.write(bbToSend);
