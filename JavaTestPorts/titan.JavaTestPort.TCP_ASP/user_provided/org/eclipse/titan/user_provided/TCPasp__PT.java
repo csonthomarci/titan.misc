@@ -78,11 +78,11 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Connect send_par) {
-		String remoteHostname = send_par.constGethostname().getValue().toString();
-		int remotePort = send_par.getportnumber().getInt();
+		String remoteHostname = send_par.constGet_field_hostname().getValue().toString();
+		int remotePort = send_par.constGet_field_portnumber().getInt();
 		
-		Optional<TitanCharString> optLocalhostname = send_par.getlocal__hostname(); 
-		Optional<TitanInteger> optLocalport = send_par.getlocal__portnumber();
+		Optional<TitanCharString> optLocalhostname = send_par.constGet_field_local__hostname(); 
+		Optional<TitanInteger> optLocalport = send_par.constGet_field_local__portnumber();
 		
 		InetSocketAddress isa = new InetSocketAddress(remoteHostname, remotePort); 
 		try {
@@ -104,8 +104,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Listen send_par) {
-		Optional<TitanCharString> optLocalhostname = send_par.getlocal__hostname(); 
-		Optional<TitanInteger> optLocalport = send_par.getportnumber();
+		Optional<TitanCharString> optLocalhostname = send_par.constGet_field_local__hostname(); 
+		Optional<TitanInteger> optLocalport = send_par.constGet_field_portnumber();
 		
 		String localhostname = optLocalhostname.is_present() ? optLocalhostname.get().getValue().toString() : "localhost";
 		
@@ -154,9 +154,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP send_par) {
-		char[] toSend = send_par.getdata().getValue();
-		if (send_par.getclient__id().is_present()) {
-			  SelectableChannel sc = conn_list.get(send_par.getclient__id().get().getInt());
+		char[] toSend = send_par.constGet_field_data().getValue();
+		if (send_par.constGet_field_client__id().is_present()) {
+			  SelectableChannel sc = conn_list.get(send_par.constGet_field_client__id().get().getInt());
 			  SocketChannel socC = (SocketChannel)sc;
 			  sendOnChannel(toSend, socC);
 		} else { //No clientId specified
@@ -181,8 +181,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Close send_par) {
-		if (send_par.getclient__id().is_present()) {
-			int clId = send_par.getclient__id().get().getInt();
+		if (send_par.constGet_field_client__id().is_present()) {
+			int clId = send_par.constGet_field_client__id().get().getInt();
 			try {
 				conn_list.get(clId).close();
 				conn_list.remove(clId);
@@ -289,13 +289,13 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 					TitanOctetString incoming = new TitanOctetString(byteArrayToOctetCharArray(received));
 					Optional<TitanInteger> optClientId = new Optional<TitanInteger>(TitanInteger.class);
 					TitanInteger tintClientID = new TitanInteger(channel.hashCode());
-					optClientId.assign(tintClientID);
+					optClientId.operator_assign(tintClientID);
 					ASP__TCP incomingMessage = new ASP__TCP(optClientId, incoming);
 					incoming_message(incomingMessage);
 				} else if (bytesRead == -1) {
 					Optional<TitanInteger> optClientID = new Optional<TitanInteger>(TitanInteger.class);
 					int clientID = socketChannel.hashCode();
-					optClientID.assign(new TitanInteger(clientID));
+					optClientID.operator_assign(new TitanInteger(clientID));
 					ASP__TCP__Close close = new ASP__TCP__Close(optClientID);
 					incoming_message(close);
 					conn_list.remove(clientID);
