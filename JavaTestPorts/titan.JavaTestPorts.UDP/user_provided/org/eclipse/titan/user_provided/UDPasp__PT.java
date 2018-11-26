@@ -150,13 +150,13 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 					TitanInteger chId = new TitanInteger(channel.hashCode());
 					
 					Optional<TitanCharString> remote_address_optional = new Optional<TitanCharString>(TitanCharString.class);
-					remote_address_optional.assign(remote_address);
+					remote_address_optional.operator_assign(remote_address);
 					
 					Optional<TitanInteger> remote_port_optional = new Optional<TitanInteger>(TitanInteger.class);
-					remote_port_optional.assign(remote_port);
+					remote_port_optional.operator_assign(remote_port);
 					
 					Optional<TitanInteger> chId_optional = new Optional<TitanInteger>(TitanInteger.class);
-					chId_optional.assign(chId);
+					chId_optional.operator_assign(chId);
 					
 					ASP__UDP__message msg = new ASP__UDP__message(incoming, remote_address_optional, remote_port_optional, chId_optional); 
 					
@@ -177,11 +177,11 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		InetSocketAddress address = null;
 		
 				//Check if the message has a valid address to be sent to
-		TitanCharString addrf = send_par.getaddressf();
+		TitanCharString addrf = send_par.constGet_field_addressf();
 		if (addrf != null) {
 			String hostname = addrf.getValue().toString();
 			
-			TitanInteger portf = send_par.getportf();
+			TitanInteger portf = send_par.constGet_field_portf();
 			if (portf != null) {
 				int port = portf.getInt();
 				if ((hostname != null) && (hostname.length()>0) && (port > 0)){
@@ -195,7 +195,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 			address = DEFAULT_REMOTE_ADDRESS;
 		}
 		try {
-			TitanOctetString pdu = send_par.getdata();
+			TitanOctetString pdu = send_par.constGet_field_data();
 			char[] send_bytes = pdu.getValue();
 			ByteBuffer bbToSend = ByteBuffer.wrap(octetCharArrayToByteArray(send_bytes));
 			dc.send(bbToSend,address);
@@ -241,10 +241,10 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 		
 		//Set local address if specified
-		if (send_par.getlocal__addr().is_present()) {
-			localAddrStr = send_par.getlocal__addr().get().getValue().toString();
-			if (send_par.getlocal__port().is_present()) {
-				localPort = send_par.getlocal__port().get().getInt();
+		if (send_par.constGet_field_local__addr().is_present()) {
+			localAddrStr = send_par.constGet_field_local__addr().get().getValue().toString();
+			if (send_par.constGet_field_local__port().is_present()) {
+				localPort = send_par.constGet_field_local__port().get().getInt();
 			}
 			try {
 				localInetAddr = new InetSocketAddress(localAddrStr, localPort);
@@ -255,10 +255,10 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 				
 		//Set remote address if specified
-		if (send_par.getremote__addr().is_present()) {
-			remoteAddrStr = send_par.getremote__addr().get().getValue().toString();
-			if (send_par.getremote__port().is_present()) {
-				remotePort = send_par.getremote__port().get().getInt();
+		if (send_par.constGet_field_remote__addr().is_present()) {
+			remoteAddrStr = send_par.constGet_field_remote__addr().get().getValue().toString();
+			if (send_par.constGet_field_remote__port().is_present()) {
+				remotePort = send_par.constGet_field_remote__port().get().getInt();
 				try {
 					remoteInetAddr = new InetSocketAddress(remoteAddrStr, remotePort);
 					dc.connect(remoteInetAddr);
@@ -297,7 +297,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	@Override
 	public void outgoing_send(ASP__UDP__close send_par) {
 		TTCN_Logger.log_event("entering UDPasp__PT::outgoing_send(ASP__UDP__close)");
-		int dcId = send_par.getid().getInt();
+		int dcId = send_par.constGet_field_id().getInt();
 		DatagramChannel dc = (DatagramChannel) conn_list.remove(dcId);
 		
 		try {
@@ -324,14 +324,14 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	public void outgoing_send(ASP__UDP__message send_par) {
 		TTCN_Logger.log_event("entering UDPasp__PT::outgoing_send(ASP__UDP__message)");
 		
-		TitanOctetString pdu = send_par.getdata();
+		TitanOctetString pdu = send_par.constGet_field_data();
 		TTCN_Logger.begin_event(Severity.ERROR_UNQUALIFIED);
 		pdu.log();
 		char[] send_bytes = pdu.getValue();
 		ByteBuffer bbToSend = ByteBuffer.wrap(octetCharArrayToByteArray(send_bytes));
 		TTCN_Logger.end_event();
 
-		Optional<TitanInteger> titanId = send_par.constGetid();
+		Optional<TitanInteger> titanId = send_par.constGet_field_id();
 		if (titanId.is_present()) { //Channel ID is set
 			DatagramChannel dc = (DatagramChannel) conn_list.get(titanId.get().getInt());
 			try {
@@ -343,7 +343,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		{
 			try {
 				dc = DatagramChannel.open();
-				ASP__UDP asp_udp = new ASP__UDP(send_par.getdata(), send_par.constGetremote__addr().get(), send_par.getremote__port().get());
+				ASP__UDP asp_udp = new ASP__UDP(send_par.constGet_field_data(), send_par.constGet_field_remote__addr().get(), send_par.constGet_field_remote__port().get());
 				outgoing_send(asp_udp);
 				dc.close();
 			} catch (IOException e) {
