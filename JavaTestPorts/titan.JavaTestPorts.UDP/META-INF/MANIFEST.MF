@@ -7,5 +7,6 @@ Require-Bundle: org.eclipse.titan.runtime;bundle-version="1.0.0",
  org.antlr.runtime;bundle-version="4.3.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.eclipse.titan.titan_JavaTestPorts_UDP.generated,
- org.eclipse.titan.titan_JavaTestPorts_UDP.user_provided
+Export-Package: org.eclipse.titan.titan_JavaTestPorts_UDP.generated;uses:="org.eclipse.titan.runtime.core",
+ org.eclipse.titan.titan_JavaTestPorts_UDP.user_provided;uses:="org.eclipse.titan.titan_JavaTestPorts_UDP.generated"
+
