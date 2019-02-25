@@ -45,7 +45,7 @@ testcase tc_UDP() runs on MyMTC system MyMTC
 control
 {
   execute(tc_UDP());
-
+  execute(tc_UDP());
 }
 
 
