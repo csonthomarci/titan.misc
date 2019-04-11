@@ -1,0 +1,114 @@
+/******************************************************************************
+* Copyright (c) 2000-2018 Ericsson Telecom AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v2.0
+* which accompanies this distribution, and is available at
+* https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+*
+* Contributors:
+*  Zoltan Bibo - initial implementation and initial documentation
+*  Akos Cserveni
+*  Attila Balasko
+*  Csaba Bela Koppany
+*  Csaba Feher
+*  Eduard Czimbalmos
+*  Endre Szalai
+*  Gabor Szalai
+*  Janos Kovesdi
+*  Jozsef Gyurusi
+*  Tibor Csondes
+*  Zoltan Jasz
+******************************************************************************/
+//
+//  File:               TCPasp_Types.ttcn
+//  Description:        TCP ASP definition file
+//  Rev:                R9A
+//  Prodnr:             CNL 113 347
+//
+
+
+module TCPasp_Types
+{    
+
+type octetstring PDU_TCP;
+
+type record ASP_TCP {
+  // client_id is used only in case of server port with multiple connections
+  integer client_id optional,   
+  PDU_TCP data
+}
+
+/*
+ *  You can send/receive these ASPS if the 'use_connection_ASPs' test port
+ *  parameter is set to "YES"
+ */
+
+// Client connect ASP. Initiates a new connection towards a server.
+// Check for ASP_TCP_Connected!
+type record ASP_TCP_Connect {
+  charstring hostname,
+  integer portnumber (1..65535),
+  charstring local_hostname optional,
+  integer local_portnumber (1..65535) optional
+};
+
+// Received by the client after ASP_TCP_Connect is sent.
+// The client_id will be filled with -1 if unsuccessful.
+// Returned client_id shall be used to distinguish between the open connections.
+type record ASP_TCP_Connect_result {
+  integer client_id
+}
+
+// Received when the server has accepted an incoming connection.
+type record ASP_TCP_Connected {
+  charstring hostname,
+  integer portnumber (1..65535),
+  integer client_id
+};
+  
+// Closes all connections, or the specified one only.
+// client_id = omit means close all connections.
+type record ASP_TCP_Close {
+  integer client_id optional
+};
+
+// Shuts down the current listening port and listens on the specified port.
+// In case of omit will use the configured port, else random.
+// portnumber = omit means random port number -> check for ASP_TCP_Listen_result!
+type record ASP_TCP_Listen {
+  integer portnumber (1..65535) optional,
+  charstring local_hostname optional
+};
+
+// Received after Listen. Sends back the choosen listening port.
+type record ASP_TCP_Listen_result {
+  integer portnumber (1..65535)
+};
+
+// Close server listening port, but leave all current connections open.
+type record ASP_TCP_Shutdown {};
+
+type enumerated TCP_Send_error_types { TCP_SEND_INVALID_CLIENT_ID (0),
+  TCP_SEND_ERROR(1), TCP_SEND_MESSAGE_NOT_COMPLETE(2) }
+
+type record ASP_TCP_Send_error {
+  integer client_id optional,   
+  PDU_TCP data,
+  integer sent_octets,
+  TCP_Send_error_types error_type,
+  integer os_error_code,
+  charstring os_error_text,
+  charstring ttcn_error_text
+}
+
+// allowed address families:
+const charstring c_TCP_AF_INET := "AF_INET";
+const charstring c_TCP_IPv4 := "IPv4";
+const charstring c_TCP_AF_INET6 := "AF_INET6";
+const charstring c_TCP_IPv6 := "IPv6";
+const charstring c_TCP_AF_UNSPEC := "AF_UNSPEC";
+const charstring c_TCP_UNSPEC := "UNSPEC";
+// set the address family
+type charstring ASP_TCP_SetAddressFamily;
+
+}

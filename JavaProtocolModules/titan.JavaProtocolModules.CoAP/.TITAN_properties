@@ -3,8 +3,7 @@
   <ActiveConfiguration>Default</ActiveConfiguration>
   <ProjectProperties>
     <MakefileSettings>
-      <targetExecutable>bin/titan.JavaTestPorts.UDP</targetExecutable>
-      <addSourceLineInfo>true</addSourceLineInfo>
+      <targetExecutable>bin/titan.JavaProtocolModules.CoAP</targetExecutable>
     </MakefileSettings>
     <LocalBuildSettings>
       <MakefileScript/>

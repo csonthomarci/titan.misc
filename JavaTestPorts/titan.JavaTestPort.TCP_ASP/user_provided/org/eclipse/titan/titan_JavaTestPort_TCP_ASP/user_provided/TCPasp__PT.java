@@ -1,4 +1,4 @@
-package org.eclipse.titan.user_provided;
+package org.eclipse.titan.titan_JavaTestPort_TCP_ASP.user_provided;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,15 +15,6 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import org.eclipse.titan.generated.TCPasp__PortType.TCPasp__PT_BASE;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Close;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Connect;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Connect__result;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Connected;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Listen;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Listen__result;
-import org.eclipse.titan.generated.TCPasp__Types.ASP__TCP__Shutdown;
 import org.eclipse.titan.runtime.core.Optional;
 import org.eclipse.titan.runtime.core.TTCN_Logger;
 import org.eclipse.titan.runtime.core.TTCN_Logger.Severity;
@@ -31,6 +22,15 @@ import org.eclipse.titan.runtime.core.TitanCharString;
 import org.eclipse.titan.runtime.core.TitanInteger;
 import org.eclipse.titan.runtime.core.TitanOctetString;
 import org.eclipse.titan.runtime.core.TtcnError;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__PortType.TCPasp__PT_BASE;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Close;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Connect;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Connect__result;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Connected;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Listen;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Listen__result;
+import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP__TCP__Shutdown;
 
 public class TCPasp__PT extends TCPasp__PT_BASE {
 
@@ -78,8 +78,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Connect send_par) {
-		String remoteHostname = send_par.constGet_field_hostname().getValue().toString();
-		int remotePort = send_par.constGet_field_portnumber().getInt();
+		String remoteHostname = send_par.constGet_field_hostname().get_value().toString();
+		int remotePort = send_par.constGet_field_portnumber().get_int();
 		
 		Optional<TitanCharString> optLocalhostname = send_par.constGet_field_local__hostname(); 
 		Optional<TitanInteger> optLocalport = send_par.constGet_field_local__portnumber();
@@ -88,8 +88,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		try {
 				SocketChannel sc = SocketChannel.open(isa);
 				if (optLocalhostname.is_present() && optLocalport.is_present()) {
-					InetSocketAddress lisa = new InetSocketAddress(optLocalhostname.get().getValue().toString(), 
-							                                       optLocalport.get().getInt());
+					InetSocketAddress lisa = new InetSocketAddress(optLocalhostname.get().get_value().toString(), 
+							                                       optLocalport.get().get_int());
 					sc.bind(lisa);
 				}
 				conn_list.put(sc.hashCode(), sc);
@@ -107,9 +107,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		Optional<TitanCharString> optLocalhostname = send_par.constGet_field_local__hostname(); 
 		Optional<TitanInteger> optLocalport = send_par.constGet_field_portnumber();
 		
-		String localhostname = optLocalhostname.is_present() ? optLocalhostname.get().getValue().toString() : "localhost";
+		String localhostname = optLocalhostname.is_present() ? optLocalhostname.get().get_value().toString() : "localhost";
 		
-		int localport = optLocalport.is_present() ? optLocalport.get().getInt() : 0;
+		int localport = optLocalport.is_present() ? optLocalport.get().get_int() : 0;
 		ServerSocketChannel ssc;
 		try {
 			ssc = ServerSocketChannel.open();
@@ -154,9 +154,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP send_par) {
-		char[] toSend = send_par.constGet_field_data().getValue();
+		char[] toSend = send_par.constGet_field_data().get_value();
 		if (send_par.constGet_field_client__id().is_present()) {
-			  SelectableChannel sc = conn_list.get(send_par.constGet_field_client__id().get().getInt());
+			  SelectableChannel sc = conn_list.get(send_par.constGet_field_client__id().get().get_int());
 			  SocketChannel socC = (SocketChannel)sc;
 			  sendOnChannel(toSend, socC);
 		} else { //No clientId specified
@@ -182,7 +182,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 	@Override
 	protected void outgoing_send(ASP__TCP__Close send_par) {
 		if (send_par.constGet_field_client__id().is_present()) {
-			int clId = send_par.constGet_field_client__id().get().getInt();
+			int clId = send_par.constGet_field_client__id().get().get_int();
 			try {
 				conn_list.get(clId).close();
 				conn_list.remove(clId);
