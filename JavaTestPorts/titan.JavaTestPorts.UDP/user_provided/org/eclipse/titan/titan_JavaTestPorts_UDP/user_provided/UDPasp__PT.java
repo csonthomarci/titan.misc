@@ -1,7 +1,9 @@
 package org.eclipse.titan.titan_JavaTestPorts_UDP.user_provided;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.PortUnreachableException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.Pipe;
@@ -122,7 +124,11 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::user_unmap(String system_port)");
 	}
 
-	//TODO: set_parameter(String parameter_name, String parameter_value)
+	@Override
+	public void set_parameter(String parameter_name, String parameter_value) {
+		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED, "Setting port parameter: "+parameter_name+": "+parameter_value);
+		
+	}
 
 	@Override
 	public void Handle_Event(SelectableChannel channel, boolean is_readable, boolean is_writeable) {
@@ -135,8 +141,13 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		//CharBuffer cbuffer = CharBuffer.allocate(65535);
 		try {
 			//int bytesRead;
-			InetSocketAddress remote;
-			remote = (InetSocketAddress)source.receive(buffer);
+			InetSocketAddress remote = null;
+			try {
+				remote = (InetSocketAddress)source.receive(buffer);
+			} catch (PortUnreachableException pue) {
+				//Ignore for now, for more info see connect() function in 
+				//https://docs.oracle.com/javase/7/docs/api/java/net/DatagramSocket.html
+			}
 			if (remote != null) {
 				int received_length = buffer.position();
 				byte[] received = new byte[received_length];
@@ -217,7 +228,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	private char[] byteArrayToOctetCharArray(byte[] in) {
 		char[] out = new char[in.length];
 		for (int i = 0;i<in.length;i++) {
-			out[i] = (char) in[i];
+			out[i] = (char) (in[i] & 0xFF);
 		}
 		return out;
 	}
@@ -260,7 +271,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 			if (send_par.constGet_field_remote__port().is_present()) {
 				remotePort = send_par.constGet_field_remote__port().get().get_int();
 				try {
-					remoteInetAddr = new InetSocketAddress(remoteAddrStr, remotePort);
+					remoteInetAddr = new InetSocketAddress(InetAddress.getByName(remoteAddrStr), remotePort);
 					dc.connect(remoteInetAddr);
 				} catch (IOException ioe) {
 					throw new TtcnError("IOException: " + ioe.getMessage());
@@ -338,7 +349,10 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 				dc.write(bbToSend);
 			} catch (IOException e) {
 				throw new TtcnError("IOException: " + e.getMessage());
+			} catch (Exception ex) {
+				throw new TtcnError("Exception when sending on DatagramChannel: " + ex.getMessage());
 			}
+			
 		} else //Channel ID not set, "emulating" simple mode
 		{
 			try {
