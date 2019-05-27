@@ -13,7 +13,7 @@ import org.eclipse.titan.titan_JavaProtocolModules_CoAP.generated.CoAP__Types.Co
 
 
 public class CoAP__Types_externalfunctions {
-	
+
 	public static int f__CoAP__enc(CoAP__Message msg, TitanOctetString v__encoded) {
 		if(TTCN_Logger.log_this_event(Severity.DEBUG_ENCDEC)){
 			TTCN_Logger.begin_event(Severity.DEBUG_ENCDEC);
@@ -234,16 +234,16 @@ public class CoAP__Types_externalfunctions {
 			int count_of_options = 0;
 			boolean payload_marker = false;
 			//version, message type and token length
-			chr = v__enc.get_value()[0];
+			chr = v__enc.get_nibble(0);
 			v__dec.get_field_msg().get_field_header().get_field_version().operator_assign(chr >> 6);
 			v__dec.get_field_msg().get_field_header().get_field_msg__type().operator_assign((chr >> 4) & 3);
 			token_length = chr & 15;
 			//code
-			chr = v__enc.get_value()[1];
+			chr = v__enc.get_nibble(1);
 			v__dec.get_field_msg().get_field_header().get_field_code().get_field_class_().operator_assign((chr >> 5) & 7);
 			v__dec.get_field_msg().get_field_header().get_field_code().get_field_detail().operator_assign(chr & 31);
 			//message ID
-			v__dec.get_field_msg().get_field_header().get_field_message__id().operator_assign(v__enc.get_value()[2] * 256 + v__enc.get_value()[3]);
+			v__dec.get_field_msg().get_field_header().get_field_message__id().operator_assign(v__enc.get_nibble(2) * 256 + v__enc.get_nibble(3));
 			if(v__enc.lengthof().is_greater_than(4) && v__dec.get_field_msg().get_field_header().get_field_code().get_field_class_().operator_equals(0) && v__dec.get_field_msg().get_field_header().get_field_code().get_field_detail().operator_equals(0)) {
 				v__dec.get_field_raw__message().operator_assign(v__enc);
 				return 1;
@@ -252,7 +252,7 @@ public class CoAP__Types_externalfunctions {
 			//token
 			if(token_length > 0){
 				if(v__enc.lengthof().is_greater_than_or_equal(position + token_length)) {
-					v__dec.get_field_msg().get_field_token().operator_assign(new TitanOctetString(v__enc.get_value()[position]));
+					v__dec.get_field_msg().get_field_token().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
 					position += token_length;
 				}else{
 					v__dec.get_field_raw__message().operator_assign(v__enc);
@@ -265,109 +265,110 @@ public class CoAP__Types_externalfunctions {
 			v__dec.get_field_msg().get_field_options().operator_assign(template_sel.OMIT_VALUE);
 			if(v__enc.lengthof().is_greater_than(4)) {
 				while(!payload_marker && v__enc.lengthof().is_greater_than(position)) {
-					int delta = v__enc.get_nibble(position) >> 4;
-			int length = v__enc.get_nibble(position) & 15;
-			if(delta == 15 && length != 15){
-				v__dec.get_field_raw__message().operator_assign(v__enc);
-				return 1;
-			}
-			position++;
-			if(delta == 15 && length == 15){
-				payload_marker = true;
-			}else{
-				//optional delta
-				if(delta == 13){
-					delta = v__enc.get_nibble(position) + 13;
+					char d = v__enc.get_nibble(position);
+					int delta = d >> 4;
+					int length = v__enc.get_nibble(position) & 15;
+					if(delta == 15 && length != 15){
+						v__dec.get_field_raw__message().operator_assign(v__enc);
+						return 1;
+					}
 					position++;
-				}else if(delta == 14){
-					delta = (v__enc.get_nibble(position) << 8) + v__enc.get_nibble(position+1) + 269;
-					position += 2;
-				}
-				//optional length
-				if(length == 13){
-					length = v__enc.get_nibble(position) + 13;
-					position++;
-				}else if(length == 14){
-					length = (v__enc.get_nibble(position) << 8) + v__enc.get_nibble(position + 1) + 269;
-					position += 2;
-				}else if(length == 15){
-					v__dec.get_field_raw__message().operator_assign(v__enc);
-					return 1; //void function cannot return
-				}
+					if(delta == 15 && length == 15){
+						payload_marker = true;
+					}else{
+						//optional delta
+						if(delta == 13){
+							delta = v__enc.get_nibble(position) + 13;
+							position++;
+						}else if(delta == 14){
+							delta = (v__enc.get_nibble(position) << 8) + v__enc.get_nibble(position+1) + 269;
+							position += 2;
+						}
+						//optional length
+						if(length == 13){
+							length = v__enc.get_nibble(position) + 13;
+							position++;
+						}else if(length == 14){
+							length = (v__enc.get_nibble(position) << 8) + v__enc.get_nibble(position + 1) + 269;
+							position += 2;
+						}else if(length == 15){
+							v__dec.get_field_raw__message().operator_assign(v__enc);
+							return 1; //void function cannot return
+						}
 				//value
-				actual_option_code += delta;
-				switch(actual_option_code){
-				case 1:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__match().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
-					break;
-				case 3:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__host().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 4:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_etag().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
-					break;
-				case 5:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__none__match().operator_assign(new TitanOctetString(""));
-					break;
-				case 6:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_observe().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				case 7:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__port().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				case 8:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 11:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 12:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_content__format().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				case 14:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_max__age().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				case 15:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 17:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_accept().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				case 20:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 23: // Block2 RFC 7959
-					decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block2(), v__enc, position, length);
-					break;
-				case 27: // Block1 RFC 7959
-					decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block1(), v__enc, position, length);
-					break;
-				case 35:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__uri().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 39:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__scheme().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
-					break;
-				case 60:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_size1().operator_assign(decodeInteger(v__enc, position, length));
-					break;
-				default:
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__code().operator_assign(actual_option_code);
-					v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__value().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
-					break;
-				}
-				position += length;
-				count_of_options++;
-			}
+						actual_option_code += delta;
+						switch(actual_option_code){
+						case 1:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__match().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
+							break;
+						case 3:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__host().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 4:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_etag().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
+							break;
+						case 5:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__none__match().operator_assign(new TitanOctetString(""));
+							break;
+						case 6:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_observe().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						case 7:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__port().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						case 8:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 11:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 12:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_content__format().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						case 14:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_max__age().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						case 15:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 17:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_accept().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						case 20:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 23: // Block2 RFC 7959
+							decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block2(), v__enc, position, length);
+							break;
+						case 27: // Block1 RFC 7959
+							decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block1(), v__enc, position, length);
+							break;
+						case 35:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__uri().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 39:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__scheme().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							break;
+						case 60:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_size1().operator_assign(decodeInteger(v__enc, position, length));
+							break;
+						default:
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__code().operator_assign(actual_option_code);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__value().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
+							break;
+						}
+						position += length;
+						count_of_options++;
+					}
 				}
 			}
 			//payload
 			if(v__enc.lengthof().is_greater_than(position)) {
 				char[] enc = v__enc.get_value();
 				char[] pl = new char[enc.length-position];
-				
+
 				System.arraycopy(enc, position, pl, 0, enc.length-position);
-				
+
 				v__dec.get_field_msg().get_field_payload().operator_assign(new TitanOctetString(pl));
 				if(v__dec.get_field_msg().get_field_payload().get().lengthof().operator_equals(0)) { 
 					v__dec.get_field_raw__message().operator_assign(v__enc);
