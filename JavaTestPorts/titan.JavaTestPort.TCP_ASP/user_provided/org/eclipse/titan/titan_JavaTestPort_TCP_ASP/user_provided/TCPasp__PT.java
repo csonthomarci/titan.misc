@@ -47,13 +47,18 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	public void set_parameter(String parameter_name, String parameter_value) {
-		// TODO Auto-generated method stub
-		super.set_parameter(parameter_name, parameter_value);
+		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED, "Setting port parameter: "+parameter_name+": "+parameter_value);
+		
 	}
 
 	@Override
 	protected void user_map(String system_port) {
 		conn_list = new HashMap<Integer,SelectableChannel>();
+		
+		TTCN_Logger.begin_event(Severity.LOG_ALL_IMPORTANT);
+		TTCN_Logger.log_event("ELNRNAG user_map");
+		TTCN_Logger.end_event();
+		
 		super.user_map(system_port);
 	}
 
@@ -216,11 +221,11 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 	private char[] byteArrayToOctetCharArray(byte[] in) {
 		char[] out = new char[in.length];
 		for (int i = 0;i<in.length;i++) {
-			out[i] = (char) in[i];
+			out[i] = (char) (in[i] & 0xFF);
 		}
 		return out;
 	}
-
+	
 	private Set<SelectableChannel> collectionToSet(Collection<SelectableChannel> input) 
 	{
 		Set<SelectableChannel> output = new HashSet<SelectableChannel>();
