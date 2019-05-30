@@ -302,10 +302,10 @@ public class CoAP__Types_externalfunctions {
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__match().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
 							break;
 						case 3:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__host().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__host().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 4:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_etag().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_etag().operator_assign(new TitanOctetString(subCharArray(position, length, v__enc.get_value())));
 							break;
 						case 5:
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_if__none__match().operator_assign(new TitanOctetString(""));
@@ -317,10 +317,10 @@ public class CoAP__Types_externalfunctions {
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__port().operator_assign(decodeInteger(v__enc, position, length));
 							break;
 						case 8:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__path().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 11:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__path().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__path().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 12:
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_content__format().operator_assign(decodeInteger(v__enc, position, length));
@@ -329,13 +329,13 @@ public class CoAP__Types_externalfunctions {
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_max__age().operator_assign(decodeInteger(v__enc, position, length));
 							break;
 						case 15:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_uri__query().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 17:
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_accept().operator_assign(decodeInteger(v__enc, position, length));
 							break;
 						case 20:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__query().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_location__query().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 23: // Block2 RFC 7959
 							decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block2(), v__enc, position, length);
@@ -344,17 +344,17 @@ public class CoAP__Types_externalfunctions {
 							decodeBlock(v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_block1(), v__enc, position, length);
 							break;
 						case 35:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__uri().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__uri().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 39:
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__scheme().decode_utf8(new char[] {v__enc.get_nibble(position)}, CharCoding.UTF_8, false);
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_proxy__scheme().decode_utf8(subCharArray(position, length, v__enc.get_value()), CharCoding.UTF_8, false);
 							break;
 						case 60:
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_size1().operator_assign(decodeInteger(v__enc, position, length));
 							break;
 						default:
 							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__code().operator_assign(actual_option_code);
-							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__value().operator_assign(new TitanOctetString(v__enc.get_nibble(position)));
+							v__dec.get_field_msg().get_field_options().get().get_at(count_of_options).get_field_unknown__option().get_field_option__value().operator_assign(new TitanOctetString(subCharArray(position, length, v__enc.get_value())));
 							break;
 						}
 						position += length;
@@ -572,5 +572,14 @@ public class CoAP__Types_externalfunctions {
 		num = (num_val << 4) & 0xf0; // num_val & 11110000b
 		chr = num | m | szx;
 		stream.put_c(Character.toChars(chr)[0]);
+	}
+	
+	private static char[] subCharArray(int start, int length, final char[] in) {
+		char[] subChrArray = new char[length];
+		
+		for (int i = 0; i<length; i++) {
+			subChrArray[i] = in[start + i];
+		}
+		return subChrArray;
 	}
 }
