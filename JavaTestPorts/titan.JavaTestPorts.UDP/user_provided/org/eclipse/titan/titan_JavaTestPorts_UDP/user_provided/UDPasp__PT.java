@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.titan.runtime.core.Optional;
+import org.eclipse.titan.runtime.core.RAW.TTCN_RAWdescriptor;
 import org.eclipse.titan.runtime.core.TTCN_Logger;
 import org.eclipse.titan.runtime.core.TTCN_Logger.Severity;
 import org.eclipse.titan.runtime.core.TitanCharString;
@@ -30,6 +31,8 @@ import org.eclipse.titan.titan_JavaTestPorts_UDP.generated.UDPasp__Types.ASP__UD
 
 public class UDPasp__PT extends UDPasp__PT_BASE {
 
+	private final String MODULE = "UDPasp__PT.";
+	
 	private final int DEFAULT_LOCAL_PORT = 2222;
 	private final InetSocketAddress DEFAULT_REMOTE_ADDRESS = new InetSocketAddress("localhost", DEFAULT_LOCAL_PORT);
 
@@ -42,7 +45,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	 */
 	private boolean port_mode = false;
 	//TODO private boolean broadcast = false;
-	//TODO private boolean debugging = false;
+	private boolean debugging = false;
 
 	// private class conn_data {...} is represented by DatagramChannel class 
 	//num_of_conn, conn_list_length and localAddr are unnecessary
@@ -62,8 +65,8 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	//Map, Unmap, Configuration
 	@Override
 	protected void user_map(String system_port) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::user_map(String system_port)");
-
+		log("Entering "+MODULE+"user_map");
+		
 		//TEMPORARY HACK - later it will be a configuration option
 		port_mode = system_port.endsWith("_advanced");
 		//TEMPORARY HACK END
@@ -88,12 +91,12 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 				throw new TtcnError("Exception in userMap: Unable to set up socket" + e.getMessage());
 			}
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::user_map(String system_port)");
+		log("Leaving "+MODULE+"user_map");
 	}
 
 	@Override
 	protected void user_unmap(String system_port) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::user_unmap(String system_port)");
+		log("Entering "+MODULE+"user_unmap");
 		if (port_mode) {
 			Iterator<SelectableChannel> it = conn_list.values().iterator();
 			while (it.hasNext()) {
@@ -121,17 +124,23 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} catch (IOException e) {
 			throw new TtcnError("Exception in userUnmap (Uninstall_Handler failed): " + e.getMessage());
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::user_unmap(String system_port)");
+		log("Leaving "+MODULE+"user_unmap");
 	}
 
 	@Override
 	public void set_parameter(String parameter_name, String parameter_value) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED, "Setting port parameter: "+parameter_name+": "+parameter_value);
-		
+		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
+		if (parameter_name.equals("debugging")) {
+			debugging = true;
+		} else {
+			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, String.format("UDPasp__PT.set_parameter: Unsupported Test Port parameter: %s ", parameter_name));
+		}
+		log("Leaving "+MODULE+"set_parameter");
 	}
 
 	@Override
 	public void Handle_Event(SelectableChannel channel, boolean is_readable, boolean is_writeable) {
+		log("Entering "+MODULE+"Handle_Event");
 		if (!(channel instanceof DatagramChannel)) {
 			throw new TtcnError("FATAL ERROR: incorrect channel received");
 		}
@@ -180,11 +189,12 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} catch (IOException e) {
 			throw new TtcnError("IOException in HandleEvent: " + e.getMessage());
 		}
+		log("Leaving "+MODULE+"Handle_Event");
 	}
 
 	@Override
 	public void outgoing_send(ASP__UDP send_par) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::outgoing_send(ASP__UDP)");
+		log("Entering "+MODULE+"outgoing_send(ASP__UDP send_par)");
 		InetSocketAddress address = null;
 
 		//Check if the message has a valid address to be sent to
@@ -213,8 +223,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} catch (IOException ioe) {
 			throw new TtcnError("IOException: " + ioe.getMessage());
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::outgoing_send(ASP__UDP)");
-
+		log("Leaving "+MODULE+"outgoing_send(ASP__UDP send_par)");
 	}
 
 	private byte[] octetCharArrayToByteArray(char[] in) {
@@ -235,7 +244,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 
 	@Override
 	public void outgoing_send(ASP__UDP__open send_par) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::outgoing_send(ASP__UDP__open)");
+		log("Entering "+MODULE+"outgoing_send(ASP__UDP send_par)");
 		String localAddrStr;
 		int localPort = 0;
 		String remoteAddrStr;
@@ -302,12 +311,12 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} catch (IOException e) {
 			throw new TtcnError("IOException: " + e.getMessage());
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::outgoing_send(ASP__UDP__open)");
+		log("Leaving "+MODULE+"outgoing_send(ASP__UDP__open send_par)");
 	}
 
 	@Override
 	public void outgoing_send(ASP__UDP__close send_par) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::outgoing_send(ASP__UDP__close)");
+		log("Entering "+MODULE+"outgoing_send(ASP__UDP__close send_par)");
 		int dcId = send_par.constGet_field_id().get_int();
 		DatagramChannel dc = (DatagramChannel) conn_list.remove(dcId);
 
@@ -328,13 +337,13 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} else {
 			throw new TtcnError("Channel not found in conn_list");
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::outgoing_send(ASP__UDP__close)");
+		log("Leaving "+MODULE+"outgoing_send(ASP__UDP__close send_par)");
 	}
 
 	@Override
 	public void outgoing_send(ASP__UDP__message send_par) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"entering UDPasp__PT::outgoing_send(ASP__UDP__message)");
-
+		log("Entering "+MODULE+"outgoing_send(ASP__UDP__message send_par)");
+		
 		TitanOctetString pdu = send_par.constGet_field_data();
 		TTCN_Logger.begin_event(Severity.ERROR_UNQUALIFIED);
 		pdu.log();
@@ -364,7 +373,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 				throw new TtcnError("IOException: " + e.getMessage());
 			}
 		}
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED,"leaving UDPasp__PT::outgoing_send(ASP__UDP__message)");
+		log("Leaving "+MODULE+"outgoing_send(ASP__UDP__message send_par)");
 	}
 
 	private Set<SelectableChannel> collectionToSet(Collection<SelectableChannel> input) 
@@ -375,6 +384,10 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 			output.add(it.next());
 		}
 		return output;
+	}
+	
+	private void log(String debugString) {
+		if (debugging) TTCN_Logger.log_str(TTCN_Logger.Severity.DEBUG_TESTPORT, debugString);
 	}
 
 }
