@@ -67,11 +67,6 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	protected void user_map(String system_port) {
 		log("Entering "+MODULE+"user_map");
 		
-		//TEMPORARY HACK - later it will be a configuration option
-		port_mode = system_port.endsWith("_advanced");
-		//TEMPORARY HACK END
-
-
 		if (port_mode){ //Advanced mode
 			if (conn_list != null) {
 				throw new TtcnError("UDP Test Port ("+system_port+"): Internal error: conn_list is not NULL when mapping.");
@@ -132,7 +127,10 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
 		if (parameter_name.equals("debugging")) {
 			debugging = true;
-		} else {
+		} else if (parameter_name.equals("mode")) {
+			port_mode = true;
+		}		
+		else {
 			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, String.format("UDPasp__PT.set_parameter: Unsupported Test Port parameter: %s ", parameter_name));
 		}
 		log("Leaving "+MODULE+"set_parameter");
