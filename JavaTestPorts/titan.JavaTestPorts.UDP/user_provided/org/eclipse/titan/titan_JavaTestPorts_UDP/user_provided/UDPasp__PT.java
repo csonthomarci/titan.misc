@@ -63,7 +63,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
 		if (parameter_name.equals("debugging")) {
 			debugging = true;
-		} else if (parameter_name.equals("mode")) {
+		} else if (parameter_name.equals("mode") && parameter_value.equals("advanced")) {
 			port_mode = true;
 		} else if (parameter_name.equals("localIPAddr")) {
 			localAddress = parameter_value;
