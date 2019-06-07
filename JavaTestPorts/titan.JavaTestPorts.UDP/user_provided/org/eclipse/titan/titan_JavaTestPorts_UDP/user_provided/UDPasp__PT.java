@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.titan.runtime.core.Optional;
-import org.eclipse.titan.runtime.core.RAW.TTCN_RAWdescriptor;
 import org.eclipse.titan.runtime.core.TTCN_Logger;
 import org.eclipse.titan.runtime.core.TTCN_Logger.Severity;
 import org.eclipse.titan.runtime.core.TitanCharString;
@@ -33,8 +32,6 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 
 	private final String MODULE = "UDPasp__PT.";
 	
-	private final int DEFAULT_LOCAL_PORT = 2222;
-	private final InetSocketAddress DEFAULT_REMOTE_ADDRESS = new InetSocketAddress("localhost", DEFAULT_LOCAL_PORT);
 
 	//private final int DEFAULT_NUM_CONN   = 10; unnecessary
 
@@ -44,11 +41,9 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 	 *     true: advanced mode. The new features are activated
 	 */
 	private boolean port_mode = false;
-	//TODO private boolean broadcast = false;
 	private boolean debugging = false;
-
-	// private class conn_data {...} is represented by DatagramChannel class 
-	//num_of_conn, conn_list_length and localAddr are unnecessary
+	private int     localPort = 50000;
+	private String  localAddress = null;
 
 	DatagramChannel dc;
 
@@ -62,6 +57,31 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		super(port_name);
 	}
 
+	//Set parameters
+	@Override
+	public void set_parameter(String parameter_name, String parameter_value) {
+		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
+		if (parameter_name.equals("debugging")) {
+			debugging = true;
+		} else if (parameter_name.equals("mode")) {
+			port_mode = true;
+		} else if (parameter_name.equals("localIPAddr")) {
+			localAddress = parameter_value;
+		} else if (parameter_name.equals("localPort")) {
+			try {
+				localPort = Integer.parseInt(parameter_value);
+			} catch (NumberFormatException nfe) {
+				throw new TtcnError("Invalid localPort parameter: %s" + parameter_value);
+			}
+		} else if (parameter_name.equals("broadcast")) {
+			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, "Broadcast option is meaningless in java, the socket is broadcast-capable by defult");
+		}
+		else {
+			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, String.format("UDPasp__PT.set_parameter: Unsupported Test Port parameter: %s ", parameter_name));
+		}
+		log("Leaving "+MODULE+"set_parameter");
+	}
+	
 	//Map, Unmap, Configuration
 	@Override
 	protected void user_map(String system_port) {
@@ -76,7 +96,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		} else { //Simple config mode
 			try {
 				dc = DatagramChannel.open();
-				dc.bind(DEFAULT_REMOTE_ADDRESS);
+				dc.bind(new InetSocketAddress(localAddress, localPort));
 				conn_list = new HashMap<Integer,SelectableChannel>();
 				conn_list.put(new Integer(dc.hashCode()),(SelectableChannel)dc);
 
@@ -121,21 +141,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 		log("Leaving "+MODULE+"user_unmap");
 	}
-
-	@Override
-	public void set_parameter(String parameter_name, String parameter_value) {
-		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
-		if (parameter_name.equals("debugging")) {
-			debugging = true;
-		} else if (parameter_name.equals("mode")) {
-			port_mode = true;
-		}		
-		else {
-			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, String.format("UDPasp__PT.set_parameter: Unsupported Test Port parameter: %s ", parameter_name));
-		}
-		log("Leaving "+MODULE+"set_parameter");
-	}
-
+	
 	@Override
 	public void Handle_Event(SelectableChannel channel, boolean is_readable, boolean is_writeable) {
 		log("Entering "+MODULE+"Handle_Event");
@@ -209,9 +215,6 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 					address = new InetSocketAddress(hostname, port);
 				}
 			} 
-		}
-		if (address == null) { //Address not overwritten, using default
-			address = DEFAULT_REMOTE_ADDRESS;
 		}
 		try {
 			TitanOctetString pdu = send_par.constGet_field_data();
