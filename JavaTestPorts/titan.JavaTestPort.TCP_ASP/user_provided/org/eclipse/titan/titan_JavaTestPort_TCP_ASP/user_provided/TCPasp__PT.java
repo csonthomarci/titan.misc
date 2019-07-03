@@ -159,7 +159,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP send_par) {
-		char[] toSend = send_par.constGet_field_data().get_value();
+		byte[] toSend = send_par.constGet_field_data().get_value();
 		if (send_par.constGet_field_client__id().is_present()) {
 			  SelectableChannel sc = conn_list.get(send_par.constGet_field_client__id().get().get_int());
 			  SocketChannel socC = (SocketChannel)sc;
@@ -176,9 +176,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		
 	}
 	
-	private void sendOnChannel(char[] toSend, SocketChannel soc) {
+	private void sendOnChannel(byte[] toSend, SocketChannel soc) {
 		try {
-			soc.write(ByteBuffer.wrap(octetCharArrayToByteArray(toSend)));
+			soc.write(ByteBuffer.wrap(toSend));
 		} catch (IOException e) {
 			throw new TtcnError("Exception in outgoing_send(ASP__TCP send_par): " + e.getMessage());
 		}
@@ -208,22 +208,6 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 			}
 		}
 		installHandler(conn_list);
-	}
-		
-	private byte[] octetCharArrayToByteArray(char[] in) {
-		byte[] out = new byte[in.length];
-		for (int i = 0;i<in.length;i++) {
-			out[i] = (byte) in[i];
-		}
-		return out;
-	}
-	
-	private char[] byteArrayToOctetCharArray(byte[] in) {
-		char[] out = new char[in.length];
-		for (int i = 0;i<in.length;i++) {
-			out[i] = (char) (in[i] & 0xFF);
-		}
-		return out;
 	}
 	
 	private Set<SelectableChannel> collectionToSet(Collection<SelectableChannel> input) 
@@ -291,7 +275,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 					byte[] received = new byte[bytesRead];
 					buffer.rewind();
 					buffer.get(received, 0, bytesRead);
-					TitanOctetString incoming = new TitanOctetString(byteArrayToOctetCharArray(received));
+					TitanOctetString incoming = new TitanOctetString(received);
 					Optional<TitanInteger> optClientId = new Optional<TitanInteger>(TitanInteger.class);
 					TitanInteger tintClientID = new TitanInteger(channel.hashCode());
 					optClientId.operator_assign(tintClientID);
