@@ -168,7 +168,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 				byte[] received = new byte[received_length];
 				buffer.rewind();
 				buffer.get(received, 0, received_length);
-				TitanOctetString incoming = new TitanOctetString(byteArrayToOctetCharArray(received));
+				TitanOctetString incoming = new TitanOctetString(received);
 				TitanCharString remote_address = new TitanCharString(remote.getHostString());
 
 				TitanInteger remote_port = new TitanInteger(remote.getPort());
@@ -220,8 +220,8 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		}
 		try {
 			TitanOctetString pdu = send_par.constGet_field_data();
-			char[] send_bytes = pdu.get_value();
-			ByteBuffer bbToSend = ByteBuffer.wrap(octetCharArrayToByteArray(send_bytes));
+			byte[] send_bytes = pdu.get_value();
+			ByteBuffer bbToSend = ByteBuffer.wrap(send_bytes);
 			dc.send(bbToSend,address);
 		} catch (IOException ioe) {
 			throw new TtcnError("IOException: " + ioe.getMessage());
@@ -229,23 +229,7 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		log("Leaving "+MODULE+"outgoing_send(ASP__UDP send_par)");
 	}
 
-	private byte[] octetCharArrayToByteArray(char[] in) {
-		byte[] out = new byte[in.length];
-		for (int i = 0;i<in.length;i++) {
-			out[i] = (byte) in[i];
-		}
-		return out;
-	}
-
-	private char[] byteArrayToOctetCharArray(byte[] in) {
-		char[] out = new char[in.length];
-		for (int i = 0;i<in.length;i++) {
-			out[i] = (char) (in[i] & 0xFF);
-		}
-		return out;
-	}
-
-	@Override
+		@Override
 	public void outgoing_send(ASP__UDP__open send_par) {
 		log("Entering "+MODULE+"outgoing_send(ASP__UDP send_par)");
 		String localAddrStr;
@@ -350,8 +334,8 @@ public class UDPasp__PT extends UDPasp__PT_BASE {
 		TitanOctetString pdu = send_par.constGet_field_data();
 		TTCN_Logger.begin_event(Severity.ERROR_UNQUALIFIED);
 		pdu.log();
-		char[] send_bytes = pdu.get_value();
-		ByteBuffer bbToSend = ByteBuffer.wrap(octetCharArrayToByteArray(send_bytes));
+		byte[] send_bytes = pdu.get_value();
+		ByteBuffer bbToSend = ByteBuffer.wrap(send_bytes);
 		TTCN_Logger.end_event();
 
 		Optional<TitanInteger> titanId = send_par.constGet_field_id();
