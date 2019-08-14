@@ -3,7 +3,7 @@
   <ActiveConfiguration>Default</ActiveConfiguration>
   <ProjectProperties>
     <MakefileSettings>
-      <targetExecutable>bin/tcptest</targetExecutable>
+      <targetExecutable>bin/titan.JavaTestPort.TCP_ASP</targetExecutable>
     </MakefileSettings>
     <LocalBuildSettings>
       <MakefileScript/>

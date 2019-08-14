@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: qwerty
-Bundle-SymbolicName: titan.JavaTestPort.TCP_ASP;singleton:=true
+Bundle-Name: titan.JavaTestPort.TCP_ASP
+Bundle-SymbolicName: titan.JavaTestPort.TCP_ASP; singleton:=true
 Bundle-Version: 1.0.0
 Require-Bundle: org.eclipse.titan.runtime;bundle-version="1.0.0",
  org.antlr.runtime;bundle-version="4.3.0"

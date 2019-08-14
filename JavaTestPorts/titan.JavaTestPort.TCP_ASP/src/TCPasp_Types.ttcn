@@ -57,7 +57,7 @@ type record ASP_TCP_Connect {
 // Returned client_id shall be used to distinguish between the open connections.
 type record ASP_TCP_Connect_result {
   integer client_id
-}
+}  
 
 // Received when the server has accepted an incoming connection.
 type record ASP_TCP_Connected {

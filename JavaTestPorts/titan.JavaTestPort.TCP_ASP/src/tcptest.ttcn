@@ -19,7 +19,7 @@ testcase tc_tcp() runs on MyMTC system MyMTC
   
   var ASP_TCP_Connected connected;
 
-  var ASP_TCP_Close close;
+  var ASP_TCP_Close close; 
   
   var integer clId := 0;
   
@@ -72,6 +72,7 @@ testcase tc_tcp() runs on MyMTC system MyMTC
     }
   }
   
+  
   unmap(mtc:tcpport, system:tcpport);
 }
 
@@ -80,6 +81,6 @@ control
   execute(tc_tcp());
 }
 
-}
+} 
 
 

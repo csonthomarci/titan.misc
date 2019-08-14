@@ -34,6 +34,20 @@ import org.eclipse.titan.titan_JavaTestPort_TCP_ASP.generated.TCPasp__Types.ASP_
 
 public class TCPasp__PT extends TCPasp__PT_BASE {
 
+	private static String MODULE = "TCPasp__PT";
+	
+	//We can't access these in JAVA
+	private boolean is_packet_hdr_length_offset = false;
+	private long packet_hdr_length_offset;
+	private boolean is_packet_hdr_nr_bytes_in_length = false;
+	private long packet_hdr_nr_bytes_in_length;
+	private boolean is_packet_hdr_byte_order=false;
+	private String packet_hdr_byte_order;
+	private boolean is_packet_hdr_length_value_offset=false;
+	private long packet_hdr_length_value_offset;
+	private boolean is_packet_hdr_length_multiplier=false;
+	private long packet_hdr_length_multiplier;
+	
 	HashMap<Integer,SelectableChannel> conn_list;
 	//Set<SelectableChannel> listeningChannel = new HashSet<SelectableChannel>() {
 	Thread listeningThread;
@@ -47,13 +61,53 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	public void set_parameter(String parameter_name, String parameter_value) {
-		TTCN_Logger.log_str(TTCN_Logger.Severity.PORTEVENT_UNQUALIFIED, "Setting port parameter: "+parameter_name+": "+parameter_value);
-		
+		log("Entering "+MODULE+"set_parameter: "+parameter_name+": "+parameter_value);
+		if(parameter_name.equals("packet_hdr_length_offset")) {
+		    is_packet_hdr_length_offset = true;
+		    if (Integer.parseInt(parameter_value) < 0) {
+		    throw new TtcnError("The value of parameter 'packet_hdr_length_offset' must be a non-negative integer");
+		    
+		    }
+		    packet_hdr_length_offset = Long.parseLong(parameter_value);
+		}
+		else if(parameter_name.equals("packet_hdr_nr_bytes_in_length")) {
+		    is_packet_hdr_nr_bytes_in_length = true;
+		    if(Integer.parseInt(parameter_value) < 0)
+		    throw new TtcnError("The value of parameter 'packet_hdr_nr_bytes_in_length' must be a non-negative integer");
+		    packet_hdr_nr_bytes_in_length = Long.parseLong(parameter_value);
+		  }
+		else if(parameter_name.equals("packet_hdr_byte_order")) {
+		    is_packet_hdr_byte_order = true;
+		    if(parameter_value.equals("MSB")) {
+		    //TODO: PacketHeaderDescr::Header_MSB
+		      packet_hdr_byte_order ="MSB";	
+		    }
+		    else if (parameter_value.equals("LSB")){
+		      packet_hdr_byte_order = "LSB";}
+		    else throw new TtcnError("Parameter value '"+parameter_value+"' not recognized for parameter 'packet_hdr_byte_order' Possible values: \"MSB\" or \"LSB\"");
+		  }
+		else if(parameter_name.equals("packet_hdr_length_value_offset")) {
+		    is_packet_hdr_length_value_offset = true;
+		    if(Integer.parseInt(parameter_value) < 0)
+		      throw new TtcnError("The value of parameter 'packet_hdr_length_value_offset' must be a number");
+		    packet_hdr_length_value_offset = Long.parseLong(parameter_value);;
+		  }
+		else if(parameter_name.equals("packet_hdr_length_multiplier")) {
+		    is_packet_hdr_length_multiplier = true;
+		    if(Integer.parseInt(parameter_value) <= 0)
+		    throw new TtcnError("The value of parameter 'packet_hdr_length_multiplier' must be a positive integer");
+		    packet_hdr_length_multiplier = Long.parseLong(parameter_value);;
+		  }
+		else {
+			TTCN_Logger.log_str(TTCN_Logger.Severity.WARNING_UNQUALIFIED, String.format("TCPasp__PT.set_parameter: Unsupported Test Port parameter: %s ", parameter_name));
+		}
+		log("Leaving "+MODULE+"set_parameter");
 	}
 
 	@Override
 	protected void user_map(String system_port) {
 		conn_list = new HashMap<Integer,SelectableChannel>();
+		
 		
 		TTCN_Logger.begin_event(Severity.LOG_ALL_IMPORTANT);
 		TTCN_Logger.log_event("ELNRNAG user_map");
@@ -83,7 +137,7 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP__Connect send_par) {
-		String remoteHostname = send_par.constGet_field_hostname().get_value().toString();
+		String remoteHostname = new String(send_par.constGet_field_hostname().get_value());
 		int remotePort = send_par.constGet_field_portnumber().get_int();
 		
 		Optional<TitanCharString> optLocalhostname = send_par.constGet_field_local__hostname(); 
@@ -159,7 +213,8 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 
 	@Override
 	protected void outgoing_send(ASP__TCP send_par) {
-		byte[] toSend = send_par.constGet_field_data().get_value();
+		byte[] toSend = new String(send_par.constGet_field_data().get_value()).getBytes();
+		System.out.println(send_par.constGet_field_data().get_value());
 		if (send_par.constGet_field_client__id().is_present()) {
 			  SelectableChannel sc = conn_list.get(send_par.constGet_field_client__id().get().get_int());
 			  SocketChannel socC = (SocketChannel)sc;
@@ -275,7 +330,9 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 					byte[] received = new byte[bytesRead];
 					buffer.rewind();
 					buffer.get(received, 0, bytesRead);
-					TitanOctetString incoming = new TitanOctetString(received);
+					
+					TitanOctetString incoming = new TitanOctetString(new String(received).toCharArray());
+					
 					Optional<TitanInteger> optClientId = new Optional<TitanInteger>(TitanInteger.class);
 					TitanInteger tintClientID = new TitanInteger(channel.hashCode());
 					optClientId.operator_assign(tintClientID);
@@ -306,8 +363,10 @@ public class TCPasp__PT extends TCPasp__PT_BASE {
 		
 		
 	}
-
-
 	
+
+	private void log(String debugString) {
+		TTCN_Logger.log_str(TTCN_Logger.Severity.DEBUG_TESTPORT, debugString);
+	}
 
 }
